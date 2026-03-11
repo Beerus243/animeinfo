@@ -2,10 +2,21 @@
 
 import { useState } from "react";
 
-import { useLanguage } from "@/app/components/LanguageProvider";
+type ImportRecommendationsButtonProps = {
+  idleLabel: string;
+  pendingLabel: string;
+  successLabel: string;
+  emptyLabel: string;
+  failedLabel: string;
+};
 
-export default function ImportRecommendationsButton() {
-  const { messages } = useLanguage();
+export default function ImportRecommendationsButton({
+  idleLabel,
+  pendingLabel,
+  successLabel,
+  emptyLabel,
+  failedLabel,
+}: ImportRecommendationsButtonProps) {
   const [pending, setPending] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
@@ -19,30 +30,30 @@ export default function ImportRecommendationsButton() {
       setPending(false);
 
       if (!response.ok) {
-        setStatus(payload?.error || messages.admin.importRecommendationsFailed);
+        setStatus(payload?.error || failedLabel);
         return;
       }
 
       if ((payload?.processedItems || 0) === 0) {
-        setStatus(messages.admin.importRecommendationsEmpty);
+        setStatus(emptyLabel);
         return;
       }
 
       setStatus(
-        messages.admin.importRecommendationsSuccess
+        successLabel
           .replace("{imported}", String(payload?.imported || 0))
           .replace("{duplicates}", String(payload?.duplicates || 0)),
       );
     } catch {
       setPending(false);
-      setStatus(messages.admin.importRecommendationsFailed);
+      setStatus(failedLabel);
     }
   }
 
   return (
     <div className="flex flex-wrap items-center gap-3">
       <button className="button-secondary" disabled={pending} onClick={() => void handleImport()} type="button">
-        {pending ? messages.admin.importingRecommendations : messages.admin.importRecommendations}
+        {pending ? pendingLabel : idleLabel}
       </button>
       {status ? <p className="text-sm text-muted">{status}</p> : null}
     </div>

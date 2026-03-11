@@ -114,5 +114,6 @@ Use a different value for `CRON_SECRET` than the admin password. The admin inter
 - MongoDB Atlas should be configured with backups and network access rules.
 - Cloudinary credentials are required for signed uploads.
 - Ad providers and analytics remain disabled until the matching environment variables are set.
+- `/api/health/db` provides a lightweight runtime check that confirms whether the deployment sees `MONGODB_URI` and whether MongoDB is reachable, without exposing the raw secret value.
 
 See `docs/` for ad setup, SEO guidance, and operations runbook.

@@ -59,7 +59,13 @@ export default async function AdminPage() {
           <Link className="button-primary" href="/admin/drafts">
             {messages.admin.openDrafts}
           </Link>
-          <ImportRecommendationsButton />
+          <ImportRecommendationsButton
+            idleLabel={messages.admin.importRecommendations}
+            pendingLabel={messages.admin.importingRecommendations}
+            successLabel={messages.admin.importRecommendationsSuccess}
+            emptyLabel={messages.admin.importRecommendationsEmpty}
+            failedLabel={messages.admin.importRecommendationsFailed}
+          />
           <Link className="button-secondary" href="/api/cron/import-news">
             {messages.admin.triggerImport}
           </Link>

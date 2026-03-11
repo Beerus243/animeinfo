@@ -83,4 +83,5 @@ Rejected during validation from this environment:
 ## Incident handling
 
 - Review cron response payloads for `failures` and `duplicates`.
+- Call `/api/health/db` on the deployed site to confirm whether the runtime sees `MONGODB_URI`, which host/db it resolves to, and whether MongoDB accepts the connection.
 - Add Sentry or another log sink before production launch.
