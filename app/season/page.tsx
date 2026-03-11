@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import ArticleCard from "@/app/components/ArticleCard";
 import { resolveArticleLocalization } from "@/lib/articleLocalization";
+import { ensureArticlesLocalization } from "@/lib/articleTranslation";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -55,12 +56,13 @@ export default async function SeasonPage() {
       .limit(6)
       .lean(),
   ]);
+  const localizedRecentArticles = await ensureArticlesLocalization(recentArticles, locale);
 
   const jsonLd = buildCollectionJsonLd({
     title: messages.season.title,
     description: messages.season.description,
     path: "/season",
-    itemPaths: recentArticles.map((article) => `/article/${article.slug}`),
+    itemPaths: localizedRecentArticles.map((article) => `/article/${resolveArticleLocalization(article, locale).slug || article.slug}`),
   });
 
   return (
@@ -104,8 +106,8 @@ export default async function SeasonPage() {
           </Link>
         </div>
         <div className="grid-auto-fit mt-6">
-          {recentArticles.length ? (
-            recentArticles.map((article) => (
+          {localizedRecentArticles.length ? (
+            localizedRecentArticles.map((article) => (
               <ArticleCard
                 key={article._id.toString()}
                 article={{

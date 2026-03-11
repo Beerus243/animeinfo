@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import ArticleCard from "@/app/components/ArticleCard";
 import { resolveArticleLocalization } from "@/lib/articleLocalization";
+import { ensureArticlesLocalization } from "@/lib/articleTranslation";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -47,12 +48,13 @@ export default async function TagPage({ params }: TagPageProps) {
   const articles = await Article.find({ status: "published", tags: { $regex: pattern } })
     .sort({ publishedAt: -1, updatedAt: -1 })
     .lean();
+  const localizedArticles = await ensureArticlesLocalization(articles, locale);
 
   const jsonLd = buildCollectionJsonLd({
     title: label,
     description: messages.tag.description,
     path: `/tag/${slug}`,
-    itemPaths: articles.map((article) => `/article/${article.slug}`),
+    itemPaths: localizedArticles.map((article) => `/article/${resolveArticleLocalization(article, locale).slug || article.slug}`),
   });
 
   return (
@@ -64,8 +66,8 @@ export default async function TagPage({ params }: TagPageProps) {
         <p className="mt-3 text-muted">{messages.tag.description}</p>
       </section>
       <div className="grid-auto-fit mt-8">
-        {articles.length ? (
-          articles.map((article) => (
+        {localizedArticles.length ? (
+          localizedArticles.map((article) => (
             <ArticleCard
               key={article._id.toString()}
               article={{

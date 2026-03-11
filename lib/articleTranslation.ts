@@ -10,6 +10,7 @@ type TranslationFields = {
   seo?: {
     metaTitle?: string;
     metaDesc?: string;
+    ogImage?: string;
   };
 };
 
@@ -23,6 +24,8 @@ type TranslationResult = {
     metaDesc: string;
   };
 };
+
+type AiTaskKind = "translation" | "rewrite";
 
 type TranslatableArticle = {
   _id?: { toString(): string } | string;
@@ -54,10 +57,22 @@ type TranslatableArticle = {
   tags?: string[] | null;
 };
 
-export function getTranslationConfig() {
-  const apiKey = process.env.OPENAI_API_KEY;
-  const model = process.env.OPENAI_TRANSLATION_MODEL || process.env.OPENAI_MODEL;
-  const baseUrl = (process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
+function getAiConfig(task: AiTaskKind) {
+  const apiKey = process.env.AI_API_KEY || process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY;
+  const model =
+    (task === "translation"
+      ? process.env.AI_TRANSLATION_MODEL || process.env.DEEPSEEK_TRANSLATION_MODEL || process.env.OPENAI_TRANSLATION_MODEL
+      : process.env.AI_REWRITE_MODEL || process.env.DEEPSEEK_REWRITE_MODEL) ||
+    process.env.AI_MODEL ||
+    process.env.DEEPSEEK_MODEL ||
+    process.env.OPENAI_MODEL ||
+    (process.env.DEEPSEEK_API_KEY ? "deepseek-chat" : undefined);
+  const baseUrl = (
+    process.env.AI_BASE_URL ||
+    process.env.DEEPSEEK_BASE_URL ||
+    ((process.env.DEEPSEEK_API_KEY || process.env.DEEPSEEK_MODEL) ? "https://api.deepseek.com/v1" : process.env.OPENAI_BASE_URL) ||
+    "https://api.openai.com/v1"
+  ).replace(/\/$/, "");
 
   if (!apiKey || !model) {
     return null;
@@ -66,8 +81,24 @@ export function getTranslationConfig() {
   return { apiKey, model, baseUrl };
 }
 
+export function getTranslationConfig() {
+  return getAiConfig("translation");
+}
+
+export function getRewriteConfig() {
+  return getAiConfig("rewrite");
+}
+
 export function isAutomaticTranslationConfigured() {
   return Boolean(getTranslationConfig());
+}
+
+export function isAutomaticRewritingConfigured() {
+  return Boolean(getRewriteConfig());
+}
+
+export function isFrenchAiPipelineConfigured() {
+  return isAutomaticTranslationConfigured() || isAutomaticRewritingConfigured();
 }
 
 function hasContent(fields?: TranslationFields | null) {
@@ -85,26 +116,15 @@ function cleanJsonContent(raw: string) {
   return trimmed;
 }
 
-export async function translateArticleFields(input: {
-  sourceLocale: Locale;
-  targetLocale: Locale;
-  fields: TranslationFields;
+async function requestStructuredCompletion(input: {
+  task: AiTaskKind;
+  systemPrompt: string;
+  userPayload: Record<string, unknown>;
 }) {
-  const config = getTranslationConfig();
+  const config = input.task === "translation" ? getTranslationConfig() : getRewriteConfig();
   if (!config) {
-    throw new Error("Translation API is not configured.");
+    throw new Error(`AI ${input.task} is not configured.`);
   }
-
-  if (input.sourceLocale === input.targetLocale) {
-    throw new Error("Invalid source or target locale.");
-  }
-
-  if (!hasContent(input.fields)) {
-    throw new Error("Missing source article content.");
-  }
-
-  const sourceLanguage = input.sourceLocale === "fr" ? "French" : "English";
-  const targetLanguage = input.targetLocale === "fr" ? "French" : "English";
 
   const response = await fetch(`${config.baseUrl}/chat/completions`, {
     method: "POST",
@@ -118,21 +138,11 @@ export async function translateArticleFields(input: {
       messages: [
         {
           role: "system",
-          content:
-            "You are a professional editorial translator for anime news. Translate accurately while preserving meaning, tone, HTML tags, structure, and proper nouns. Return strict JSON only with keys: title, excerpt, content, seoMetaTitle, seoMetaDesc.",
+          content: input.systemPrompt,
         },
         {
           role: "user",
-          content: JSON.stringify({
-            task: `Translate this article draft from ${sourceLanguage} to ${targetLanguage}. Preserve HTML in content and do not add commentary.`,
-            fields: {
-              title: input.fields.title || "",
-              excerpt: input.fields.excerpt || "",
-              content: input.fields.content || "",
-              seoMetaTitle: input.fields.seo?.metaTitle || "",
-              seoMetaDesc: input.fields.seo?.metaDesc || "",
-            },
-          }),
+          content: JSON.stringify(input.userPayload),
         },
       ],
       response_format: { type: "json_object" },
@@ -150,13 +160,50 @@ export async function translateArticleFields(input: {
     throw new Error("Translation provider returned an invalid response.");
   }
 
-  const translated = JSON.parse(cleanJsonContent(rawContent)) as {
+  return JSON.parse(cleanJsonContent(rawContent)) as {
     title?: string;
     excerpt?: string;
     content?: string;
     seoMetaTitle?: string;
     seoMetaDesc?: string;
   };
+}
+
+export async function translateArticleFields(input: {
+  sourceLocale: Locale;
+  targetLocale: Locale;
+  fields: TranslationFields;
+}) {
+  if (!getTranslationConfig()) {
+    throw new Error("Translation API is not configured.");
+  }
+
+  if (input.sourceLocale === input.targetLocale) {
+    throw new Error("Invalid source or target locale.");
+  }
+
+  if (!hasContent(input.fields)) {
+    throw new Error("Missing source article content.");
+  }
+
+  const sourceLanguage = input.sourceLocale === "fr" ? "French" : "English";
+  const targetLanguage = input.targetLocale === "fr" ? "French" : "English";
+
+  const translated = await requestStructuredCompletion({
+    task: "translation",
+    systemPrompt:
+      "You are a professional editorial translator for anime news. Translate accurately while preserving meaning, tone, HTML tags, structure, and proper nouns. Adapt the phrasing so the result reads like polished native editorial copy. Return strict JSON only with keys: title, excerpt, content, seoMetaTitle, seoMetaDesc.",
+    userPayload: {
+      task: `Translate this article draft from ${sourceLanguage} to ${targetLanguage}. Preserve HTML in content and do not add commentary.`,
+      fields: {
+        title: input.fields.title || "",
+        excerpt: input.fields.excerpt || "",
+        content: input.fields.content || "",
+        seoMetaTitle: input.fields.seo?.metaTitle || "",
+        seoMetaDesc: input.fields.seo?.metaDesc || "",
+      },
+    },
+  });
 
   return {
     slug: translated.title ? await ensureUniqueArticleSlug(translated.title) : "",
@@ -168,6 +215,210 @@ export async function translateArticleFields(input: {
       metaDesc: translated.seoMetaDesc || "",
     },
   } satisfies TranslationResult;
+}
+
+export async function rewriteArticleFields(input: {
+  locale: Locale;
+  fields: TranslationFields;
+}) {
+  if (!getRewriteConfig()) {
+    throw new Error("AI rewrite is not configured.");
+  }
+
+  if (!hasContent(input.fields)) {
+    throw new Error("Missing source article content.");
+  }
+
+  const targetLanguage = input.locale === "fr" ? "French" : "English";
+  const rewritten = await requestStructuredCompletion({
+    task: "rewrite",
+    systemPrompt:
+      "You are a senior anime news editor. Rewrite drafts into polished publication-ready copy while preserving facts, proper nouns, HTML tags, and structure. Improve clarity, rhythm, readability, and SEO wording without inventing information. Return strict JSON only with keys: title, excerpt, content, seoMetaTitle, seoMetaDesc.",
+    userPayload: {
+      task: `Rewrite this article in ${targetLanguage} for publication on an anime news site. Keep the same facts, improve editorial quality, and preserve HTML in content.`,
+      fields: {
+        title: input.fields.title || "",
+        excerpt: input.fields.excerpt || "",
+        content: input.fields.content || "",
+        seoMetaTitle: input.fields.seo?.metaTitle || "",
+        seoMetaDesc: input.fields.seo?.metaDesc || "",
+      },
+    },
+  });
+
+  return {
+    slug: rewritten.title ? await ensureUniqueArticleSlug(rewritten.title) : "",
+    title: rewritten.title || "",
+    excerpt: rewritten.excerpt || "",
+    content: rewritten.content || "",
+    seo: {
+      metaTitle: rewritten.seoMetaTitle || "",
+      metaDesc: rewritten.seoMetaDesc || "",
+    },
+  } satisfies TranslationResult;
+}
+
+export async function buildFrenchFirstLocalizations(input: {
+  sourceLocale: Locale;
+  fields: TranslationFields;
+  existingSlugs?: string[];
+  excludeId?: string;
+}) {
+  const sourceFields = {
+    title: input.fields.title || "",
+    excerpt: input.fields.excerpt || "",
+    content: input.fields.content || "",
+    seo: {
+      metaTitle: input.fields.seo?.metaTitle || "",
+      metaDesc: input.fields.seo?.metaDesc || "",
+      ogImage: input.fields.seo?.ogImage || "",
+    },
+  };
+
+  let frenchFields = sourceFields;
+  let aiRewritten = false;
+
+  if (input.sourceLocale !== "fr" && isAutomaticTranslationConfigured()) {
+    const translated = await translateArticleFields({
+      sourceLocale: input.sourceLocale,
+      targetLocale: "fr",
+      fields: sourceFields,
+    });
+    frenchFields = {
+      title: translated.title,
+      excerpt: translated.excerpt,
+      content: translated.content,
+      seo: {
+        metaTitle: translated.seo.metaTitle,
+        metaDesc: translated.seo.metaDesc,
+        ogImage: sourceFields.seo.ogImage,
+      },
+    };
+  }
+
+  if (isAutomaticRewritingConfigured()) {
+    const rewritten = await rewriteArticleFields({
+      locale: "fr",
+      fields: frenchFields,
+    });
+    frenchFields = {
+      title: rewritten.title,
+      excerpt: rewritten.excerpt,
+      content: rewritten.content,
+      seo: {
+        metaTitle: rewritten.seo.metaTitle,
+        metaDesc: rewritten.seo.metaDesc,
+        ogImage: sourceFields.seo.ogImage,
+      },
+    };
+    aiRewritten = true;
+  }
+
+  const reservedSlugs = input.existingSlugs?.filter(Boolean) || [];
+  const frSlug = frenchFields.title
+    ? await ensureUniqueArticleSlug(frenchFields.title, { excludeId: input.excludeId, reservedSlugs })
+    : "";
+  const enSlug = input.sourceLocale === "en"
+    ? sourceFields.title
+      ? await ensureUniqueArticleSlug(sourceFields.title, {
+          excludeId: input.excludeId,
+          reservedSlugs: [frSlug, ...reservedSlugs],
+        })
+      : ""
+    : "";
+
+  return {
+    aiRewritten,
+    root: {
+      slug: frSlug,
+      title: frenchFields.title,
+      excerpt: frenchFields.excerpt,
+      content: frenchFields.content,
+      seo: {
+        metaTitle: frenchFields.seo.metaTitle,
+        metaDesc: frenchFields.seo.metaDesc,
+        ogImage: sourceFields.seo.ogImage,
+      },
+    },
+    localizations: {
+      fr: {
+        slug: frSlug,
+        title: frenchFields.title,
+        excerpt: frenchFields.excerpt,
+        content: frenchFields.content,
+        seo: {
+          metaTitle: frenchFields.seo.metaTitle,
+          metaDesc: frenchFields.seo.metaDesc,
+          ogImage: sourceFields.seo.ogImage,
+        },
+      },
+      en: {
+        slug: input.sourceLocale === "en" ? enSlug : "",
+        title: input.sourceLocale === "en" ? sourceFields.title : "",
+        excerpt: input.sourceLocale === "en" ? sourceFields.excerpt : "",
+        content: input.sourceLocale === "en" ? sourceFields.content : "",
+        seo: {
+          metaTitle: input.sourceLocale === "en" ? sourceFields.seo.metaTitle : "",
+          metaDesc: input.sourceLocale === "en" ? sourceFields.seo.metaDesc : "",
+          ogImage: sourceFields.seo.ogImage,
+        },
+      },
+    },
+  };
+}
+
+export async function processStoredArticleToFrenchFirst(article: TranslatableArticle & { _id: { toString(): string } | string }) {
+  const existingSlugs = [article.slug, article.localizations?.fr?.slug, article.localizations?.en?.slug].filter(
+    (value): value is string => Boolean(value),
+  );
+  await Article.updateOne(
+    { _id: article._id.toString() },
+    {
+      $set: {
+        aiStatus: "pending",
+      },
+      $unset: {
+        aiError: 1,
+      },
+    },
+  );
+
+  const processed = await buildFrenchFirstLocalizations({
+    sourceLocale: article.localizations?.en?.title || article.localizations?.en?.content ? "en" : "en",
+    fields: {
+      title: article.localizations?.en?.title || article.title || "",
+      excerpt: article.localizations?.en?.excerpt || article.excerpt || "",
+      content: article.localizations?.en?.content || article.content || "",
+      seo: {
+        metaTitle: article.localizations?.en?.seo?.metaTitle || article.seo?.metaTitle || "",
+        metaDesc: article.localizations?.en?.seo?.metaDesc || article.seo?.metaDesc || "",
+        ogImage: article.localizations?.en?.seo?.ogImage || article.seo?.ogImage || article.coverImage || "",
+      },
+    },
+    existingSlugs,
+    excludeId: article._id.toString(),
+  });
+
+  await Article.updateOne(
+    { _id: article._id.toString() },
+    {
+      $set: {
+        title: processed.root.title,
+        slug: processed.root.slug,
+        excerpt: processed.root.excerpt,
+        content: processed.root.content,
+        seo: processed.root.seo,
+        localizations: processed.localizations,
+        aiStatus: "done",
+        aiProcessedAt: new Date(),
+        aiError: "",
+        aiRewritten: processed.aiRewritten,
+        status: "review",
+      },
+    },
+  );
+
+  return processed;
 }
 
 export async function ensureArticleLocalization<T extends TranslatableArticle>(article: T, locale: Locale): Promise<T> {

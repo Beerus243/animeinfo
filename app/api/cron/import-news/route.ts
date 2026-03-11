@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
     imported: articleImport.imported,
     duplicates: articleImport.duplicates,
     enriched: articleImport.enriched,
+    aiProcessed: articleImport.aiProcessed,
     animeImported: animeImport.imported,
     animeUpdated: animeImport.updated,
     animeTotalItems: animeImport.totalItems,

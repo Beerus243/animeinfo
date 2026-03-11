@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import ArticleCard from "@/app/components/ArticleCard";
 import { resolveArticleLocalization } from "@/lib/articleLocalization";
+import { ensureArticlesLocalization } from "@/lib/articleTranslation";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { buildCollectionJsonLd, buildMetadata } from "@/lib/seo";
@@ -36,11 +37,12 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const articles = await Article.find({ category: slug, status: "published" })
     .sort({ publishedAt: -1, updatedAt: -1 })
     .lean();
+  const localizedArticles = await ensureArticlesLocalization(articles, locale);
   const jsonLd = buildCollectionJsonLd({
     title: slug.replace(/-/g, " "),
     description: messages.category.description,
     path: `/category/${slug}`,
-    itemPaths: articles.map((article) => `/article/${article.slug}`),
+    itemPaths: localizedArticles.map((article) => `/article/${resolveArticleLocalization(article, locale).slug || article.slug}`),
   });
 
   return (
@@ -54,8 +56,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         <p className="mt-3 text-muted">{messages.category.description}</p>
       </section>
       <div className="grid-auto-fit mt-8">
-        {articles.length ? (
-          articles.map((article) => (
+        {localizedArticles.length ? (
+          localizedArticles.map((article) => (
             <ArticleCard
               key={article._id.toString()}
               article={{

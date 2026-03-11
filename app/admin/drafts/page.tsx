@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import DraftCard from "@/app/admin/components/DraftCard";
+import ProcessDraftsButton from "@/app/admin/components/ProcessDraftsButton";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -16,11 +17,18 @@ export default async function DraftsPage({ searchParams }: DraftsPageProps) {
   const locale = await getServerLocale();
   const messages = getMessages(locale);
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
-  const filter = resolvedSearchParams?.filter === "no-image" ? "no-image" : "all";
+  const filter = ["all", "no-image", "ai-pending", "ai-done", "ai-failed"].includes(resolvedSearchParams?.filter || "")
+    ? (resolvedSearchParams?.filter as "all" | "no-image" | "ai-pending" | "ai-done" | "ai-failed")
+    : "all";
   await connectToDatabase();
+
+  const baseQuery = {
+    status: { $in: ["draft", "review"] },
+  };
 
   const query = filter === "no-image"
     ? {
+        ...baseQuery,
         status: { $in: ["draft", "review"] },
         $or: [
           { coverImage: { $exists: false } },
@@ -28,7 +36,13 @@ export default async function DraftsPage({ searchParams }: DraftsPageProps) {
           { coverImage: "" },
         ],
       }
-    : { status: { $in: ["draft", "review"] } };
+    : filter === "ai-pending"
+      ? { ...baseQuery, aiStatus: "pending" }
+      : filter === "ai-done"
+        ? { ...baseQuery, aiStatus: "done" }
+        : filter === "ai-failed"
+          ? { ...baseQuery, aiStatus: "failed" }
+          : baseQuery;
 
   const drafts = await Article.find(query)
     .sort({ updatedAt: -1, createdAt: -1 })
@@ -48,6 +62,22 @@ export default async function DraftsPage({ searchParams }: DraftsPageProps) {
           <Link className={filter === "no-image" ? "button-primary" : "button-secondary"} href="/admin/drafts?filter=no-image">
             {messages.admin.draftWithoutImage}
           </Link>
+          <Link className={filter === "ai-pending" ? "button-primary" : "button-secondary"} href="/admin/drafts?filter=ai-pending">
+            {messages.admin.draftAiPending}
+          </Link>
+          <Link className={filter === "ai-done" ? "button-primary" : "button-secondary"} href="/admin/drafts?filter=ai-done">
+            {messages.admin.draftAiDone}
+          </Link>
+          <Link className={filter === "ai-failed" ? "button-primary" : "button-secondary"} href="/admin/drafts?filter=ai-failed">
+            {messages.admin.draftAiFailed}
+          </Link>
+          <ProcessDraftsButton
+            idleLabel={messages.admin.processDrafts}
+            pendingLabel={messages.admin.processingDrafts}
+            successLabel={messages.admin.processDraftsSuccess}
+            emptyLabel={messages.admin.processDraftsEmpty}
+            failedLabel={messages.admin.processDraftsFailed}
+          />
         </div>
       </section>
       {drafts.length ? (
@@ -61,6 +91,8 @@ export default async function DraftsPage({ searchParams }: DraftsPageProps) {
                 excerpt: draft.excerpt ?? undefined,
                 coverImage: draft.coverImage ?? undefined,
                 sourceName: draft.sourceName ?? undefined,
+                aiStatus: draft.aiStatus ?? undefined,
+                aiError: draft.aiError ?? undefined,
                 updatedAt: draft.updatedAt,
               }}
             />

@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import ArticleCard from "@/app/components/ArticleCard";
 import { resolveArticleLocalization } from "@/lib/articleLocalization";
+import { ensureArticlesLocalization } from "@/lib/articleTranslation";
 import { formatDate, getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -54,13 +55,14 @@ export default async function TrendingPage() {
 
   const effectiveCategoryRows = categoryRows.length ? categoryRows : rssSnapshot.sourceRows;
   const effectiveTagRows = tagRows.length ? tagRows : rssSnapshot.topicRows;
+  const localizedArticles = await ensureArticlesLocalization(articles, locale);
 
   const jsonLd = buildCollectionJsonLd({
     title: messages.trending.title,
     description: messages.trending.description,
     path: "/trending",
-    itemPaths: articles.length
-      ? articles.map((article) => `/article/${article.slug}`)
+    itemPaths: localizedArticles.length
+      ? localizedArticles.map((article) => `/article/${resolveArticleLocalization(article, locale).slug || article.slug}`)
       : rssSnapshot.liveItems.map((item) => item.url),
   });
 
@@ -122,8 +124,8 @@ export default async function TrendingPage() {
       ) : null}
 
       <div className="grid-auto-fit mt-6 md:mt-8">
-        {articles.length ? (
-          articles.map((article) => (
+        {localizedArticles.length ? (
+          localizedArticles.map((article) => (
             <ArticleCard
               key={article._id.toString()}
               article={{
@@ -141,10 +143,10 @@ export default async function TrendingPage() {
         )}
       </div>
 
-      {articles.length ? (
+      {localizedArticles.length ? (
         <section className="mt-6 panel px-5 py-5 md:mt-8 md:px-6">
           <p className="text-[13px] text-muted md:text-sm">
-            {messages.news.pagePrefix} 1. {messages.categories.latest}: {formatDate(locale, articles[0].publishedAt || new Date())}
+            {messages.news.pagePrefix} 1. {messages.categories.latest}: {formatDate(locale, localizedArticles[0].publishedAt || new Date())}
           </p>
         </section>
       ) : null}

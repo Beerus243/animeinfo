@@ -6,7 +6,7 @@ import AdUnit from "@/app/components/AdUnit";
 import ArticleCard from "@/app/components/ArticleCard";
 import ArticleExperienceControls from "@/app/components/ArticleExperienceControls";
 import { resolveArticleLocalization } from "@/lib/articleLocalization";
-import { ensureArticleLocalization } from "@/lib/articleTranslation";
+import { ensureArticleLocalization, ensureArticlesLocalization } from "@/lib/articleTranslation";
 import { formatDate, getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -128,6 +128,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         .limit(3)
         .lean()
     : [];
+  const localizedRelatedArticles = await ensureArticlesLocalization(relatedArticles, locale);
 
   return (
     <div className="shell-container py-8 md:py-12">
@@ -180,7 +181,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               <p>{localized.excerpt || messages.article.contentUnavailable}</p>
             )}
           </div>
-          {relatedArticles.length ? (
+          {localizedRelatedArticles.length ? (
             <section className="article-measure mt-12">
               <div className="flex items-end justify-between gap-4">
                 <div>
@@ -189,7 +190,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 </div>
               </div>
               <div className="grid-auto-fit mt-6">
-                {relatedArticles.map((relatedArticle) => (
+                {localizedRelatedArticles.map((relatedArticle) => (
                   <ArticleCard
                     key={relatedArticle._id.toString()}
                     article={{

@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import CreateDraftButtons from "@/app/admin/components/CreateDraftButtons";
 import ImportRecommendationsButton from "@/app/admin/components/ImportRecommendationsButton";
+import ProcessDraftsButton from "@/app/admin/components/ProcessDraftsButton";
 import AdminLogoutButton from "@/app/admin/components/AdminLogoutButton";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
@@ -20,11 +21,19 @@ export default async function AdminPage() {
     Article.countDocuments({ status: "review" }),
     Article.countDocuments({ status: "published" }),
   ]);
+  const [aiPending, aiDone, aiFailed] = await Promise.all([
+    Article.countDocuments({ status: { $in: ["draft", "review"] }, aiStatus: "pending" }),
+    Article.countDocuments({ status: { $in: ["draft", "review"] }, aiStatus: "done" }),
+    Article.countDocuments({ status: { $in: ["draft", "review"] }, aiStatus: "failed" }),
+  ]);
 
   const stats = [
     { label: messages.admin.drafts, value: drafts },
     { label: messages.admin.inReview, value: review },
     { label: messages.admin.published, value: published },
+    { label: messages.admin.draftAiPending, value: aiPending },
+    { label: messages.admin.draftAiDone, value: aiDone },
+    { label: messages.admin.draftAiFailed, value: aiFailed },
   ];
 
   return (
@@ -65,6 +74,13 @@ export default async function AdminPage() {
             successLabel={messages.admin.importRecommendationsSuccess}
             emptyLabel={messages.admin.importRecommendationsEmpty}
             failedLabel={messages.admin.importRecommendationsFailed}
+          />
+          <ProcessDraftsButton
+            idleLabel={messages.admin.processDrafts}
+            pendingLabel={messages.admin.processingDrafts}
+            successLabel={messages.admin.processDraftsSuccess}
+            emptyLabel={messages.admin.processDraftsEmpty}
+            failedLabel={messages.admin.processDraftsFailed}
           />
           <Link className="button-secondary" href="/api/cron/import-news">
             {messages.admin.triggerImport}

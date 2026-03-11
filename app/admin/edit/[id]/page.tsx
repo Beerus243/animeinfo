@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import Editor from "@/app/admin/components/Editor";
 import PublishButton from "@/app/admin/components/PublishButton";
+import { isAutomaticRewritingConfigured, isAutomaticTranslationConfigured } from "@/lib/articleTranslation";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -26,7 +27,8 @@ export default async function EditArticlePage({ params }: EditPageProps) {
   }
 
   const initialArticle = JSON.parse(JSON.stringify(article));
-  const translationEnabled = Boolean(process.env.OPENAI_API_KEY && (process.env.OPENAI_TRANSLATION_MODEL || process.env.OPENAI_MODEL));
+  const translationEnabled = isAutomaticTranslationConfigured();
+  const rewritingEnabled = isAutomaticRewritingConfigured();
 
   return (
     <div className="shell-container py-8 md:py-12">
@@ -39,7 +41,7 @@ export default async function EditArticlePage({ params }: EditPageProps) {
         </div>
         <PublishButton articleId={initialArticle._id} currentStatus={initialArticle.status} />
       </div>
-      <Editor initialArticle={initialArticle} translationEnabled={translationEnabled} />
+      <Editor initialArticle={initialArticle} rewritingEnabled={rewritingEnabled} translationEnabled={translationEnabled} />
     </div>
   );
 }

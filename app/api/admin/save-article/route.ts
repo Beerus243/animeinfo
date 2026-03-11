@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
           metaDesc: preferredLocalization.seo.metaDesc,
           ogImage: preferredLocalization.seo.ogImage,
         },
+        aiRewritten: Boolean(payload.aiRewritten),
         status: "review",
       },
       ...(section === "news" ? { $unset: { recommendationType: 1 } } : {}),

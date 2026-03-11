@@ -338,6 +338,11 @@ img {
   color: var(--warning);
 }
 
+.status-chip-danger {
+  background: color-mix(in srgb, #d94b4b 18%, transparent);
+  color: #d94b4b;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

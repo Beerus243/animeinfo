@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
   const drafts = await Article.find({ status: { $in: ["draft", "review"] } })
     .sort({ updatedAt: -1 })
     .limit(100)
+    .select({ title: 1, excerpt: 1, coverImage: 1, sourceName: 1, updatedAt: 1, aiStatus: 1, aiError: 1 })
     .lean();
 
   return NextResponse.json({ ok: true, drafts });

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import ArticleCard from "@/app/components/ArticleCard";
 import NotificationSignupForm from "@/app/components/NotificationSignupForm";
 import { resolveArticleLocalization } from "@/lib/articleLocalization";
+import { ensureArticlesLocalization } from "@/lib/articleTranslation";
 import { formatDateTime, getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -56,11 +57,13 @@ export default async function AnimePage({ params }: AnimePageProps) {
     notFound();
   }
 
+  const localizedArticles = await ensureArticlesLocalization(articles, locale);
+
   const jsonLd = buildCollectionJsonLd({
     title: anime.title,
     description: anime.synopsis || messages.anime.synopsisFallback,
     path: `/anime/${slug}`,
-    itemPaths: articles.map((article) => `/article/${article.slug}`),
+    itemPaths: localizedArticles.map((article) => `/article/${resolveArticleLocalization(article, locale).slug || article.slug}`),
   });
 
   return (
@@ -105,7 +108,7 @@ export default async function AnimePage({ params }: AnimePageProps) {
       <section className="mt-8">
         <h2 className="font-display text-3xl font-semibold">{messages.anime.related}</h2>
         <div className="grid-auto-fit mt-6">
-          {articles.map((article) => (
+          {localizedArticles.map((article) => (
             <ArticleCard
               key={article._id.toString()}
               article={{

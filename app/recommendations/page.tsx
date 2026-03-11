@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import ArticleCard from "@/app/components/ArticleCard";
 import { resolveArticleLocalization } from "@/lib/articleLocalization";
+import { ensureArticlesLocalization } from "@/lib/articleTranslation";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -38,12 +39,16 @@ export default async function RecommendationsPage() {
       .limit(12)
       .lean(),
   ]);
+  const [localizedAnimeSource, localizedMangaSource] = await Promise.all([
+    ensureArticlesLocalization(animeRecommendations, locale),
+    ensureArticlesLocalization(mangaRecommendations, locale),
+  ]);
 
-  const localizedAnimeRecommendations = animeRecommendations.map((article) => ({
+  const localizedAnimeRecommendations = localizedAnimeSource.map((article) => ({
     article,
     localized: resolveArticleLocalization(article, locale),
   }));
-  const localizedMangaRecommendations = mangaRecommendations.map((article) => ({
+  const localizedMangaRecommendations = localizedMangaSource.map((article) => ({
     article,
     localized: resolveArticleLocalization(article, locale),
   }));
@@ -61,7 +66,7 @@ export default async function RecommendationsPage() {
     title: messages.recommendations.title,
     description: messages.recommendations.description,
     path: "/recommendations",
-    itemPaths: [...animeRecommendations, ...dedupedMangaRecommendations.map(({ article }) => article)].map((article) => `/article/${article.slug}`),
+    itemPaths: [...localizedAnimeRecommendations.map(({ article, localized }) => localized.slug || article.slug), ...dedupedMangaRecommendations.map(({ article, localized }) => localized.slug || article.slug)].map((slug) => `/article/${slug}`),
   });
 
   return (

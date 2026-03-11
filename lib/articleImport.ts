@@ -1,4 +1,5 @@
 import { buildImportedArticleKey, ensureUniqueArticleSlug, type EditorialSection } from "@/lib/articleDrafts";
+import { buildFrenchFirstLocalizations, isFrenchAiPipelineConfigured } from "@/lib/articleTranslation";
 import { uploadRemoteImageToCloudinary } from "@/lib/cloudinary";
 import { shouldImportRecommendationItem } from "@/lib/recommendationClassifier";
 import { fetchRssFeed, getConfiguredRssSourceGroups } from "@/lib/rssParser";
@@ -16,6 +17,7 @@ export async function importConfiguredArticleSources(kind?: EditorialSection) {
   let imported = 0;
   let duplicates = 0;
   let enriched = 0;
+  let aiProcessed = 0;
   let processedItems = 0;
   const failures: Array<{ source: string; error: string }> = [];
 
@@ -107,28 +109,106 @@ export async function importConfiguredArticleSources(kind?: EditorialSection) {
 
         const mirroredCoverImage = await uploadRemoteImageToCloudinary(item.coverImage, item.slug);
         const slug = await ensureUniqueArticleSlug(item.title);
+        let rootTitle = item.title;
+        let rootSlug = slug;
+        let rootExcerpt = item.excerpt;
+        let rootContent = item.content;
+        let rootSeo = {
+          metaTitle: item.title,
+          metaDesc: item.excerpt,
+          ogImage: mirroredCoverImage,
+        };
+        let aiStatus: "pending" | "done" | "failed" = isFrenchAiPipelineConfigured() ? "done" : "pending";
+        let aiError = "";
+        let aiRewritten = false;
+        let localizations:
+          | {
+              fr: {
+                slug?: string;
+                title?: string;
+                excerpt?: string;
+                content?: string;
+                seo?: {
+                  metaTitle?: string;
+                  metaDesc?: string;
+                  ogImage?: string;
+                };
+              };
+              en: {
+                slug?: string;
+                title?: string;
+                excerpt?: string;
+                content?: string;
+                seo?: {
+                  metaTitle?: string;
+                  metaDesc?: string;
+                  ogImage?: string;
+                };
+              };
+            }
+          | undefined;
+
+        if (isFrenchAiPipelineConfigured()) {
+          try {
+            const processed = await buildFrenchFirstLocalizations({
+              sourceLocale: "en",
+              fields: {
+                title: item.title,
+                excerpt: item.excerpt,
+                content: item.content,
+                seo: {
+                  metaTitle: item.title,
+                  metaDesc: item.excerpt,
+                  ogImage: mirroredCoverImage,
+                },
+              },
+              existingSlugs: [slug],
+            });
+
+            rootTitle = processed.root.title || rootTitle;
+            rootSlug = processed.root.slug || rootSlug;
+            rootExcerpt = processed.root.excerpt || rootExcerpt;
+            rootContent = processed.root.content || rootContent;
+            rootSeo = {
+              metaTitle: processed.root.seo.metaTitle || rootSeo.metaTitle,
+              metaDesc: processed.root.seo.metaDesc || rootSeo.metaDesc,
+              ogImage: processed.root.seo.ogImage || rootSeo.ogImage,
+            };
+            localizations = processed.localizations;
+            aiRewritten = processed.aiRewritten;
+            aiProcessed += 1;
+          } catch (error) {
+            aiStatus = "failed";
+            aiError = error instanceof Error ? error.message : "AI processing failed for imported item";
+            failures.push({
+              source: `${source.feedUrl}#${item.originalUrl}`,
+              error: aiError,
+            });
+          }
+        }
 
         await Article.create({
-          title: item.title,
-          slug,
+          title: rootTitle,
+          slug: rootSlug,
           originalTitle: item.title,
           originalUrl: item.originalUrl,
           importKey,
-          excerpt: item.excerpt,
-          content: item.content,
+          excerpt: rootExcerpt,
+          content: rootContent,
           coverImage: mirroredCoverImage,
           category: source.sourceCategory,
           tags: source.defaultTags,
           section: source.kind,
           recommendationType: source.recommendationType,
+          aiStatus,
+          aiError,
+          aiProcessedAt: aiStatus === "done" ? new Date() : undefined,
+          aiRewritten,
           sourceName: item.sourceName,
           status: "draft",
           publishedAt: item.publishedAt,
-          seo: {
-            metaTitle: item.title,
-            metaDesc: item.excerpt,
-            ogImage: mirroredCoverImage,
-          },
+          seo: rootSeo,
+          localizations,
         });
 
         imported += 1;
@@ -147,6 +227,7 @@ export async function importConfiguredArticleSources(kind?: EditorialSection) {
     imported,
     duplicates,
     enriched,
+    aiProcessed,
     processedItems,
     failures,
   };

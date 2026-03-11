@@ -106,11 +106,25 @@ Without those variables, subscriptions are stored but no email is sent.
 - `ADMIN_SESSION_SECRET`: HMAC secret used to sign the admin session cookie
 - `CRON_SECRET`: dedicated bearer token or query token for `/api/cron/import-news`
 
-Optional automatic article translation in the admin editor can be enabled with:
+Optional automatic article translation and rewriting in the admin editor can be enabled with:
+
+- `DEEPSEEK_API_KEY`
+- `DEEPSEEK_BASE_URL` (defaults to `https://api.deepseek.com/v1` when DeepSeek is used)
+- `DEEPSEEK_TRANSLATION_MODEL` or `DEEPSEEK_MODEL`
+- `DEEPSEEK_REWRITE_MODEL` or `DEEPSEEK_MODEL`
+
+Generic provider aliases are also supported if you do not want provider-specific names:
+
+- `AI_API_KEY`
+- `AI_BASE_URL`
+- `AI_TRANSLATION_MODEL` or `AI_MODEL`
+- `AI_REWRITE_MODEL` or `AI_MODEL`
+
+The older OpenAI-compatible variables remain supported for backward compatibility:
 
 - `OPENAI_API_KEY`
 - `OPENAI_TRANSLATION_MODEL` or `OPENAI_MODEL`
-- `OPENAI_BASE_URL` (optional, for OpenAI-compatible providers)
+- `OPENAI_BASE_URL`
 
 Use a different value for `CRON_SECRET` than the admin password. The admin interface now uses session auth only; `ADMIN_TOKEN` is no longer used.
 

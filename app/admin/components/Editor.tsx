@@ -31,9 +31,11 @@ type EditorFormState = {
 };
 
 type EditorProps = {
+  rewritingEnabled: boolean;
   translationEnabled: boolean;
   initialArticle: {
     _id: string;
+    aiRewritten?: boolean;
     slug?: string;
     title: string;
     excerpt?: string;
@@ -76,9 +78,11 @@ type EditorProps = {
   };
 };
 
-export default function Editor({ initialArticle, translationEnabled }: EditorProps) {
+export default function Editor({ initialArticle, rewritingEnabled, translationEnabled }: EditorProps) {
   const { messages } = useLanguage();
   const [activeLocale, setActiveLocale] = useState<EditorLocale>("fr");
+  const [aiRewritten, setAiRewritten] = useState(Boolean(initialArticle.aiRewritten));
+  const [isRewriting, setIsRewriting] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const initialFormState: EditorFormState = {
     localizations: {
@@ -283,6 +287,72 @@ export default function Editor({ initialArticle, translationEnabled }: EditorPro
     }
   }
 
+  async function autoRewriteLocale(locale: EditorLocale) {
+    const source = formRef.current.localizations[locale];
+
+    if (![source.title, source.excerpt, source.content, source.seo.metaTitle, source.seo.metaDesc].some((value) => value.trim())) {
+      setToast(messages.editor.prefillMissingSource);
+      return;
+    }
+
+    setIsRewriting(true);
+    setStatus(messages.editor.autoRewritePending.replace("{locale}", locale.toUpperCase()));
+
+    try {
+      const response = await fetch("/api/admin/rewrite-article", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          locale,
+          fields: {
+            title: source.title,
+            excerpt: source.excerpt,
+            content: source.content,
+            seo: {
+              metaTitle: source.seo.metaTitle,
+              metaDesc: source.seo.metaDesc,
+            },
+          },
+        }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload?.rewrite) {
+        throw new Error(payload?.error || messages.editor.autoRewriteFailed);
+      }
+
+      updateForm({
+        ...formRef.current,
+        localizations: {
+          ...formRef.current.localizations,
+          [locale]: {
+            ...formRef.current.localizations[locale],
+            slug: payload.rewrite.slug || formRef.current.localizations[locale].slug,
+            title: payload.rewrite.title || "",
+            excerpt: payload.rewrite.excerpt || "",
+            content: payload.rewrite.content || "",
+            seo: {
+              ...formRef.current.localizations[locale].seo,
+              metaTitle: payload.rewrite.seo?.metaTitle || "",
+              metaDesc: payload.rewrite.seo?.metaDesc || "",
+            },
+          },
+        },
+      });
+      setAiRewritten(true);
+      setStatus(messages.editor.autoRewriteSuccess.replace("{locale}", locale.toUpperCase()));
+      setToast(messages.editor.autoRewriteSuccess.replace("{locale}", locale.toUpperCase()));
+    } catch (error) {
+      const message = error instanceof Error && error.message ? error.message : messages.editor.autoRewriteFailed;
+      setStatus(message);
+      setToast(message);
+    } finally {
+      setIsRewriting(false);
+    }
+  }
+
   const handleSave = useCallback(async (reason: "manual" | "auto" = "manual") => {
     setStatus(reason === "auto" ? messages.editor.autosaving : messages.editor.saving);
     const currentForm = formRef.current;
@@ -301,6 +371,7 @@ export default function Editor({ initialArticle, translationEnabled }: EditorPro
         coverImage: currentForm.coverImage,
         section: currentForm.section,
         recommendationType: currentForm.section === "recommendation" ? currentForm.recommendationType : null,
+        aiRewritten,
       }),
     });
 
@@ -329,7 +400,7 @@ export default function Editor({ initialArticle, translationEnabled }: EditorPro
 
     setStatus(failureMessage);
     setToast(failureMessage);
-  }, [initialArticle._id, messages.editor.autoToast, messages.editor.autosaved, messages.editor.autosaving, messages.editor.failedWithReasonPrefix, messages.editor.saveFailed, messages.editor.saved, messages.editor.savedToast, messages.editor.saving, messages.editor.unauthorized]);
+  }, [aiRewritten, initialArticle._id, messages.editor.autoToast, messages.editor.autosaved, messages.editor.autosaving, messages.editor.failedWithReasonPrefix, messages.editor.saveFailed, messages.editor.saved, messages.editor.savedToast, messages.editor.saving, messages.editor.unauthorized]);
 
   useEffect(() => {
     if (!isDirty) {
@@ -383,6 +454,7 @@ export default function Editor({ initialArticle, translationEnabled }: EditorPro
           <span className={`status-chip ${isDirty ? "status-chip-warning" : "status-chip-success"}`}>
             {isDirty ? messages.editor.unsaved : messages.editor.upToDate}
           </span>
+          {aiRewritten ? <span className="status-chip status-chip-success">{messages.editor.aiRewritten}</span> : null}
           {status ? <span className="text-sm text-muted">{status}</span> : null}
         </div>
         <button className="button-primary" onClick={() => void handleSave("manual")} type="button">
@@ -426,6 +498,18 @@ export default function Editor({ initialArticle, translationEnabled }: EditorPro
               })}
             </div>
             <div className="mt-4 rounded-2xl border border-line bg-white/45 p-3 dark:bg-white/5">
+              <p className="text-xs uppercase tracking-[0.16em] text-muted">{messages.editor.rewriteAssistTitle}</p>
+              <p className="mt-2 text-[13px] leading-6 text-muted">{messages.editor.rewriteAssistDescription}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button className="button-primary" disabled={!rewritingEnabled || isRewriting} onClick={() => void autoRewriteLocale(activeLocale)} type="button">
+                  {isRewriting
+                    ? messages.editor.autoRewritePending.replace("{locale}", activeLocale.toUpperCase())
+                    : messages.editor.autoRewriteCurrent.replace("{locale}", activeLocale.toUpperCase())}
+                </button>
+              </div>
+              {!rewritingEnabled ? <p className="mt-3 text-[12px] text-muted">{messages.editor.autoRewriteUnavailable}</p> : null}
+            </div>
+            <div className="rounded-2xl border border-line bg-white/45 p-3 dark:bg-white/5">
               <p className="text-xs uppercase tracking-[0.16em] text-muted">{messages.editor.translationAssistTitle}</p>
               <p className="mt-2 text-[13px] leading-6 text-muted">{messages.editor.translationAssistDescription}</p>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -435,10 +519,10 @@ export default function Editor({ initialArticle, translationEnabled }: EditorPro
                 <button className="button-secondary" onClick={() => prefillLocaleFrom("en", "fr")} type="button">
                   {messages.editor.prefillFromEn}
                 </button>
-                <button className="button-primary" disabled={!translationEnabled || isTranslating} onClick={() => void autoTranslateFrom("fr", "en")} type="button">
+                <button className="button-primary" disabled={!translationEnabled || isTranslating || isRewriting} onClick={() => void autoTranslateFrom("fr", "en")} type="button">
                   {isTranslating ? messages.editor.autoTranslatePending : messages.editor.autoTranslateFromFr}
                 </button>
-                <button className="button-primary" disabled={!translationEnabled || isTranslating} onClick={() => void autoTranslateFrom("en", "fr")} type="button">
+                <button className="button-primary" disabled={!translationEnabled || isTranslating || isRewriting} onClick={() => void autoTranslateFrom("en", "fr")} type="button">
                   {isTranslating ? messages.editor.autoTranslatePending : messages.editor.autoTranslateFromEn}
                 </button>
               </div>
