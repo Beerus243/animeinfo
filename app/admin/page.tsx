@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import CreateDraftButtons from "@/app/admin/components/CreateDraftButtons";
+import ImportRecommendationsButton from "@/app/admin/components/ImportRecommendationsButton";
 import AdminLogoutButton from "@/app/admin/components/AdminLogoutButton";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
@@ -58,6 +59,7 @@ export default async function AdminPage() {
           <Link className="button-primary" href="/admin/drafts">
             {messages.admin.openDrafts}
           </Link>
+          <ImportRecommendationsButton />
           <Link className="button-secondary" href="/api/cron/import-news">
             {messages.admin.triggerImport}
           </Link>

@@ -1,121 +1,15 @@
 import { importConfiguredAnimeFeeds } from "@/lib/animeFeedImport";
-import { buildImportedArticleKey, ensureUniqueArticleSlug } from "@/lib/articleDrafts";
+import { importConfiguredArticleSources } from "@/lib/articleImport";
 import { connectToDatabase } from "@/lib/mongodb";
-import { shouldImportRecommendationItem } from "@/lib/recommendationClassifier";
-import { uploadRemoteImageToCloudinary } from "@/lib/cloudinary";
-import { fetchRssFeed, getConfiguredRssSourceGroups } from "@/lib/rssParser";
 import { getRssTrendSnapshot, persistRssTrendSnapshot } from "@/lib/rssTrends";
-import Article from "@/models/Article";
-
-function mergeTags(existingTags: unknown, defaultTags: string[] = []) {
-  const sourceTags = Array.isArray(existingTags) ? existingTags.filter((tag): tag is string => typeof tag === "string") : [];
-  return Array.from(new Set([...sourceTags, ...defaultTags]));
-}
 
 async function run() {
-  const sources = getConfiguredRssSourceGroups();
-  if (!sources.length) {
+  const articleImport = await importConfiguredArticleSources();
+  if (!articleImport.sources) {
     throw new Error("No RSS sources configured.");
   }
 
   await connectToDatabase();
-
-  let imported = 0;
-  let enriched = 0;
-
-  for (const source of sources) {
-    const items = await fetchRssFeed(source.feedUrl);
-    for (const item of items) {
-      if (!item.originalUrl) {
-        continue;
-      }
-
-      if (source.kind === "recommendation" && source.recommendationType && !shouldImportRecommendationItem(item, source.recommendationType)) {
-        continue;
-      }
-
-      const importKey = buildImportedArticleKey(item.originalUrl, source.kind, source.recommendationType);
-
-      const existingArticle = await Article.findOne({
-        $or: [
-          { importKey },
-          {
-            importKey: { $exists: false },
-            originalUrl: item.originalUrl,
-            section: source.kind,
-            ...(source.recommendationType ? { recommendationType: source.recommendationType } : { recommendationType: { $exists: false } }),
-          },
-        ],
-      })
-        .select({ _id: 1, coverImage: 1, seo: 1, tags: 1, section: 1, recommendationType: 1, category: 1, importKey: 1 })
-        .lean();
-
-      if (existingArticle) {
-        const nextTags = mergeTags(existingArticle.tags, source.defaultTags);
-        const shouldEnrichMeta =
-          existingArticle.category !== source.sourceCategory ||
-          nextTags.length !== (Array.isArray(existingArticle.tags) ? existingArticle.tags.length : 0) ||
-          existingArticle.importKey !== importKey;
-
-        if (shouldEnrichMeta) {
-          await Article.updateOne(
-            { _id: existingArticle._id },
-            {
-              $set: {
-                importKey,
-                category: existingArticle.category || source.sourceCategory,
-                tags: nextTags,
-              },
-            },
-          );
-        }
-
-        if (!existingArticle.coverImage && item.coverImage) {
-          const mirroredCoverImage = await uploadRemoteImageToCloudinary(item.coverImage, item.slug);
-          await Article.updateOne(
-            { _id: existingArticle._id },
-            {
-              $set: {
-                coverImage: mirroredCoverImage,
-                "seo.ogImage": existingArticle.seo?.ogImage || mirroredCoverImage,
-              },
-            },
-          );
-          enriched += 1;
-        }
-
-        continue;
-      }
-
-      const mirroredCoverImage = await uploadRemoteImageToCloudinary(item.coverImage, item.slug);
-
-      const slug = await ensureUniqueArticleSlug(item.title);
-
-      await Article.create({
-        title: item.title,
-        slug,
-        originalTitle: item.title,
-        originalUrl: item.originalUrl,
-        importKey,
-        excerpt: item.excerpt,
-        content: item.content,
-        coverImage: mirroredCoverImage,
-        category: source.sourceCategory,
-        tags: source.defaultTags,
-        section: source.kind,
-        recommendationType: source.recommendationType,
-        sourceName: item.sourceName,
-        status: "draft",
-        seo: {
-          metaTitle: item.title,
-          metaDesc: item.excerpt,
-          ogImage: mirroredCoverImage,
-        },
-      });
-
-      imported += 1;
-    }
-  }
 
   const animeImport = await importConfiguredAnimeFeeds();
   const trendSnapshot = await getRssTrendSnapshot();
@@ -124,8 +18,11 @@ async function run() {
   }
 
   console.log(JSON.stringify({
-    imported,
-    enriched,
+    imported: articleImport.imported,
+    duplicates: articleImport.duplicates,
+    enriched: articleImport.enriched,
+    processedItems: articleImport.processedItems,
+    failures: articleImport.failures,
     animeImported: animeImport.imported,
     animeUpdated: animeImport.updated,
     animeTotalItems: animeImport.totalItems,
