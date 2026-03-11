@@ -5,6 +5,7 @@ import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { buildCollectionJsonLd, buildMetadata } from "@/lib/seo";
+import { slugify } from "@/lib/slugify";
 import Article from "@/models/Article";
 
 export const dynamic = "force-dynamic";
@@ -37,11 +38,20 @@ export default async function RecommendationsPage() {
       .lean(),
   ]);
 
+  const seenRecommendationKeys = new Set(
+    animeRecommendations.map((article) => (article.originalUrl || slugify(article.title || "")).toLowerCase()),
+  );
+
+  const dedupedMangaRecommendations = mangaRecommendations.filter((article) => {
+    const key = (article.originalUrl || slugify(article.title || "")).toLowerCase();
+    return !seenRecommendationKeys.has(key);
+  });
+
   const jsonLd = buildCollectionJsonLd({
     title: messages.recommendations.title,
     description: messages.recommendations.description,
     path: "/recommendations",
-    itemPaths: [...animeRecommendations, ...mangaRecommendations].map((article) => `/article/${article.slug}`),
+    itemPaths: [...animeRecommendations, ...dedupedMangaRecommendations].map((article) => `/article/${article.slug}`),
   });
 
   return (
@@ -80,8 +90,8 @@ export default async function RecommendationsPage() {
         <div>
           <h2 className="font-display text-3xl font-semibold">{messages.recommendations.mangaTitle}</h2>
           <div className="grid-auto-fit mt-6">
-            {mangaRecommendations.length ? (
-              mangaRecommendations.map((article) => (
+            {dedupedMangaRecommendations.length ? (
+              dedupedMangaRecommendations.map((article) => (
                 <ArticleCard
                   key={article._id.toString()}
                   article={{

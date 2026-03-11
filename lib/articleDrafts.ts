@@ -4,6 +4,14 @@ import Article from "@/models/Article";
 export type EditorialSection = "news" | "recommendation";
 export type RecommendationKind = "anime" | "manga" | null;
 
+export function buildImportedArticleKey(
+  originalUrl: string,
+  section: EditorialSection,
+  recommendationType?: Exclude<RecommendationKind, null> | undefined,
+) {
+  return [section, recommendationType || "general", originalUrl.trim()].join("::");
+}
+
 type UniqueSlugOptions = {
   excludeId?: string;
 };

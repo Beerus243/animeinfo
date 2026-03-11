@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { isAdminRequestAuthorized, isCronSecretAuthorized } from "@/lib/adminAuth";
+import { buildImportedArticleKey, ensureUniqueArticleSlug } from "@/lib/articleDrafts";
 import { importConfiguredAnimeFeeds } from "@/lib/animeFeedImport";
 import { uploadRemoteImageToCloudinary } from "@/lib/cloudinary";
 import { connectToDatabase } from "@/lib/mongodb";
+import { shouldImportRecommendationItem } from "@/lib/recommendationClassifier";
 import { fetchRssFeed, getConfiguredRssSourceGroups } from "@/lib/rssParser";
 import { getRssTrendSnapshot, persistRssTrendSnapshot } from "@/lib/rssTrends";
 import Article from "@/models/Article";
@@ -57,8 +59,24 @@ export async function GET(request: NextRequest) {
           continue;
         }
 
-        const existingArticle = await Article.findOne({ originalUrl: item.originalUrl })
-          .select({ _id: 1, coverImage: 1, seo: 1, tags: 1, section: 1, recommendationType: 1, category: 1 })
+        if (source.kind === "recommendation" && source.recommendationType && !shouldImportRecommendationItem(item, source.recommendationType)) {
+          continue;
+        }
+
+        const importKey = buildImportedArticleKey(item.originalUrl, source.kind, source.recommendationType);
+
+        const existingArticle = await Article.findOne({
+          $or: [
+            { importKey },
+            {
+              importKey: { $exists: false },
+              originalUrl: item.originalUrl,
+              section: source.kind,
+              ...(source.recommendationType ? { recommendationType: source.recommendationType } : { recommendationType: { $exists: false } }),
+            },
+          ],
+        })
+          .select({ _id: 1, coverImage: 1, seo: 1, tags: 1, section: 1, recommendationType: 1, category: 1, importKey: 1 })
           .lean();
 
         if (existingArticle) {
@@ -66,18 +84,16 @@ export async function GET(request: NextRequest) {
 
           const nextTags = mergeTags(existingArticle.tags, source.defaultTags);
           const shouldEnrichMeta =
-            existingArticle.section !== source.kind ||
-            existingArticle.recommendationType !== source.recommendationType ||
             existingArticle.category !== source.sourceCategory ||
-            nextTags.length !== (Array.isArray(existingArticle.tags) ? existingArticle.tags.length : 0);
+            nextTags.length !== (Array.isArray(existingArticle.tags) ? existingArticle.tags.length : 0) ||
+            existingArticle.importKey !== importKey;
 
           if (shouldEnrichMeta) {
             await Article.updateOne(
               { _id: existingArticle._id },
               {
                 $set: {
-                  section: source.kind,
-                  recommendationType: source.recommendationType,
+                  importKey,
                   category: existingArticle.category || source.sourceCategory,
                   tags: nextTags,
                 },
@@ -104,11 +120,14 @@ export async function GET(request: NextRequest) {
 
         const mirroredCoverImage = await uploadRemoteImageToCloudinary(item.coverImage, item.slug);
 
+        const slug = await ensureUniqueArticleSlug(item.title);
+
         await Article.create({
           title: item.title,
-          slug: item.slug,
+          slug,
           originalTitle: item.title,
           originalUrl: item.originalUrl,
+          importKey,
           excerpt: item.excerpt,
           content: item.content,
           coverImage: mirroredCoverImage,

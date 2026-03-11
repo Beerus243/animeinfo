@@ -43,6 +43,15 @@ Recommendations:
 - `voiranime://airing` and `voiranime://upcoming` are supported pseudo-feeds for the anime importer; they scrape the public Voiranime listings and enrich entries with genres, synopsis, score, and season labels.
 - Trend snapshots also include Voiranime genre archive feeds, either discovered from the homepage or read from `VOIRANIME_GENRE_SLUGS`.
 
+## Public RSS routes
+
+- `/rss/airing`: republishes the current airing catalog from MongoDB as RSS
+- `/rss/trending`: republishes the latest saved trend snapshot as RSS
+- `/rss/season`: republishes the current season anime bucket as RSS
+- `/rss/categories`: republishes merged editorial categories and anime genres as RSS
+
+These routes are internal to AnimeInfo and do not fetch Voiranime at request time; they publish the data already imported and stored by the cron/import pipeline.
+
 Validated RSS endpoints:
 
 - `https://myanimelist.net/rss.php?type=season`

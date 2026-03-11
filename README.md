@@ -59,6 +59,13 @@ Open [http://localhost:3000](http://localhost:3000).
 - `VOIRANIME_BASE_URL`: optional override for the Voiranime base URL used by the scraper/feed connector
 - `VOIRANIME_GENRE_SLUGS`: optional override for the genre feeds used to enrich trend snapshots
 
+Internal public RSS routes exposed by AnimeInfo:
+
+- `/rss/airing`: anime currently airing from the imported catalog
+- `/rss/trending`: latest trend snapshot items
+- `/rss/season`: anime tied to the current season bucket
+- `/rss/categories`: dominant categories and genres aggregated from articles and anime
+
 Recommendation imports are stored as a dedicated editorial section so they can be published into the public recommendations hub.
 Anime catalog imports are also wired into the scheduled cron flow, so `/api/cron/import-news` now tries to refresh airing/upcoming anime entries automatically.
 The same cron route also stores RSS trend snapshots so public discovery surfaces can reuse recent feed signals even when live feeds are sparse.

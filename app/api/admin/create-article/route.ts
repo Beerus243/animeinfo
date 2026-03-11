@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import {
+  buildImportedArticleKey,
   buildManualDraftOriginalUrl,
   buildManualDraftTitle,
   ensureUniqueArticleSlug,
@@ -39,11 +40,13 @@ export async function POST(request: NextRequest) {
   await connectToDatabase();
 
   const slug = await ensureUniqueArticleSlug(title);
+  const originalUrl = buildManualDraftOriginalUrl(section, recommendationType);
   const article = await Article.create({
     title,
     slug,
     originalTitle: title,
-    originalUrl: buildManualDraftOriginalUrl(section, recommendationType),
+    originalUrl,
+    importKey: buildImportedArticleKey(originalUrl, section, recommendationType ?? undefined),
     excerpt: "",
     content: "",
     category: section === "recommendation" ? "Recommendations" : "Actualites",

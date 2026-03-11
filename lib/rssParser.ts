@@ -18,6 +18,7 @@ export type NormalizedRssItem = {
   publishedAt?: Date;
   sourceName: string;
   content?: string;
+  categories: string[];
 };
 
 export type ConfiguredRssSource = {
@@ -100,6 +101,11 @@ export async function fetchRssFeed(feedUrl: string) {
       item.content ||
       item.contentSnippet ||
       "";
+    const categories = Array.isArray((item as { categories?: unknown }).categories)
+      ? (item as { categories?: unknown[] }).categories
+          ?.map((value) => String(value || "").trim())
+          .filter(Boolean) || []
+      : [];
     const mediaThumb = item["media:thumbnail"] as { $?: { url?: string } } | undefined;
     const mediaContent = item["media:content"] as { $?: { url?: string } } | undefined;
     const coverImage = await resolveArticleImage(originalUrl, mediaThumb?.$?.url || mediaContent?.$?.url);
@@ -113,6 +119,7 @@ export async function fetchRssFeed(feedUrl: string) {
       publishedAt: item.isoDate ? new Date(item.isoDate) : undefined,
       sourceName: feed.title || new URL(feedUrl).hostname,
       content: typeof rawContent === "string" ? rawContent : undefined,
+      categories,
     };
   }));
 }

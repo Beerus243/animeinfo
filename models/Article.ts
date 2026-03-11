@@ -5,7 +5,8 @@ const ArticleSchema = new Schema(
     title: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, index: true },
     originalTitle: { type: String, trim: true },
-    originalUrl: { type: String, required: true, unique: true, index: true },
+    originalUrl: { type: String, required: true, index: true },
+    importKey: { type: String, trim: true },
     excerpt: { type: String, trim: true },
     content: { type: String, default: "" },
     coverImage: { type: String, trim: true },
@@ -42,6 +43,8 @@ const ArticleSchema = new Schema(
     timestamps: true,
   },
 );
+
+ArticleSchema.index({ importKey: 1 }, { unique: true, sparse: true });
 
 export type ArticleDocument = InferSchemaType<typeof ArticleSchema>;
 
