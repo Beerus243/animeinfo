@@ -26,7 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const [articles, categoryRows, tagRows, animes] = await Promise.all([
     Article.find({ status: "published" })
-      .select({ slug: 1, updatedAt: 1, publishedAt: 1 })
+      .select({ slug: 1, localizations: 1, updatedAt: 1, publishedAt: 1 })
       .sort({ publishedAt: -1, updatedAt: -1 })
       .lean(),
     Article.aggregate<{ _id: string }>([
@@ -42,12 +42,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     Anime.find({}).select({ slug: 1, updatedAt: 1 }).lean(),
   ]);
 
-  const articleRoutes = articles.map((article) => ({
-    url: absoluteUrl(`/article/${article.slug}`),
-    lastModified: article.updatedAt || article.publishedAt || new Date(),
-    changeFrequency: "daily" as const,
-    priority: 0.8,
-  }));
+  const articleRoutes = articles.flatMap((article) => {
+    const slugs = Array.from(new Set([
+      article.slug,
+      article.localizations?.fr?.slug,
+      article.localizations?.en?.slug,
+    ].filter(Boolean)));
+
+    return slugs.map((slug) => ({
+      url: absoluteUrl(`/article/${slug}`),
+      lastModified: article.updatedAt || article.publishedAt || new Date(),
+      changeFrequency: "daily" as const,
+      priority: 0.8,
+    }));
+  });
 
   const categoryRoutes = categoryRows.map((category) => ({
     url: absoluteUrl(`/category/${category._id}`),

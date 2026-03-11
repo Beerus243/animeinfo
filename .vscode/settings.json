@@ -3,6 +3,10 @@
         "/^node -e \"\\(async\\(\\)=>\\{for\\(const url of \\['https://myanimelist\\.net/rss\\.php\\?type=season','https://myanimelist\\.net/rss\\.php\\?type=upcoming'\\]\\)\\{const res=await fetch\\(url,\\{headers:\\{'user-agent':'Mozilla/5\\.0'\\}\\}\\); const text=await res\\.text\\(\\); console\\.log\\('URL='\\+url\\); console\\.log\\(text\\.slice\\(0,1500\\)\\.replace\\(/\\\\n/g,' '\\)\\);\\}\\}\\)\\(\\)\\.catch\\(err=>\\{console\\.error\\(err\\); process\\.exit\\(1\\);\\}\\);\"$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^\\$line = Get-Content \\.env\\.local \\| Where-Object \\{ \\$_ -match '\\^MONGODB_URI=' \\} \\| Select-Object -First 1; \\$env:MONGODB_URI = \\(\\$line -replace '\\^MONGODB_URI=\"\\?','' -replace '\"\\$',''\\); node -e \"const mongoose=require\\('mongoose'\\); \\(async\\(\\)=>\\{ await mongoose\\.connect\\(process\\.env\\.MONGODB_URI\\); const doc=await mongoose\\.connection\\.db\\.collection\\('articles'\\)\\.findOne\\(\\{\\}, \\{projection:\\{slug:1,title:1,localizations:1\\}\\}\\); console\\.log\\(JSON\\.stringify\\(\\{slug:doc\\?\\.slug,title:doc\\?\\.title,frSlug:doc\\?\\.localizations\\?\\.fr\\?\\.slug,enSlug:doc\\?\\.localizations\\?\\.en\\?\\.slug,frTitle:doc\\?\\.localizations\\?\\.fr\\?\\.title,enTitle:doc\\?\\.localizations\\?\\.en\\?\\.title\\}, null, 2\\)\\); await mongoose\\.disconnect\\(\\); \\}\\)\\(\\)\\.catch\\(async\\(err\\)=>\\{ console\\.error\\(err\\); try\\{await mongoose\\.disconnect\\(\\);\\}catch\\{\\} process\\.exit\\(1\\); \\}\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

@@ -83,7 +83,7 @@ export default async function RecommendationsPage() {
                   key={article._id.toString()}
                   article={{
                     title: localized.title || article.title,
-                    slug: article.slug,
+                    slug: localized.slug || article.slug,
                     excerpt: localized.excerpt ?? undefined,
                     category: article.category ?? undefined,
                     coverImage: article.coverImage ?? undefined,
@@ -106,7 +106,7 @@ export default async function RecommendationsPage() {
                   key={article._id.toString()}
                   article={{
                     title: localized.title || article.title,
-                    slug: article.slug,
+                    slug: localized.slug || article.slug,
                     excerpt: localized.excerpt ?? undefined,
                     category: article.category ?? undefined,
                     coverImage: article.coverImage ?? undefined,

@@ -60,7 +60,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               key={article._id.toString()}
               article={{
                 title: resolveArticleLocalization(article, locale).title || article.title,
-                slug: article.slug,
+                slug: resolveArticleLocalization(article, locale).slug || article.slug,
                 excerpt: resolveArticleLocalization(article, locale).excerpt ?? undefined,
                 category: article.category ?? undefined,
                 coverImage: article.coverImage ?? undefined,

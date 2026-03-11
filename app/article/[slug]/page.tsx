@@ -6,6 +6,7 @@ import AdUnit from "@/app/components/AdUnit";
 import ArticleCard from "@/app/components/ArticleCard";
 import ArticleExperienceControls from "@/app/components/ArticleExperienceControls";
 import { resolveArticleLocalization } from "@/lib/articleLocalization";
+import { ensureArticleLocalization } from "@/lib/articleTranslation";
 import { formatDate, getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -51,15 +52,24 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
     });
   }
 
-  const localized = resolveArticleLocalization(article, locale);
-  const localizedSlug = localized.slug || article.slug;
+  const hydratedArticle = await ensureArticleLocalization(article, locale);
+  const localized = resolveArticleLocalization(hydratedArticle, locale);
+  const localizedSlug = localized.slug || hydratedArticle.slug;
+  const frSlug = hydratedArticle.localizations?.fr?.slug || hydratedArticle.slug;
+  const enSlug = hydratedArticle.localizations?.en?.slug;
+  const languageAlternates = {
+    fr: `/article/${frSlug}`,
+    ...(enSlug ? { en: `/article/${enSlug}` } : {}),
+    "x-default": `/article/${frSlug}`,
+  };
 
   return buildMetadata({
     title: localized.seo.metaTitle || localized.title || article.title,
     description: localized.seo.metaDesc || localized.excerpt || messages.article.fallbackDescription,
     path: `/article/${localizedSlug}`,
-    image: localized.seo.ogImage || article.coverImage || undefined,
+    image: localized.seo.ogImage || hydratedArticle.coverImage || undefined,
     type: "article",
+    languages: languageAlternates,
   });
 }
 
@@ -73,37 +83,45 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound();
   }
 
-  const localized = resolveArticleLocalization(article, locale);
-  const localizedSlug = localized.slug || article.slug;
+  const hydratedArticle = await ensureArticleLocalization(article, locale);
+  const localized = resolveArticleLocalization(hydratedArticle, locale);
+  const localizedSlug = localized.slug || hydratedArticle.slug;
+  const sourceLanguageLabel = messages.locales[localized.sourceLocale];
+  const requestedLanguageLabel = messages.locales[locale];
+  const browserTranslationNotice = localized.isFallback
+    ? messages.article.browserTranslationNotice
+        .replace("{locale}", requestedLanguageLabel)
+        .replace("{sourceLocale}", sourceLanguageLabel)
+    : null;
 
   if (slug !== localizedSlug) {
     permanentRedirect(`/article/${localizedSlug}`);
   }
 
   const jsonLd = buildArticleJsonLd({
-    title: localized.seo.metaTitle || localized.title || article.title,
+    title: localized.seo.metaTitle || localized.title || hydratedArticle.title,
     description: localized.seo.metaDesc || localized.excerpt || messages.article.fallbackDescription,
     path: `/article/${localizedSlug}`,
-    image: localized.seo.ogImage || article.coverImage || undefined,
-    publishedTime: article.publishedAt ?? undefined,
-    modifiedTime: article.updatedAt ?? undefined,
-    tags: article.tags ?? undefined,
+    image: localized.seo.ogImage || hydratedArticle.coverImage || undefined,
+    publishedTime: hydratedArticle.publishedAt ?? undefined,
+    modifiedTime: hydratedArticle.updatedAt ?? undefined,
+    tags: hydratedArticle.tags ?? undefined,
   });
   const readTime = getReadingTime(localized.content, localized.excerpt);
   const relatedFilters: Array<Record<string, unknown>> = [];
 
-  if (article.category) {
-    relatedFilters.push({ category: article.category });
+  if (hydratedArticle.category) {
+    relatedFilters.push({ category: hydratedArticle.category });
   }
 
-  if (article.tags?.length) {
-    relatedFilters.push({ tags: { $in: article.tags } });
+  if (hydratedArticle.tags?.length) {
+    relatedFilters.push({ tags: { $in: hydratedArticle.tags } });
   }
 
   const relatedArticles = relatedFilters.length
     ? await Article.find({
         status: "published",
-        slug: { $ne: article.slug },
+        slug: { $ne: hydratedArticle.slug },
         $or: relatedFilters,
       })
         .sort({ publishedAt: -1, updatedAt: -1 })
@@ -116,17 +134,17 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <article className="grid gap-8 lg:grid-cols-[1fr_300px]">
         <div className="panel reading-surface px-6 py-8 md:px-10 md:py-12">
-          <span className="eyebrow">{article.category || messages.article.fallbackCategory}</span>
+          <span className="eyebrow">{hydratedArticle.category || messages.article.fallbackCategory}</span>
           <div className="article-measure">
-            <h1 className="mt-5 font-display text-4xl font-semibold md:text-6xl md:leading-[1.05]">
-              {localized.title || article.title}
+            <h1 className="mt-5 font-display text-4xl font-semibold md:text-6xl md:leading-[1.05]" lang={localized.sourceLocale} translate="yes">
+              {localized.title || hydratedArticle.title}
             </h1>
           </div>
           <div className="article-measure mt-5 flex flex-wrap items-center gap-3 text-sm text-muted">
-            <span className="status-chip status-chip-warning">{article.sourceName || messages.article.desk}</span>
+            <span className="status-chip status-chip-warning">{hydratedArticle.sourceName || messages.article.desk}</span>
             <span>
-              {article.publishedAt
-                ? formatDate(locale, article.publishedAt, {
+              {hydratedArticle.publishedAt
+                ? formatDate(locale, hydratedArticle.publishedAt, {
                     day: "numeric",
                     month: "long",
                     year: "numeric",
@@ -135,22 +153,27 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             </span>
             <span>{readTime} {messages.article.minutesReadSuffix}</span>
           </div>
-          <ArticleExperienceControls title={localized.title || article.title} />
-          {article.coverImage ? (
+          {browserTranslationNotice ? (
+            <div className="article-measure mt-5 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-muted" role="status">
+              {browserTranslationNotice}
+            </div>
+          ) : null}
+          <ArticleExperienceControls title={localized.title || hydratedArticle.title} />
+          {hydratedArticle.coverImage ? (
             <div className="article-measure relative mt-8 overflow-hidden rounded-3xl">
               <Image
-                alt={localized.title || article.title}
+                alt={localized.title || hydratedArticle.title}
                 className="h-auto w-full object-cover"
                 height={720}
                 priority
                 sizes="(max-width: 900px) 100vw, 820px"
-                src={article.coverImage}
+                src={hydratedArticle.coverImage}
                 width={1280}
               />
               <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent dark:from-black/30" />
             </div>
           ) : null}
-          <div className="article-measure prose-content mt-8 text-base text-foreground">
+          <div className="article-measure prose-content mt-8 text-base text-foreground" lang={localized.sourceLocale} translate="yes">
             {localized.content ? (
               <div dangerouslySetInnerHTML={{ __html: localized.content }} />
             ) : (

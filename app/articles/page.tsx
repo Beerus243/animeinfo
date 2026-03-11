@@ -3,6 +3,7 @@ import Link from "next/link";
 import AdUnit from "@/app/components/AdUnit";
 import ArticleCard from "@/app/components/ArticleCard";
 import { resolveArticleLocalization } from "@/lib/articleLocalization";
+import { ensureArticlesLocalization } from "@/lib/articleTranslation";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -33,6 +34,7 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
     Article.countDocuments({ status: "published" }),
     Article.countDocuments({ status: "published", section: "recommendation" }),
   ]);
+  const localizedArticles = await ensureArticlesLocalization(articles, locale);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -53,7 +55,7 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
 
       <div className="mt-6 grid gap-5 md:mt-8 lg:grid-cols-[1fr_280px]">
         <div className="grid-auto-fit">
-          {articles.map((article) => (
+          {localizedArticles.map((article) => (
             <ArticleCard
               key={article._id.toString()}
               article={{

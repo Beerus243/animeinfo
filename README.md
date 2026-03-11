@@ -106,6 +106,12 @@ Without those variables, subscriptions are stored but no email is sent.
 - `ADMIN_SESSION_SECRET`: HMAC secret used to sign the admin session cookie
 - `CRON_SECRET`: dedicated bearer token or query token for `/api/cron/import-news`
 
+Optional automatic article translation in the admin editor can be enabled with:
+
+- `OPENAI_API_KEY`
+- `OPENAI_TRANSLATION_MODEL` or `OPENAI_MODEL`
+- `OPENAI_BASE_URL` (optional, for OpenAI-compatible providers)
+
 Use a different value for `CRON_SECRET` than the admin password. The admin interface now uses session auth only; `ADMIN_TOKEN` is no longer used.
 
 ## Deployment Notes

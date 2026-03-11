@@ -42,12 +42,20 @@ export function resolveArticleLocalization(article: ArticleWithLocalizations, lo
   const current = article.localizations?.[locale];
   const alternateLocale: Locale = locale === "fr" ? "en" : "fr";
   const alternate = article.localizations?.[alternateLocale];
+  const sourceLocale = normalizeText(current?.content) || normalizeText(current?.title) || normalizeText(current?.excerpt)
+    ? locale
+    : normalizeText(alternate?.content) || normalizeText(alternate?.title) || normalizeText(alternate?.excerpt)
+      ? alternateLocale
+      : locale;
 
   return {
     slug: pickText(current?.slug, alternate?.slug),
     title: pickText(current?.title, alternate?.title, article.title),
     excerpt: pickText(current?.excerpt, alternate?.excerpt, article.excerpt),
     content: pickText(current?.content, alternate?.content, article.content),
+    requestedLocale: locale,
+    sourceLocale,
+    isFallback: sourceLocale !== locale,
     seo: {
       metaTitle: pickText(current?.seo?.metaTitle, alternate?.seo?.metaTitle, article.seo?.metaTitle),
       metaDesc: pickText(current?.seo?.metaDesc, alternate?.seo?.metaDesc, article.seo?.metaDesc),

@@ -4,10 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useLanguage } from "@/app/components/LanguageProvider";
 import UploadImage from "@/app/admin/components/UploadImage";
+import { slugify } from "@/lib/slugify";
 
 type EditorLocale = "fr" | "en";
 
 type LocalizedEditorFields = {
+  slug: string;
   title: string;
   excerpt: string;
   content: string;
@@ -29,8 +31,10 @@ type EditorFormState = {
 };
 
 type EditorProps = {
+  translationEnabled: boolean;
   initialArticle: {
     _id: string;
+    slug?: string;
     title: string;
     excerpt?: string;
     content?: string;
@@ -47,6 +51,7 @@ type EditorProps = {
     };
     localizations?: {
       fr?: {
+        slug?: string;
         title?: string;
         excerpt?: string;
         content?: string;
@@ -57,6 +62,7 @@ type EditorProps = {
         };
       };
       en?: {
+        slug?: string;
         title?: string;
         excerpt?: string;
         content?: string;
@@ -70,12 +76,14 @@ type EditorProps = {
   };
 };
 
-export default function Editor({ initialArticle }: EditorProps) {
+export default function Editor({ initialArticle, translationEnabled }: EditorProps) {
   const { messages } = useLanguage();
   const [activeLocale, setActiveLocale] = useState<EditorLocale>("fr");
+  const [isTranslating, setIsTranslating] = useState(false);
   const initialFormState: EditorFormState = {
     localizations: {
       fr: {
+        slug: initialArticle.localizations?.fr?.slug || initialArticle.slug || "",
         title: initialArticle.localizations?.fr?.title || initialArticle.title || "",
         excerpt: initialArticle.localizations?.fr?.excerpt || initialArticle.excerpt || "",
         content: initialArticle.localizations?.fr?.content || initialArticle.content || "",
@@ -86,6 +94,7 @@ export default function Editor({ initialArticle }: EditorProps) {
         },
       },
       en: {
+        slug: initialArticle.localizations?.en?.slug || "",
         title: initialArticle.localizations?.en?.title || "",
         excerpt: initialArticle.localizations?.en?.excerpt || "",
         content: initialArticle.localizations?.en?.content || "",
@@ -176,6 +185,102 @@ export default function Editor({ initialArticle }: EditorProps) {
       setIsDirty(JSON.stringify(next) !== lastSavedRef.current);
       return next;
     });
+  }
+
+  function prefillLocaleFrom(sourceLocale: EditorLocale, targetLocale: EditorLocale) {
+    const source = formRef.current.localizations[sourceLocale];
+
+    if (![source.title, source.excerpt, source.content, source.seo.metaTitle, source.seo.metaDesc].some((value) => value.trim())) {
+      setToast(messages.editor.prefillMissingSource);
+      return;
+    }
+
+    const nextTargetSlug = source.title.trim() ? slugify(source.title) : formRef.current.localizations[targetLocale].slug;
+    updateForm({
+      ...formRef.current,
+      localizations: {
+        ...formRef.current.localizations,
+        [targetLocale]: {
+          ...formRef.current.localizations[targetLocale],
+          slug: nextTargetSlug,
+          title: source.title,
+          excerpt: source.excerpt,
+          content: source.content,
+          seo: {
+            metaTitle: source.seo.metaTitle,
+            metaDesc: source.seo.metaDesc,
+            ogImage: source.seo.ogImage,
+          },
+        },
+      },
+    });
+    setToast(messages.editor.prefillSuccess.replace("{locale}", sourceLocale.toUpperCase()));
+  }
+
+  async function autoTranslateFrom(sourceLocale: EditorLocale, targetLocale: EditorLocale) {
+    const source = formRef.current.localizations[sourceLocale];
+
+    if (![source.title, source.excerpt, source.content, source.seo.metaTitle, source.seo.metaDesc].some((value) => value.trim())) {
+      setToast(messages.editor.prefillMissingSource);
+      return;
+    }
+
+    setIsTranslating(true);
+    setStatus(messages.editor.autoTranslatePending);
+
+    try {
+      const response = await fetch("/api/admin/translate-article", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sourceLocale,
+          targetLocale,
+          fields: {
+            title: source.title,
+            excerpt: source.excerpt,
+            content: source.content,
+            seo: {
+              metaTitle: source.seo.metaTitle,
+              metaDesc: source.seo.metaDesc,
+            },
+          },
+        }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload?.translation) {
+        throw new Error(payload?.error || messages.editor.autoTranslateFailed);
+      }
+
+      updateForm({
+        ...formRef.current,
+        localizations: {
+          ...formRef.current.localizations,
+          [targetLocale]: {
+            ...formRef.current.localizations[targetLocale],
+            slug: payload.translation.slug || formRef.current.localizations[targetLocale].slug,
+            title: payload.translation.title || "",
+            excerpt: payload.translation.excerpt || "",
+            content: payload.translation.content || "",
+            seo: {
+              ...formRef.current.localizations[targetLocale].seo,
+              metaTitle: payload.translation.seo?.metaTitle || "",
+              metaDesc: payload.translation.seo?.metaDesc || "",
+            },
+          },
+        },
+      });
+      setStatus(messages.editor.autoTranslateSuccess.replace("{locale}", targetLocale.toUpperCase()));
+      setToast(messages.editor.autoTranslateSuccess.replace("{locale}", targetLocale.toUpperCase()));
+    } catch (error) {
+      const message = error instanceof Error && error.message ? error.message : messages.editor.autoTranslateFailed;
+      setStatus(message);
+      setToast(message);
+    } finally {
+      setIsTranslating(false);
+    }
   }
 
   const handleSave = useCallback(async (reason: "manual" | "auto" = "manual") => {
@@ -310,6 +415,7 @@ export default function Editor({ initialArticle }: EditorProps) {
                       <div>
                         <p className="text-[11px] uppercase tracking-[0.16em] text-muted">{localeOption.toUpperCase()}</p>
                         <p className="mt-1 text-sm font-semibold text-foreground">{messages.locales[localeOption]}</p>
+                        <p className="mt-1 text-[12px] text-muted">/{(form.localizations[localeOption].slug || "article").trim() || "article"}</p>
                       </div>
                       <span className={isActive ? "status-chip status-chip-success" : "status-chip status-chip-warning"}>
                         {localeCompletion[localeOption]}/3
@@ -318,6 +424,25 @@ export default function Editor({ initialArticle }: EditorProps) {
                   </button>
                 );
               })}
+            </div>
+            <div className="mt-4 rounded-2xl border border-line bg-white/45 p-3 dark:bg-white/5">
+              <p className="text-xs uppercase tracking-[0.16em] text-muted">{messages.editor.translationAssistTitle}</p>
+              <p className="mt-2 text-[13px] leading-6 text-muted">{messages.editor.translationAssistDescription}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button className="button-secondary" onClick={() => prefillLocaleFrom("fr", "en")} type="button">
+                  {messages.editor.prefillFromFr}
+                </button>
+                <button className="button-secondary" onClick={() => prefillLocaleFrom("en", "fr")} type="button">
+                  {messages.editor.prefillFromEn}
+                </button>
+                <button className="button-primary" disabled={!translationEnabled || isTranslating} onClick={() => void autoTranslateFrom("fr", "en")} type="button">
+                  {isTranslating ? messages.editor.autoTranslatePending : messages.editor.autoTranslateFromFr}
+                </button>
+                <button className="button-primary" disabled={!translationEnabled || isTranslating} onClick={() => void autoTranslateFrom("en", "fr")} type="button">
+                  {isTranslating ? messages.editor.autoTranslatePending : messages.editor.autoTranslateFromEn}
+                </button>
+              </div>
+              {!translationEnabled ? <p className="mt-3 text-[12px] text-muted">{messages.editor.autoTranslateUnavailable}</p> : null}
             </div>
           </div>
           <input

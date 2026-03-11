@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 type ArticleLocalizationDoc = {
   _id: mongoose.Types.ObjectId;
+  slug?: string | null;
   title?: string | null;
   excerpt?: string | null;
   content?: string | null;
@@ -12,6 +13,7 @@ type ArticleLocalizationDoc = {
   } | null;
   localizations?: {
     fr?: {
+      slug?: string | null;
       title?: string | null;
       excerpt?: string | null;
       content?: string | null;
@@ -22,6 +24,7 @@ type ArticleLocalizationDoc = {
       } | null;
     } | null;
     en?: {
+      slug?: string | null;
       title?: string | null;
       excerpt?: string | null;
       content?: string | null;
@@ -56,6 +59,7 @@ async function run() {
     projection: {
       _id: 1,
       title: 1,
+      slug: 1,
       excerpt: 1,
       content: 1,
       seo: 1,
@@ -67,6 +71,7 @@ async function run() {
   for (const doc of docs) {
     const nextLocalizations = {
       fr: {
+        slug: normalizeText(doc.localizations?.fr?.slug) || normalizeText(doc.slug),
         title: normalizeText(doc.localizations?.fr?.title) || normalizeText(doc.title),
         excerpt: normalizeText(doc.localizations?.fr?.excerpt) || normalizeText(doc.excerpt),
         content: normalizeText(doc.localizations?.fr?.content) || normalizeText(doc.content),
@@ -77,6 +82,7 @@ async function run() {
         },
       },
       en: {
+        slug: normalizeText(doc.localizations?.en?.slug),
         title: normalizeText(doc.localizations?.en?.title),
         excerpt: normalizeText(doc.localizations?.en?.excerpt),
         content: normalizeText(doc.localizations?.en?.content),

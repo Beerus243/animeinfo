@@ -6,6 +6,7 @@ type SeoInput = {
   path: string;
   image?: string;
   type?: "website" | "article";
+  languages?: Record<string, string>;
 };
 
 type ArticleSeoInput = SeoInput & {
@@ -19,8 +20,36 @@ type CollectionSeoInput = SeoInput & {
   itemPaths?: string[];
 };
 
+function getSiteUrlSource() {
+  const explicitSiteUrl = process.env.SITE_URL?.trim();
+  if (explicitSiteUrl && !/^https?:\/\/localhost(?::\d+)?$/i.test(explicitSiteUrl)) {
+    return { url: explicitSiteUrl.replace(/\/$/, ""), source: "SITE_URL" as const };
+  }
+
+  const vercelProductionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (vercelProductionUrl) {
+    return { url: `https://${vercelProductionUrl.replace(/^https?:\/\//i, "").replace(/\/$/, "")}`, source: "VERCEL_PROJECT_PRODUCTION_URL" as const };
+  }
+
+  const vercelPreviewUrl = process.env.VERCEL_URL?.trim();
+  if (vercelPreviewUrl) {
+    return { url: `https://${vercelPreviewUrl.replace(/^https?:\/\//i, "").replace(/\/$/, "")}`, source: "VERCEL_URL" as const };
+  }
+
+  return { url: (explicitSiteUrl || "http://localhost:3000").replace(/\/$/, ""), source: explicitSiteUrl ? "SITE_URL_LOCALHOST" as const : "DEFAULT_LOCALHOST" as const };
+}
+
 function getSiteUrl() {
-  return (process.env.SITE_URL || "http://localhost:3000").replace(/\/$/, "");
+  return getSiteUrlSource().url;
+}
+
+export function getSiteUrlDiagnostics() {
+  const resolved = getSiteUrlSource();
+  return {
+    resolvedUrl: resolved.url,
+    source: resolved.source,
+    usesLocalhost: /^https?:\/\/localhost(?::\d+)?$/i.test(resolved.url),
+  };
 }
 
 export function absoluteUrl(path: string) {
@@ -33,12 +62,16 @@ export function absoluteUrl(path: string) {
 
 export function buildMetadata(input: SeoInput): Metadata {
   const canonical = absoluteUrl(input.path);
+  const languages = input.languages
+    ? Object.fromEntries(Object.entries(input.languages).map(([locale, path]) => [locale, absoluteUrl(path)]))
+    : undefined;
 
   return {
     title: input.title,
     description: input.description,
     alternates: {
       canonical,
+      languages,
     },
     openGraph: {
       title: input.title,

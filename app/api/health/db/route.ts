@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { connectToDatabase } from "@/lib/mongodb";
+import { getSiteUrlDiagnostics } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,7 @@ function sanitizeMongoUri(uri: string | undefined) {
 export async function GET() {
   const mongoUri = process.env.MONGODB_URI;
   const siteUrl = process.env.SITE_URL;
+  const siteUrlDiagnostics = getSiteUrlDiagnostics();
 
   try {
     const connection = await connectToDatabase();
@@ -41,6 +43,9 @@ export async function GET() {
       environment: process.env.VERCEL_ENV || "local",
       region: process.env.VERCEL_REGION || null,
       siteUrl: siteUrl || null,
+      effectiveSiteUrl: siteUrlDiagnostics.resolvedUrl,
+      effectiveSiteUrlSource: siteUrlDiagnostics.source,
+      seoWarning: siteUrlDiagnostics.usesLocalhost ? "SITE_URL still resolves to localhost. Set your production domain to stabilize canonical URLs." : null,
       hasMongoUri: Boolean(mongoUri),
       mongoUri: sanitizeMongoUri(mongoUri),
       mongo: {
@@ -56,6 +61,9 @@ export async function GET() {
         environment: process.env.VERCEL_ENV || "local",
         region: process.env.VERCEL_REGION || null,
         siteUrl: siteUrl || null,
+        effectiveSiteUrl: siteUrlDiagnostics.resolvedUrl,
+        effectiveSiteUrlSource: siteUrlDiagnostics.source,
+        seoWarning: siteUrlDiagnostics.usesLocalhost ? "SITE_URL still resolves to localhost. Set your production domain to stabilize canonical URLs." : null,
         hasMongoUri: Boolean(mongoUri),
         mongoUri: sanitizeMongoUri(mongoUri),
         error: error instanceof Error ? error.message : "Unknown database error",

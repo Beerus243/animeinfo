@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import ArticleCard from "@/app/components/ArticleCard";
 import { resolveArticleLocalization } from "@/lib/articleLocalization";
+import { ensureArticlesLocalization } from "@/lib/articleTranslation";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -76,6 +77,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       .sort({ publishedAt: -1, updatedAt: -1 })
       .limit(24)
       .lean()) as SearchArticle[];
+    articles = await ensureArticlesLocalization(articles, locale);
   }
 
   const jsonLd = buildCollectionJsonLd({
@@ -118,7 +120,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   key={article._id.toString()}
                   article={{
                     title: resolveArticleLocalization(article, locale).title || article.title,
-                    slug: article.slug,
+                    slug: resolveArticleLocalization(article, locale).slug || article.slug,
                     excerpt: resolveArticleLocalization(article, locale).excerpt ?? undefined,
                     category: article.category ?? undefined,
                     coverImage: article.coverImage ?? undefined,

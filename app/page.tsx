@@ -4,6 +4,7 @@ import AdUnit from "@/app/components/AdUnit";
 import ArticleCard from "@/app/components/ArticleCard";
 import NotificationSignupForm from "@/app/components/NotificationSignupForm";
 import { resolveArticleLocalization } from "@/lib/articleLocalization";
+import { ensureArticlesLocalization } from "@/lib/articleTranslation";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { absoluteUrl } from "@/lib/seo";
@@ -36,7 +37,12 @@ export default async function Home() {
   const locale = await getServerLocale();
   const messages = getMessages(locale);
   const { featured, latest, airingAnimes } = await getHomepageArticles();
-  const featuredContent = featured ? resolveArticleLocalization(featured, locale) : null;
+  const [localizedFeaturedItems, localizedLatest] = await Promise.all([
+    featured ? ensureArticlesLocalization([featured], locale) : Promise.resolve([]),
+    ensureArticlesLocalization(latest, locale),
+  ]);
+  const resolvedFeatured = localizedFeaturedItems[0] || featured;
+  const featuredContent = resolvedFeatured ? resolveArticleLocalization(resolvedFeatured, locale) : null;
 
   const notificationOptions = airingAnimes.map((anime) => ({
     slug: anime.slug,
@@ -68,14 +74,14 @@ export default async function Home() {
         </div>
         <div className="panel bg-surface-strong p-5 md:p-6">
           <p className="text-[12px] uppercase tracking-[0.18em] text-muted">{messages.home.featured}</p>
-          {featured ? (
+          {resolvedFeatured ? (
             <div className="mt-3.5 space-y-3.5">
-              <p className="text-[13px] text-muted">{featured.category || messages.home.industry}</p>
+              <p className="text-[13px] text-muted">{resolvedFeatured.category || messages.home.industry}</p>
               <h2 className="font-display text-2xl font-semibold md:text-[1.7rem]">
-                {featuredContent?.title || featured.title}
+                {featuredContent?.title || resolvedFeatured.title}
               </h2>
               <p className="text-sm leading-6 text-muted md:text-[15px]">{featuredContent?.excerpt || messages.home.noSummary}</p>
-              <Link className="button-primary" href={`/article/${featured.slug}`}>
+              <Link className="button-primary" href={`/article/${featuredContent?.slug || resolvedFeatured.slug}`}>
                 {messages.home.readArticle}
               </Link>
             </div>
@@ -128,8 +134,8 @@ export default async function Home() {
             </Link>
           </div>
           <div className="grid-auto-fit">
-            {latest.length ? (
-              latest.map((article) => (
+            {localizedLatest.length ? (
+              localizedLatest.map((article) => (
                 <ArticleCard
                   key={article._id.toString()}
                   article={{
