@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import ArticleCard from "@/app/components/ArticleCard";
 import NotificationSignupForm from "@/app/components/NotificationSignupForm";
+import { resolveArticleLocalization } from "@/lib/articleLocalization";
 import { formatDateTime, getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -94,6 +95,8 @@ export default async function AnimePage({ params }: AnimePageProps) {
           <NotificationSignupForm
             animeOptions={[{ slug: anime.slug, title: anime.title, releaseDay: anime.releaseDay || undefined }]}
             compact
+            locale={locale}
+            messages={messages.notifications}
             preselectedSlugs={[anime.slug]}
             sourcePage={`/anime/${anime.slug}`}
           />
@@ -106,9 +109,9 @@ export default async function AnimePage({ params }: AnimePageProps) {
             <ArticleCard
               key={article._id.toString()}
               article={{
-                title: article.title,
+                  title: resolveArticleLocalization(article, locale).title || article.title,
                 slug: article.slug,
-                excerpt: article.excerpt ?? undefined,
+                  excerpt: resolveArticleLocalization(article, locale).excerpt ?? undefined,
                 category: article.category ?? undefined,
                 coverImage: article.coverImage ?? undefined,
                 publishedAt: article.publishedAt ?? undefined,

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import ArticleCard from "@/app/components/ArticleCard";
+import { resolveArticleLocalization } from "@/lib/articleLocalization";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -38,12 +39,21 @@ export default async function RecommendationsPage() {
       .lean(),
   ]);
 
+  const localizedAnimeRecommendations = animeRecommendations.map((article) => ({
+    article,
+    localized: resolveArticleLocalization(article, locale),
+  }));
+  const localizedMangaRecommendations = mangaRecommendations.map((article) => ({
+    article,
+    localized: resolveArticleLocalization(article, locale),
+  }));
+
   const seenRecommendationKeys = new Set(
-    animeRecommendations.map((article) => (article.originalUrl || slugify(article.title || "")).toLowerCase()),
+    localizedAnimeRecommendations.map(({ article, localized }) => (article.originalUrl || slugify(localized.title || article.title || "")).toLowerCase()),
   );
 
-  const dedupedMangaRecommendations = mangaRecommendations.filter((article) => {
-    const key = (article.originalUrl || slugify(article.title || "")).toLowerCase();
+  const dedupedMangaRecommendations = localizedMangaRecommendations.filter(({ article, localized }) => {
+    const key = (article.originalUrl || slugify(localized.title || article.title || "")).toLowerCase();
     return !seenRecommendationKeys.has(key);
   });
 
@@ -51,7 +61,7 @@ export default async function RecommendationsPage() {
     title: messages.recommendations.title,
     description: messages.recommendations.description,
     path: "/recommendations",
-    itemPaths: [...animeRecommendations, ...dedupedMangaRecommendations].map((article) => `/article/${article.slug}`),
+    itemPaths: [...animeRecommendations, ...dedupedMangaRecommendations.map(({ article }) => article)].map((article) => `/article/${article.slug}`),
   });
 
   return (
@@ -68,13 +78,13 @@ export default async function RecommendationsPage() {
           <h2 className="font-display text-2xl font-semibold md:text-[1.7rem]">{messages.recommendations.animeTitle}</h2>
           <div className="grid-auto-fit mt-5 md:mt-6">
             {animeRecommendations.length ? (
-              animeRecommendations.map((article) => (
+              localizedAnimeRecommendations.map(({ article, localized }) => (
                 <ArticleCard
                   key={article._id.toString()}
                   article={{
-                    title: article.title,
+                    title: localized.title || article.title,
                     slug: article.slug,
-                    excerpt: article.excerpt ?? undefined,
+                    excerpt: localized.excerpt ?? undefined,
                     category: article.category ?? undefined,
                     coverImage: article.coverImage ?? undefined,
                     publishedAt: article.publishedAt ?? undefined,
@@ -91,13 +101,13 @@ export default async function RecommendationsPage() {
           <h2 className="font-display text-2xl font-semibold md:text-[1.7rem]">{messages.recommendations.mangaTitle}</h2>
           <div className="grid-auto-fit mt-5 md:mt-6">
             {dedupedMangaRecommendations.length ? (
-              dedupedMangaRecommendations.map((article) => (
+              dedupedMangaRecommendations.map(({ article, localized }) => (
                 <ArticleCard
                   key={article._id.toString()}
                   article={{
-                    title: article.title,
+                    title: localized.title || article.title,
                     slug: article.slug,
-                    excerpt: article.excerpt ?? undefined,
+                    excerpt: localized.excerpt ?? undefined,
                     category: article.category ?? undefined,
                     coverImage: article.coverImage ?? undefined,
                     publishedAt: article.publishedAt ?? undefined,

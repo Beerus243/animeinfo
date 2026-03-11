@@ -1,5 +1,25 @@
 import { InferSchemaType, Model, Schema, model, models } from "mongoose";
 
+const LocalizedSeoSchema = new Schema(
+  {
+    metaTitle: { type: String, trim: true },
+    metaDesc: { type: String, trim: true },
+    ogImage: { type: String, trim: true },
+  },
+  { _id: false },
+);
+
+const LocalizedArticleSchema = new Schema(
+  {
+    slug: { type: String, trim: true },
+    title: { type: String, trim: true },
+    excerpt: { type: String, trim: true },
+    content: { type: String, default: "" },
+    seo: { type: LocalizedSeoSchema, default: () => ({}) },
+  },
+  { _id: false },
+);
+
 const ArticleSchema = new Schema(
   {
     title: { type: String, required: true, trim: true },
@@ -37,6 +57,10 @@ const ArticleSchema = new Schema(
       metaTitle: { type: String, trim: true },
       metaDesc: { type: String, trim: true },
       ogImage: { type: String, trim: true },
+    },
+    localizations: {
+      fr: { type: LocalizedArticleSchema, default: () => ({}) },
+      en: { type: LocalizedArticleSchema, default: () => ({}) },
     },
   },
   {

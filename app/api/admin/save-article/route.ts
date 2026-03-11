@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { isAdminRequestAuthorized } from "@/lib/adminAuth";
 import { ensureUniqueArticleSlug } from "@/lib/articleDrafts";
+import { buildArticleLocalizations, resolveArticleLocalization } from "@/lib/articleLocalization";
 import { connectToDatabase } from "@/lib/mongodb";
 import Article from "@/models/Article";
 
@@ -11,13 +12,39 @@ export async function POST(request: NextRequest) {
   }
 
   const payload = await request.json();
-  if (!payload?.id || !payload?.title) {
-    return NextResponse.json({ error: "Missing article id or title." }, { status: 400 });
+  const localizations = buildArticleLocalizations(payload?.localizations);
+  const preferredLocalization = resolveArticleLocalization(
+    {
+      title: payload?.title,
+      excerpt: payload?.excerpt,
+      content: payload?.content,
+      seo: payload?.seo,
+      localizations,
+    },
+    "fr",
+  );
+
+  if (!payload?.id || !preferredLocalization.title) {
+    return NextResponse.json({ error: "Missing article id or localized title." }, { status: 400 });
   }
 
   await connectToDatabase();
 
-  const slug = await ensureUniqueArticleSlug(payload.title, { excludeId: payload.id });
+  const frTitle = localizations.fr.title || preferredLocalization.title;
+  const frSlug = await ensureUniqueArticleSlug(frTitle || preferredLocalization.title, { excludeId: payload.id });
+  const enSlug = localizations.en.title
+    ? await ensureUniqueArticleSlug(localizations.en.title, { excludeId: payload.id, reservedSlugs: [frSlug] })
+    : "";
+  const localizationsWithSlugs = {
+    fr: {
+      ...localizations.fr,
+      slug: frSlug,
+    },
+    en: {
+      ...localizations.en,
+      slug: enSlug,
+    },
+  };
 
   const section = payload.section === "recommendation" ? "recommendation" : "news";
   const recommendationType =
@@ -29,10 +56,11 @@ export async function POST(request: NextRequest) {
     payload.id,
     {
       $set: {
-        title: payload.title,
-        slug,
-        excerpt: payload.excerpt,
-        content: payload.content,
+        title: preferredLocalization.title,
+        localizations: localizationsWithSlugs,
+        slug: frSlug,
+        excerpt: preferredLocalization.excerpt,
+        content: preferredLocalization.content,
         category: payload.category,
         anime: payload.anime,
         tags: String(payload.tags || "")
@@ -43,9 +71,9 @@ export async function POST(request: NextRequest) {
         section,
         recommendationType,
         seo: {
-          metaTitle: payload.seo?.metaTitle,
-          metaDesc: payload.seo?.metaDesc,
-          ogImage: payload.seo?.ogImage,
+          metaTitle: preferredLocalization.seo.metaTitle,
+          metaDesc: preferredLocalization.seo.metaDesc,
+          ogImage: preferredLocalization.seo.ogImage,
         },
         status: "review",
       },

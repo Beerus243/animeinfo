@@ -3,6 +3,7 @@ import Link from "next/link";
 import AdUnit from "@/app/components/AdUnit";
 import ArticleCard from "@/app/components/ArticleCard";
 import NotificationSignupForm from "@/app/components/NotificationSignupForm";
+import { resolveArticleLocalization } from "@/lib/articleLocalization";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { absoluteUrl } from "@/lib/seo";
@@ -35,6 +36,7 @@ export default async function Home() {
   const locale = await getServerLocale();
   const messages = getMessages(locale);
   const { featured, latest, airingAnimes } = await getHomepageArticles();
+  const featuredContent = featured ? resolveArticleLocalization(featured, locale) : null;
 
   const notificationOptions = airingAnimes.map((anime) => ({
     slug: anime.slug,
@@ -70,9 +72,9 @@ export default async function Home() {
             <div className="mt-3.5 space-y-3.5">
               <p className="text-[13px] text-muted">{featured.category || messages.home.industry}</p>
               <h2 className="font-display text-2xl font-semibold md:text-[1.7rem]">
-                {featured.title}
+                {featuredContent?.title || featured.title}
               </h2>
-              <p className="text-sm leading-6 text-muted md:text-[15px]">{featured.excerpt || messages.home.noSummary}</p>
+              <p className="text-sm leading-6 text-muted md:text-[15px]">{featuredContent?.excerpt || messages.home.noSummary}</p>
               <Link className="button-primary" href={`/article/${featured.slug}`}>
                 {messages.home.readArticle}
               </Link>
@@ -102,7 +104,13 @@ export default async function Home() {
               {messages.home.subscribeSecondaryCta}
             </Link>
           </div>
-          <NotificationSignupForm animeOptions={notificationOptions} preselectedSlugs={notificationOptions.slice(0, 2).map((anime) => anime.slug)} sourcePage="/" />
+          <NotificationSignupForm
+            animeOptions={notificationOptions}
+            locale={locale}
+            messages={messages.notifications}
+            preselectedSlugs={notificationOptions.slice(0, 2).map((anime) => anime.slug)}
+            sourcePage="/"
+          />
         </section>
       ) : null}
 
@@ -125,9 +133,9 @@ export default async function Home() {
                 <ArticleCard
                   key={article._id.toString()}
                   article={{
-                    title: article.title,
-                    slug: article.slug,
-                    excerpt: article.excerpt ?? undefined,
+                    title: resolveArticleLocalization(article, locale).title || article.title,
+                    slug: resolveArticleLocalization(article, locale).slug || article.slug,
+                    excerpt: resolveArticleLocalization(article, locale).excerpt ?? undefined,
                     category: article.category ?? undefined,
                     coverImage: article.coverImage ?? undefined,
                     publishedAt: article.publishedAt ?? undefined,

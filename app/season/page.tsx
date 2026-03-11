@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import ArticleCard from "@/app/components/ArticleCard";
+import { resolveArticleLocalization } from "@/lib/articleLocalization";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -108,9 +109,9 @@ export default async function SeasonPage() {
               <ArticleCard
                 key={article._id.toString()}
                 article={{
-                  title: article.title,
+                  title: resolveArticleLocalization(article, locale).title || article.title,
                   slug: article.slug,
-                  excerpt: article.excerpt ?? undefined,
+                  excerpt: resolveArticleLocalization(article, locale).excerpt ?? undefined,
                   category: article.category ?? undefined,
                   coverImage: article.coverImage ?? undefined,
                   publishedAt: article.publishedAt ?? undefined,

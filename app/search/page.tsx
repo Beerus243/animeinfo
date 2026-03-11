@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import ArticleCard from "@/app/components/ArticleCard";
+import { resolveArticleLocalization } from "@/lib/articleLocalization";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -54,9 +55,22 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       $or: [
         { title: regex },
         { excerpt: regex },
+        { content: regex },
         { category: regex },
         { anime: regex },
         { tags: { $regex: regex } },
+        { "seo.metaTitle": regex },
+        { "seo.metaDesc": regex },
+        { "localizations.fr.title": regex },
+        { "localizations.fr.excerpt": regex },
+        { "localizations.fr.content": regex },
+        { "localizations.fr.seo.metaTitle": regex },
+        { "localizations.fr.seo.metaDesc": regex },
+        { "localizations.en.title": regex },
+        { "localizations.en.excerpt": regex },
+        { "localizations.en.content": regex },
+        { "localizations.en.seo.metaTitle": regex },
+        { "localizations.en.seo.metaDesc": regex },
       ],
     })
       .sort({ publishedAt: -1, updatedAt: -1 })
@@ -103,9 +117,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 <ArticleCard
                   key={article._id.toString()}
                   article={{
-                    title: article.title,
+                    title: resolveArticleLocalization(article, locale).title || article.title,
                     slug: article.slug,
-                    excerpt: article.excerpt ?? undefined,
+                    excerpt: resolveArticleLocalization(article, locale).excerpt ?? undefined,
                     category: article.category ?? undefined,
                     coverImage: article.coverImage ?? undefined,
                     publishedAt: article.publishedAt ?? undefined,

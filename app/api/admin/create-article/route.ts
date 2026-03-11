@@ -60,6 +60,30 @@ export async function POST(request: NextRequest) {
       metaDesc: "",
       ogImage: "",
     },
+    localizations: {
+      fr: {
+        slug,
+        title,
+        excerpt: "",
+        content: "",
+        seo: {
+          metaTitle: title,
+          metaDesc: "",
+          ogImage: "",
+        },
+      },
+      en: {
+        slug: "",
+        title: "",
+        excerpt: "",
+        content: "",
+        seo: {
+          metaTitle: "",
+          metaDesc: "",
+          ogImage: "",
+        },
+      },
+    },
   });
 
   return NextResponse.json({ ok: true, articleId: article._id.toString() });

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 
 import AdUnit from "@/app/components/AdUnit";
 import ArticleCard from "@/app/components/ArticleCard";
 import ArticleExperienceControls from "@/app/components/ArticleExperienceControls";
+import { resolveArticleLocalization } from "@/lib/articleLocalization";
 import { formatDate, getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -19,7 +20,14 @@ type ArticlePageProps = {
 
 async function getArticle(slug: string) {
   await connectToDatabase();
-  return Article.findOne({ slug, status: "published" }).lean();
+  return Article.findOne({
+    status: "published",
+    $or: [
+      { slug },
+      { "localizations.fr.slug": slug },
+      { "localizations.en.slug": slug },
+    ],
+  }).lean();
 }
 
 function getReadingTime(content?: string | null, excerpt?: string | null) {
@@ -43,11 +51,14 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
     });
   }
 
+  const localized = resolveArticleLocalization(article, locale);
+  const localizedSlug = localized.slug || article.slug;
+
   return buildMetadata({
-    title: article.seo?.metaTitle || article.title,
-    description: article.seo?.metaDesc || article.excerpt || messages.article.fallbackDescription,
-    path: `/article/${article.slug}`,
-    image: article.seo?.ogImage || article.coverImage || undefined,
+    title: localized.seo.metaTitle || localized.title || article.title,
+    description: localized.seo.metaDesc || localized.excerpt || messages.article.fallbackDescription,
+    path: `/article/${localizedSlug}`,
+    image: localized.seo.ogImage || article.coverImage || undefined,
     type: "article",
   });
 }
@@ -62,16 +73,23 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound();
   }
 
+  const localized = resolveArticleLocalization(article, locale);
+  const localizedSlug = localized.slug || article.slug;
+
+  if (slug !== localizedSlug) {
+    permanentRedirect(`/article/${localizedSlug}`);
+  }
+
   const jsonLd = buildArticleJsonLd({
-    title: article.seo?.metaTitle || article.title,
-    description: article.seo?.metaDesc || article.excerpt || messages.article.fallbackDescription,
-    path: `/article/${article.slug}`,
-    image: article.seo?.ogImage || article.coverImage || undefined,
+    title: localized.seo.metaTitle || localized.title || article.title,
+    description: localized.seo.metaDesc || localized.excerpt || messages.article.fallbackDescription,
+    path: `/article/${localizedSlug}`,
+    image: localized.seo.ogImage || article.coverImage || undefined,
     publishedTime: article.publishedAt ?? undefined,
     modifiedTime: article.updatedAt ?? undefined,
     tags: article.tags ?? undefined,
   });
-  const readTime = getReadingTime(article.content, article.excerpt);
+  const readTime = getReadingTime(localized.content, localized.excerpt);
   const relatedFilters: Array<Record<string, unknown>> = [];
 
   if (article.category) {
@@ -101,7 +119,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           <span className="eyebrow">{article.category || messages.article.fallbackCategory}</span>
           <div className="article-measure">
             <h1 className="mt-5 font-display text-4xl font-semibold md:text-6xl md:leading-[1.05]">
-              {article.title}
+              {localized.title || article.title}
             </h1>
           </div>
           <div className="article-measure mt-5 flex flex-wrap items-center gap-3 text-sm text-muted">
@@ -117,11 +135,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             </span>
             <span>{readTime} {messages.article.minutesReadSuffix}</span>
           </div>
-          <ArticleExperienceControls title={article.title} />
+          <ArticleExperienceControls title={localized.title || article.title} />
           {article.coverImage ? (
             <div className="article-measure relative mt-8 overflow-hidden rounded-3xl">
               <Image
-                alt={article.title}
+                alt={localized.title || article.title}
                 className="h-auto w-full object-cover"
                 height={720}
                 priority
@@ -133,10 +151,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             </div>
           ) : null}
           <div className="article-measure prose-content mt-8 text-base text-foreground">
-            {article.content ? (
-              <div dangerouslySetInnerHTML={{ __html: article.content }} />
+            {localized.content ? (
+              <div dangerouslySetInnerHTML={{ __html: localized.content }} />
             ) : (
-              <p>{article.excerpt || messages.article.contentUnavailable}</p>
+              <p>{localized.excerpt || messages.article.contentUnavailable}</p>
             )}
           </div>
           {relatedArticles.length ? (
@@ -152,9 +170,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   <ArticleCard
                     key={relatedArticle._id.toString()}
                     article={{
-                      title: relatedArticle.title,
-                      slug: relatedArticle.slug,
-                      excerpt: relatedArticle.excerpt ?? undefined,
+                      title: resolveArticleLocalization(relatedArticle, locale).title || relatedArticle.title,
+                      slug: resolveArticleLocalization(relatedArticle, locale).slug || relatedArticle.slug,
+                      excerpt: resolveArticleLocalization(relatedArticle, locale).excerpt ?? undefined,
                       category: relatedArticle.category ?? undefined,
                       coverImage: relatedArticle.coverImage ?? undefined,
                       publishedAt: relatedArticle.publishedAt ?? undefined,

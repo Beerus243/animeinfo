@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import AdUnit from "@/app/components/AdUnit";
 import ArticleCard from "@/app/components/ArticleCard";
+import { resolveArticleLocalization } from "@/lib/articleLocalization";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -56,9 +57,9 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
             <ArticleCard
               key={article._id.toString()}
               article={{
-                title: article.title,
-                slug: article.slug,
-                excerpt: article.excerpt ?? undefined,
+                title: resolveArticleLocalization(article, locale).title || article.title,
+                slug: resolveArticleLocalization(article, locale).slug || article.slug,
+                excerpt: resolveArticleLocalization(article, locale).excerpt ?? undefined,
                 category: article.category ?? undefined,
                 coverImage: article.coverImage ?? undefined,
                 publishedAt: article.publishedAt ?? undefined,

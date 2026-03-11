@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import { useLanguage } from "@/app/components/LanguageProvider";
+import type { Locale, Messages } from "@/lib/i18n/messages";
 
 type AnimeOption = {
   slug: string;
@@ -12,6 +12,8 @@ type AnimeOption = {
 
 type NotificationSignupFormProps = {
   animeOptions: AnimeOption[];
+  locale: Locale;
+  messages: Messages["notifications"];
   sourcePage: string;
   preselectedSlugs?: string[];
   compact?: boolean;
@@ -19,11 +21,12 @@ type NotificationSignupFormProps = {
 
 export default function NotificationSignupForm({
   animeOptions,
+  locale,
+  messages,
   sourcePage,
   preselectedSlugs = [],
   compact = false,
 }: NotificationSignupFormProps) {
-  const { locale, messages } = useLanguage();
   const [email, setEmail] = useState("");
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>(preselectedSlugs);
   const [pending, setPending] = useState(false);
@@ -59,18 +62,18 @@ export default function NotificationSignupForm({
 
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
-        setStatus({ type: "error", message: payload?.error || messages.notifications.error });
+        setStatus({ type: "error", message: payload?.error || messages.error });
         setPending(false);
         return;
       }
 
       setStatus({
         type: "success",
-        message: messages.notifications.success.replace("{count}", String(payload?.count || selectedCount)),
+        message: messages.success.replace("{count}", String(payload?.count || selectedCount)),
       });
       setPending(false);
     } catch {
-      setStatus({ type: "error", message: messages.notifications.error });
+      setStatus({ type: "error", message: messages.error });
       setPending(false);
     }
   }
@@ -83,11 +86,11 @@ export default function NotificationSignupForm({
     <form className="panel p-6 md:p-8" onSubmit={handleSubmit}>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <span className="eyebrow">{messages.notifications.eyebrow}</span>
-          <h2 className="mt-4 font-display text-3xl font-semibold">{messages.notifications.title}</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-muted">{messages.notifications.description}</p>
+          <span className="eyebrow">{messages.eyebrow}</span>
+          <h2 className="mt-4 font-display text-3xl font-semibold">{messages.title}</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-muted">{messages.description}</p>
         </div>
-        <span className="status-chip status-chip-success">{selectedCount} {messages.notifications.selectedSuffix}</span>
+        <span className="status-chip status-chip-success">{selectedCount} {messages.selectedSuffix}</span>
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -111,7 +114,7 @@ export default function NotificationSignupForm({
                   <div>
                     <p className="font-semibold">{anime.title}</p>
                     <p className="mt-1 text-sm text-muted">
-                      {anime.releaseDay ? `${messages.notifications.releaseDayPrefix} ${anime.releaseDay}` : messages.notifications.releaseFallback}
+                      {anime.releaseDay ? `${messages.releaseDayPrefix} ${anime.releaseDay}` : messages.releaseFallback}
                     </p>
                   </div>
                 </div>
@@ -122,19 +125,19 @@ export default function NotificationSignupForm({
 
         <div className="content-card space-y-4 rounded-3xl p-5">
           <label className="block space-y-2">
-            <span className="text-sm font-medium">{messages.notifications.emailLabel}</span>
+            <span className="text-sm font-medium">{messages.emailLabel}</span>
             <input
               className="w-full rounded-2xl border border-line bg-white/70 px-4 py-3 dark:bg-white/5"
               onChange={(event) => setEmail(event.target.value)}
-              placeholder={messages.notifications.emailPlaceholder}
+              placeholder={messages.emailPlaceholder}
               type="email"
               value={email}
             />
           </label>
           <button className="button-primary w-full" disabled={pending || selectedCount === 0} type="submit">
-            {pending ? messages.notifications.pending : messages.notifications.submit}
+            {pending ? messages.pending : messages.submit}
           </button>
-          <p className="text-sm leading-7 text-muted">{messages.notifications.legalHint}</p>
+          <p className="text-sm leading-7 text-muted">{messages.legalHint}</p>
           {status ? (
             <p className={`text-sm ${status.type === "success" ? "text-success" : "text-warning"}`}>{status.message}</p>
           ) : null}

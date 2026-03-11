@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "import:example": "tsx scripts/import-example.ts",
-    "migrate:cloudinary-images": "tsx scripts/migrate-cloudinary-images.ts"
+    "migrate:cloudinary-images": "tsx scripts/migrate-cloudinary-images.ts",
+    "migrate:article-localizations": "tsx scripts/migrate-article-localizations.ts"
   },
   "dependencies": {
     "cloudinary": "^2.8.0",

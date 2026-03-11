@@ -5,6 +5,29 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/app/components/LanguageProvider";
 import UploadImage from "@/app/admin/components/UploadImage";
 
+type EditorLocale = "fr" | "en";
+
+type LocalizedEditorFields = {
+  title: string;
+  excerpt: string;
+  content: string;
+  seo: {
+    metaTitle: string;
+    metaDesc: string;
+    ogImage: string;
+  };
+};
+
+type EditorFormState = {
+  localizations: Record<EditorLocale, LocalizedEditorFields>;
+  category: string;
+  anime: string;
+  tags: string;
+  coverImage: string;
+  section: "news" | "recommendation";
+  recommendationType: "anime" | "manga";
+};
+
 type EditorProps = {
   initialArticle: {
     _id: string;
@@ -22,24 +45,63 @@ type EditorProps = {
       metaDesc?: string;
       ogImage?: string;
     };
+    localizations?: {
+      fr?: {
+        title?: string;
+        excerpt?: string;
+        content?: string;
+        seo?: {
+          metaTitle?: string;
+          metaDesc?: string;
+          ogImage?: string;
+        };
+      };
+      en?: {
+        title?: string;
+        excerpt?: string;
+        content?: string;
+        seo?: {
+          metaTitle?: string;
+          metaDesc?: string;
+          ogImage?: string;
+        };
+      };
+    };
   };
 };
 
 export default function Editor({ initialArticle }: EditorProps) {
   const { messages } = useLanguage();
-  const initialFormState = {
-    title: initialArticle.title || "",
-    excerpt: initialArticle.excerpt || "",
-    content: initialArticle.content || "",
+  const [activeLocale, setActiveLocale] = useState<EditorLocale>("fr");
+  const initialFormState: EditorFormState = {
+    localizations: {
+      fr: {
+        title: initialArticle.localizations?.fr?.title || initialArticle.title || "",
+        excerpt: initialArticle.localizations?.fr?.excerpt || initialArticle.excerpt || "",
+        content: initialArticle.localizations?.fr?.content || initialArticle.content || "",
+        seo: {
+          metaTitle: initialArticle.localizations?.fr?.seo?.metaTitle || initialArticle.seo?.metaTitle || "",
+          metaDesc: initialArticle.localizations?.fr?.seo?.metaDesc || initialArticle.seo?.metaDesc || "",
+          ogImage: initialArticle.localizations?.fr?.seo?.ogImage || initialArticle.seo?.ogImage || "",
+        },
+      },
+      en: {
+        title: initialArticle.localizations?.en?.title || "",
+        excerpt: initialArticle.localizations?.en?.excerpt || "",
+        content: initialArticle.localizations?.en?.content || "",
+        seo: {
+          metaTitle: initialArticle.localizations?.en?.seo?.metaTitle || "",
+          metaDesc: initialArticle.localizations?.en?.seo?.metaDesc || "",
+          ogImage: initialArticle.localizations?.en?.seo?.ogImage || initialArticle.seo?.ogImage || "",
+        },
+      },
+    },
     category: initialArticle.category || "",
     anime: initialArticle.anime || "",
     tags: (initialArticle.tags || []).join(", "),
     coverImage: initialArticle.coverImage || "",
     section: initialArticle.section || "news",
     recommendationType: initialArticle.recommendationType || "anime",
-    metaTitle: initialArticle.seo?.metaTitle || "",
-    metaDesc: initialArticle.seo?.metaDesc || "",
-    ogImage: initialArticle.seo?.ogImage || "",
   };
   const [form, setForm] = useState(initialFormState);
   const [status, setStatus] = useState<string | null>(null);
@@ -47,23 +109,70 @@ export default function Editor({ initialArticle }: EditorProps) {
   const [isDirty, setIsDirty] = useState(false);
   const formRef = useRef(form);
   const lastSavedRef = useRef(JSON.stringify(initialFormState));
+  const localizedForm = form.localizations[activeLocale];
+  const localeCompletion = useMemo(() => ({
+    fr: [form.localizations.fr.title, form.localizations.fr.excerpt, form.localizations.fr.content].filter((value) => value.trim()).length,
+    en: [form.localizations.en.title, form.localizations.en.excerpt, form.localizations.en.content].filter((value) => value.trim()).length,
+  }), [form.localizations.en.content, form.localizations.en.excerpt, form.localizations.en.title, form.localizations.fr.content, form.localizations.fr.excerpt, form.localizations.fr.title]);
   const deferredPreview = useMemo(() => ({
-    title: form.metaTitle || form.title || messages.editor.articleTitleFallback,
-    description: form.metaDesc || form.excerpt || messages.editor.metaFallback,
-    slug: form.title
+    title: localizedForm.seo.metaTitle || localizedForm.title || messages.editor.articleTitleFallback,
+    description: localizedForm.seo.metaDesc || localizedForm.excerpt || messages.editor.metaFallback,
+    slug: (localizedForm.title || form.localizations.fr.title || form.localizations.en.title)
       .trim()
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, ""),
-  }), [form.excerpt, form.metaDesc, form.metaTitle, form.title, messages.editor.articleTitleFallback, messages.editor.metaFallback]);
+  }), [form.localizations.en.title, form.localizations.fr.title, localizedForm.excerpt, localizedForm.seo.metaDesc, localizedForm.seo.metaTitle, localizedForm.title, messages.editor.articleTitleFallback, messages.editor.metaFallback]);
 
   useEffect(() => {
     formRef.current = form;
   }, [form]);
 
-  function updateField(name: string, value: string) {
+  function updateForm(next: EditorFormState) {
+    setForm(next);
+    setIsDirty(JSON.stringify(next) !== lastSavedRef.current);
+  }
+
+  function updateSharedField(name: keyof Omit<EditorFormState, "localizations">, value: string) {
     setForm((current) => {
       const next = { ...current, [name]: value };
+      setIsDirty(JSON.stringify(next) !== lastSavedRef.current);
+      return next;
+    });
+  }
+
+  function updateLocalizedField(locale: EditorLocale, field: keyof Omit<LocalizedEditorFields, "seo">, value: string) {
+    setForm((current) => {
+      const next = {
+        ...current,
+        localizations: {
+          ...current.localizations,
+          [locale]: {
+            ...current.localizations[locale],
+            [field]: value,
+          },
+        },
+      };
+      setIsDirty(JSON.stringify(next) !== lastSavedRef.current);
+      return next;
+    });
+  }
+
+  function updateLocalizedSeoField(locale: EditorLocale, field: keyof LocalizedEditorFields["seo"], value: string) {
+    setForm((current) => {
+      const next = {
+        ...current,
+        localizations: {
+          ...current.localizations,
+          [locale]: {
+            ...current.localizations[locale],
+            seo: {
+              ...current.localizations[locale].seo,
+              [field]: value,
+            },
+          },
+        },
+      };
       setIsDirty(JSON.stringify(next) !== lastSavedRef.current);
       return next;
     });
@@ -80,20 +189,13 @@ export default function Editor({ initialArticle }: EditorProps) {
       },
       body: JSON.stringify({
         id: initialArticle._id,
-        title: currentForm.title,
-        excerpt: currentForm.excerpt,
-        content: currentForm.content,
+        localizations: currentForm.localizations,
         category: currentForm.category,
         anime: currentForm.anime,
         tags: currentForm.tags,
         coverImage: currentForm.coverImage,
         section: currentForm.section,
         recommendationType: currentForm.section === "recommendation" ? currentForm.recommendationType : null,
-        seo: {
-          metaTitle: currentForm.metaTitle,
-          metaDesc: currentForm.metaDesc,
-          ogImage: currentForm.ogImage,
-        },
       }),
     });
 
@@ -184,26 +286,60 @@ export default function Editor({ initialArticle }: EditorProps) {
       </div>
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <div className="space-y-5">
+          <div className="content-card p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.16em] text-muted">{messages.localeLabel}</p>
+                <p className="mt-1 font-medium text-foreground">{messages.locales[activeLocale]}</p>
+                <p className="mt-1 text-[13px] text-muted">Le contenu et le SEO se modifient pour la langue active uniquement.</p>
+              </div>
+              <span className="status-chip status-chip-success">{localeCompletion[activeLocale]}/3</span>
+            </div>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              {(["fr", "en"] as const).map((localeOption) => {
+                const isActive = activeLocale === localeOption;
+
+                return (
+                  <button
+                    key={localeOption}
+                    className={isActive ? "content-card border-accent bg-accent-soft p-3 text-left" : "content-card p-3 text-left opacity-90"}
+                    onClick={() => setActiveLocale(localeOption)}
+                    type="button"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-[11px] uppercase tracking-[0.16em] text-muted">{localeOption.toUpperCase()}</p>
+                        <p className="mt-1 text-sm font-semibold text-foreground">{messages.locales[localeOption]}</p>
+                      </div>
+                      <span className={isActive ? "status-chip status-chip-success" : "status-chip status-chip-warning"}>
+                        {localeCompletion[localeOption]}/3
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <input
             aria-label={messages.editor.titleAria}
             className="w-full rounded-2xl border border-line bg-white/70 px-4 py-3"
-            value={form.title}
-            onChange={(event) => updateField("title", event.target.value)}
-            placeholder={messages.editor.titlePlaceholder}
+            value={localizedForm.title}
+            onChange={(event) => updateLocalizedField(activeLocale, "title", event.target.value)}
+            placeholder={`${messages.editor.titlePlaceholder} (${activeLocale.toUpperCase()})`}
           />
           <textarea
             aria-label={messages.editor.excerptAria}
             className="min-h-28 w-full rounded-2xl border border-line bg-white/70 px-4 py-3"
-            value={form.excerpt}
-            onChange={(event) => updateField("excerpt", event.target.value)}
-            placeholder={messages.editor.excerptPlaceholder}
+            value={localizedForm.excerpt}
+            onChange={(event) => updateLocalizedField(activeLocale, "excerpt", event.target.value)}
+            placeholder={`${messages.editor.excerptPlaceholder} (${activeLocale.toUpperCase()})`}
           />
           <textarea
             aria-label={messages.editor.contentAria}
             className="min-h-90 w-full rounded-2xl border border-line bg-white/70 px-4 py-3"
-            value={form.content}
-            onChange={(event) => updateField("content", event.target.value)}
-            placeholder={messages.editor.contentPlaceholder}
+            value={localizedForm.content}
+            onChange={(event) => updateLocalizedField(activeLocale, "content", event.target.value)}
+            placeholder={`${messages.editor.contentPlaceholder} (${activeLocale.toUpperCase()})`}
           />
         </div>
         <div className="space-y-5">
@@ -213,7 +349,7 @@ export default function Editor({ initialArticle }: EditorProps) {
               <select
                 className="w-full rounded-2xl border border-line bg-white/70 px-4 py-3 text-foreground"
                 value={form.section}
-                onChange={(event) => updateField("section", event.target.value)}
+                onChange={(event) => updateSharedField("section", event.target.value)}
               >
                 <option value="news">{messages.editor.sectionNews}</option>
                 <option value="recommendation">{messages.editor.sectionRecommendation}</option>
@@ -225,7 +361,7 @@ export default function Editor({ initialArticle }: EditorProps) {
                 className="w-full rounded-2xl border border-line bg-white/70 px-4 py-3 text-foreground"
                 disabled={form.section !== "recommendation"}
                 value={form.recommendationType}
-                onChange={(event) => updateField("recommendationType", event.target.value)}
+                onChange={(event) => updateSharedField("recommendationType", event.target.value)}
               >
                 <option value="anime">{messages.editor.recommendationTypeAnime}</option>
                 <option value="manga">{messages.editor.recommendationTypeManga}</option>
@@ -235,49 +371,67 @@ export default function Editor({ initialArticle }: EditorProps) {
           <input
             className="w-full rounded-2xl border border-line bg-white/70 px-4 py-3"
             value={form.category}
-            onChange={(event) => updateField("category", event.target.value)}
+            onChange={(event) => updateSharedField("category", event.target.value)}
             placeholder={messages.editor.categoryPlaceholder}
           />
           <input
             className="w-full rounded-2xl border border-line bg-white/70 px-4 py-3"
             value={form.anime}
-            onChange={(event) => updateField("anime", event.target.value)}
+            onChange={(event) => updateSharedField("anime", event.target.value)}
             placeholder={messages.editor.animePlaceholder}
           />
           <input
             className="w-full rounded-2xl border border-line bg-white/70 px-4 py-3"
             value={form.tags}
-            onChange={(event) => updateField("tags", event.target.value)}
+            onChange={(event) => updateSharedField("tags", event.target.value)}
             placeholder={messages.editor.tagsPlaceholder}
           />
           <input
             className="w-full rounded-2xl border border-line bg-white/70 px-4 py-3"
-            value={form.metaTitle}
-            onChange={(event) => updateField("metaTitle", event.target.value)}
-            placeholder={messages.editor.metaTitlePlaceholder}
+            value={localizedForm.seo.metaTitle}
+            onChange={(event) => updateLocalizedSeoField(activeLocale, "metaTitle", event.target.value)}
+            placeholder={`${messages.editor.metaTitlePlaceholder} (${activeLocale.toUpperCase()})`}
           />
           <textarea
             className="min-h-24 w-full rounded-2xl border border-line bg-white/70 px-4 py-3"
-            value={form.metaDesc}
-            onChange={(event) => updateField("metaDesc", event.target.value)}
-            placeholder={messages.editor.metaDescPlaceholder}
+            value={localizedForm.seo.metaDesc}
+            onChange={(event) => updateLocalizedSeoField(activeLocale, "metaDesc", event.target.value)}
+            placeholder={`${messages.editor.metaDescPlaceholder} (${activeLocale.toUpperCase()})`}
           />
           <input
             className="w-full rounded-2xl border border-line bg-white/70 px-4 py-3"
             value={form.coverImage}
-            onChange={(event) => updateField("coverImage", event.target.value)}
+            onChange={(event) => updateSharedField("coverImage", event.target.value)}
             placeholder={messages.editor.coverPlaceholder}
           />
           <input
             className="w-full rounded-2xl border border-line bg-white/70 px-4 py-3"
-            value={form.ogImage}
-            onChange={(event) => updateField("ogImage", event.target.value)}
-            placeholder={messages.editor.ogPlaceholder}
+            value={localizedForm.seo.ogImage}
+            onChange={(event) => updateLocalizedSeoField(activeLocale, "ogImage", event.target.value)}
+            placeholder={`${messages.editor.ogPlaceholder} (${activeLocale.toUpperCase()})`}
           />
           <UploadImage
             onUploaded={(url) => {
-              updateField("coverImage", url);
-              updateField("ogImage", url);
+              updateForm({
+                ...formRef.current,
+                coverImage: url,
+                localizations: {
+                  fr: {
+                    ...formRef.current.localizations.fr,
+                    seo: {
+                      ...formRef.current.localizations.fr.seo,
+                      ogImage: url,
+                    },
+                  },
+                  en: {
+                    ...formRef.current.localizations.en,
+                    seo: {
+                      ...formRef.current.localizations.en.seo,
+                      ogImage: url,
+                    },
+                  },
+                },
+              });
               setToast(messages.editor.imageToast);
             }}
           />
@@ -297,8 +451,8 @@ export default function Editor({ initialArticle }: EditorProps) {
                   ? `${messages.editor.sectionRecommendation} · ${form.recommendationType === "manga" ? messages.editor.recommendationTypeManga : messages.editor.recommendationTypeAnime}`
                   : form.category || messages.editor.categoryFallback}
               </p>
-              <h2 className="font-display text-2xl font-semibold">{form.title || messages.editor.articleTitleFallback}</h2>
-              <p className="text-sm leading-7 text-muted">{form.excerpt || messages.editor.excerptPreviewFallback}</p>
+              <h2 className="font-display text-2xl font-semibold">{localizedForm.title || messages.editor.articleTitleFallback}</h2>
+              <p className="text-sm leading-7 text-muted">{localizedForm.excerpt || messages.editor.excerptPreviewFallback}</p>
             </div>
           </div>
         </div>

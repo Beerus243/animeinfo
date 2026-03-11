@@ -78,7 +78,7 @@ export default async function AiringPage() {
       </section>
 
       <div className="mt-6 md:mt-8">
-        <NotificationSignupForm animeOptions={notificationOptions} sourcePage="/airing" />
+        <NotificationSignupForm animeOptions={notificationOptions} locale={locale} messages={messages.notifications} sourcePage="/airing" />
       </div>
 
       <section className="mt-6 md:mt-8">

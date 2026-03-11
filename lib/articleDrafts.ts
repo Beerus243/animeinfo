@@ -14,16 +14,28 @@ export function buildImportedArticleKey(
 
 type UniqueSlugOptions = {
   excludeId?: string;
+  reservedSlugs?: string[];
 };
 
 export async function ensureUniqueArticleSlug(title: string, options: UniqueSlugOptions = {}) {
   const baseSlug = slugify(title) || "article";
   let candidate = baseSlug;
   let suffix = 2;
+  const reservedSlugs = new Set(options.reservedSlugs || []);
 
   while (true) {
+    if (reservedSlugs.has(candidate)) {
+      candidate = `${baseSlug}-${suffix}`;
+      suffix += 1;
+      continue;
+    }
+
     const existing = await Article.findOne({
-      slug: candidate,
+      $or: [
+        { slug: candidate },
+        { "localizations.fr.slug": candidate },
+        { "localizations.en.slug": candidate },
+      ],
       ...(options.excludeId ? { _id: { $ne: options.excludeId } } : {}),
     })
       .select({ _id: 1 })
