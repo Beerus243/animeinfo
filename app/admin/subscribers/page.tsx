@@ -22,10 +22,10 @@ export default async function AdminSubscribersPage() {
 
   return (
     <div className="shell-container py-8 md:py-12">
-      <section className="panel px-6 py-8 md:px-10 md:py-12">
+      <section className="panel px-5 py-6 md:px-10 md:py-12">
         <span className="eyebrow">{messages.adminSubscribers.eyebrow}</span>
-        <h1 className="mt-5 font-display text-4xl font-semibold md:text-5xl">{messages.adminSubscribers.title}</h1>
-        <p className="mt-4 max-w-2xl text-sm leading-7 text-muted">{messages.adminSubscribers.description}</p>
+        <h1 className="mt-4 font-display text-3xl font-semibold md:mt-5 md:text-5xl">{messages.adminSubscribers.title}</h1>
+        <p className="mt-4 max-w-2xl text-sm leading-6 text-muted md:leading-7">{messages.adminSubscribers.description}</p>
       </section>
 
       {subscriptions.length ? (
@@ -34,9 +34,9 @@ export default async function AdminSubscribersPage() {
             const followedTitles = (subscription.animeSlugs || []).map((slug) => animeMap.get(slug) || slug);
 
             return (
-              <article key={subscription._id.toString()} className="panel p-6">
+              <article key={subscription._id.toString()} className="content-card p-5 md:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h2 className="font-display text-2xl font-semibold">{subscription.email}</h2>
+                  <h2 className="font-display text-xl font-semibold md:text-2xl break-all">{subscription.email}</h2>
                   <span className="rounded-full border border-line px-3 py-2 text-sm text-muted">
                     {followedTitles.length} {messages.adminSubscribers.followedSuffix}
                   </span>

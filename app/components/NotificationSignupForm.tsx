@@ -98,7 +98,7 @@ export default function NotificationSignupForm({
             return (
               <label
                 key={anime.slug}
-                className={`rounded-3xl border px-4 py-4 transition-colors ${checked ? "border-accent bg-accent-soft" : "border-line bg-white/50"}`}
+                className={`content-card rounded-3xl px-4 py-4 transition-colors ${checked ? "border-accent bg-accent-soft" : ""}`}
               >
                 <div className="flex items-start gap-3">
                   <input
@@ -120,11 +120,11 @@ export default function NotificationSignupForm({
           })}
         </div>
 
-        <div className="space-y-4 rounded-3xl border border-line bg-white/55 p-5">
+        <div className="content-card space-y-4 rounded-3xl p-5">
           <label className="block space-y-2">
             <span className="text-sm font-medium">{messages.notifications.emailLabel}</span>
             <input
-              className="w-full rounded-2xl border border-line bg-white/70 px-4 py-3"
+              className="w-full rounded-2xl border border-line bg-white/70 px-4 py-3 dark:bg-white/5"
               onChange={(event) => setEmail(event.target.value)}
               placeholder={messages.notifications.emailPlaceholder}
               type="email"

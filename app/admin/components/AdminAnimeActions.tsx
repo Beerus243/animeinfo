@@ -56,7 +56,7 @@ export default function AdminAnimeActions() {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-wrap items-start gap-2.5 md:items-center md:gap-3">
       <button className="button-primary" disabled={creating} onClick={() => void handleCreateAnime()} type="button">
         {creating ? messages.adminAnime.creating : messages.adminAnime.create}
       </button>
@@ -64,7 +64,7 @@ export default function AdminAnimeActions() {
       <button className="button-secondary" disabled={sending} onClick={() => void handleSendAlerts()} type="button">
         {sending ? messages.adminAnime.sendingAlerts : messages.adminAnime.sendAlerts}
       </button>
-      {statusMessage ? <p className="text-sm text-muted">{statusMessage}</p> : null}
+      {statusMessage ? <p className="max-w-full text-sm leading-6 text-muted md:max-w-md">{statusMessage}</p> : null}
     </div>
   );
 }

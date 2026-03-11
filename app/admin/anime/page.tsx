@@ -30,18 +30,18 @@ export default async function AdminAnimePage({ searchParams }: AdminAnimePagePro
 
   return (
     <div className="shell-container py-8 md:py-12">
-      <section className="panel px-6 py-8 md:px-10 md:py-12">
+      <section className="panel px-5 py-6 md:px-10 md:py-12">
         <span className="eyebrow">{messages.adminAnime.eyebrow}</span>
-        <h1 className="mt-5 font-display text-4xl font-semibold md:text-5xl">{messages.adminAnime.title}</h1>
-        <p className="mt-4 max-w-2xl text-sm leading-7 text-muted">{messages.adminAnime.description}</p>
-        <div className="mt-6 flex flex-wrap gap-3">
+        <h1 className="mt-4 font-display text-3xl font-semibold md:mt-5 md:text-5xl">{messages.adminAnime.title}</h1>
+        <p className="mt-4 max-w-2xl text-sm leading-6 text-muted md:leading-7">{messages.adminAnime.description}</p>
+        <div className="mt-6 flex flex-wrap gap-2.5 md:gap-3">
           <Link className={filter === "all" ? "button-primary" : "button-secondary"} href="/admin/anime">{messages.adminAnime.filterAll}</Link>
           <Link className={filter === "airing" ? "button-primary" : "button-secondary"} href="/admin/anime?filter=airing">{messages.adminAnime.filterAiring}</Link>
           <Link className={filter === "popular" ? "button-primary" : "button-secondary"} href="/admin/anime?filter=popular">{messages.adminAnime.filterPopular}</Link>
         </div>
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-6 flex flex-wrap items-start gap-2.5 md:gap-3">
           <AdminAnimeActions />
-          <span className="rounded-full border border-line px-4 py-3 text-sm text-muted">{subscriptionCount} {messages.adminAnime.subscriptions}</span>
+          <span className="rounded-full border border-line px-3 py-2 text-sm text-muted">{subscriptionCount} {messages.adminAnime.subscriptions}</span>
         </div>
       </section>
 

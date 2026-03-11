@@ -27,15 +27,19 @@ export default function MobileNav({ links, ariaLabel }: MobileNavProps) {
         {open ? <X size={18} strokeWidth={2.25} /> : <Menu size={18} strokeWidth={2.25} />}
       </button>
 
-      {open ? (
+      <div
+        aria-hidden={!open}
+        className={`mobile-nav-panel ${open ? "mobile-nav-panel-open" : "mobile-nav-panel-closed"}`}
+      >
         <div className="mt-4 rounded-[1.25rem] border border-line bg-surface-strong/95 p-4 shadow-[0_18px_40px_var(--shadow)] backdrop-blur-xl">
           <nav aria-label={ariaLabel} className="flex flex-col gap-2">
-            {links.map((link) => (
+            {links.map((link, index) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="rounded-2xl px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent-soft"
+                className="rounded-2xl px-4 py-3 text-sm font-semibold text-foreground transition-all duration-200 hover:bg-accent-soft"
                 onClick={() => setOpen(false)}
+                style={{ transitionDelay: open ? `${index * 24}ms` : "0ms" }}
               >
                 {link.label}
               </Link>
@@ -46,7 +50,7 @@ export default function MobileNav({ links, ariaLabel }: MobileNavProps) {
             <ThemeToggle compact />
           </div>
         </div>
-      ) : null}
+      </div>
     </div>
   );
 }
