@@ -41,7 +41,7 @@ export default function ThemeToggle({ compact = false }: ThemeToggleProps) {
   return (
     <button
       aria-label={theme === "dark" ? messages.theme.toLight : messages.theme.toDark}
-      className={`button-secondary ${compact ? "min-w-10 px-3 text-sm" : "min-w-11 px-4"}`}
+      className={`button-secondary ${compact ? "min-w-9 px-2.5 text-[13px]" : "min-w-10 px-3.5"}`}
       onClick={toggleTheme}
       type="button"
     >

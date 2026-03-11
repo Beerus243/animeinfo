@@ -88,27 +88,27 @@ export default async function ExplorePage() {
   });
 
   return (
-    <div className="shell-container py-8 md:py-12">
+    <div className="shell-container py-6 md:py-9">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <section className="panel px-6 py-8 md:px-10 md:py-12">
+      <section className="panel px-5 py-6 md:px-8 md:py-8">
         <span className="eyebrow">{messages.explore.eyebrow}</span>
-        <h1 className="mt-5 font-display text-4xl font-semibold md:text-6xl">{messages.explore.title}</h1>
-        <p className="mt-4 max-w-3xl text-lg leading-8 text-muted">{messages.explore.description}</p>
+        <h1 className="mt-4 font-display text-3xl font-semibold md:text-5xl">{messages.explore.title}</h1>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-muted md:text-base md:leading-7">{messages.explore.description}</p>
       </section>
 
-      <section className="mt-8 grid gap-6 lg:grid-cols-2">
-        <div className="panel p-6 md:p-8">
+      <section className="mt-6 grid gap-5 md:mt-8 lg:grid-cols-2">
+        <div className="panel p-5 md:p-6">
           <div className="flex items-end justify-between gap-4">
             <div>
               <p className="eyebrow">{messages.trending.eyebrow}</p>
-              <h2 className="mt-3 font-display text-3xl font-semibold">{messages.explore.trendingTitle}</h2>
+              <h2 className="mt-2.5 font-display text-2xl font-semibold md:text-[1.7rem]">{messages.explore.trendingTitle}</h2>
             </div>
             <Link className="button-secondary" href="/trending">{messages.explore.openDetail}</Link>
           </div>
-          <div className="mt-6 space-y-5">
+          <div className="mt-5 space-y-4">
             <div>
-              <p className="text-sm uppercase tracking-[0.16em] text-muted">{messages.trending.topCategories}</p>
-              <div className="mt-4 flex flex-wrap gap-3">
+              <p className="text-[11px] uppercase tracking-[0.16em] text-muted">{messages.trending.topCategories}</p>
+              <div className="mt-3 flex flex-wrap gap-2.5">
                 {(trendSourceRows.length ? trendSourceRows : categoryRows.slice(0, 4)).slice(0, 4).map((category) => (
                   <Link key={category._id} className="button-secondary" href={`/search?q=${encodeURIComponent(category._id)}`}>
                     {category._id} · {category.count}
@@ -117,8 +117,8 @@ export default async function ExplorePage() {
               </div>
             </div>
             <div>
-              <p className="text-sm uppercase tracking-[0.16em] text-muted">{messages.trending.hotTopics}</p>
-              <div className="mt-4 flex flex-wrap gap-3">
+              <p className="text-[11px] uppercase tracking-[0.16em] text-muted">{messages.trending.hotTopics}</p>
+              <div className="mt-3 flex flex-wrap gap-2.5">
                 {(trendTopicRows.length ? trendTopicRows : tagRows.slice(0, 6)).slice(0, 6).map((tag) => (
                   <Link key={tag._id} className="button-secondary" href={`/tag/${slugify(tag._id)}`}>
                     #{tag._id} · {tag.count}
@@ -128,18 +128,18 @@ export default async function ExplorePage() {
             </div>
             {trendLiveItems.length ? (
               <div>
-                <p className="text-sm uppercase tracking-[0.16em] text-muted">{messages.explore.liveRssTitle}</p>
-                <div className="mt-4 grid gap-3">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-muted">{messages.explore.liveRssTitle}</p>
+                <div className="mt-3 grid gap-2.5">
                   {trendLiveItems.slice(0, 4).map((item) => (
                     <a
                       key={`${item.sourceLabel}-${item.url}`}
-                      className="rounded-3xl border border-line bg-white/45 p-4 transition-transform hover:-translate-y-0.5"
+                      className="content-card p-3.5 transition-transform hover:-translate-y-0.5"
                       href={item.url}
                       rel="noreferrer"
                       target="_blank"
                     >
-                      <p className="text-sm uppercase tracking-[0.16em] text-muted">{item.sourceLabel}</p>
-                      <h3 className="mt-2 font-semibold">{item.title}</h3>
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-muted">{item.sourceLabel}</p>
+                      <h3 className="mt-1.5 text-sm font-semibold md:text-[15px]">{item.title}</h3>
                     </a>
                   ))}
                 </div>
@@ -148,23 +148,23 @@ export default async function ExplorePage() {
           </div>
         </div>
 
-        <div className="panel p-6 md:p-8">
+        <div className="panel p-5 md:p-6">
           <div className="flex items-end justify-between gap-4">
             <div>
               <p className="eyebrow">{messages.season.eyebrow}</p>
-              <h2 className="mt-3 font-display text-3xl font-semibold">{messages.explore.seasonTitle}</h2>
+              <h2 className="mt-2.5 font-display text-2xl font-semibold md:text-[1.7rem]">{messages.explore.seasonTitle}</h2>
             </div>
             <Link className="button-secondary" href="/season">{messages.explore.openDetail}</Link>
           </div>
-          <div className="mt-6 grid gap-4">
+          <div className="mt-5 grid gap-3.5">
             {seasonRows.length ? (
               seasonRows.map((season) => (
-                <div key={season._id} className="rounded-3xl border border-line bg-white/45 p-5">
-                  <h3 className="font-display text-2xl font-semibold">{season._id}</h3>
-                  <p className="mt-2 text-sm text-muted">{season.animeCount} {messages.season.animeCount}</p>
-                  <div className="mt-4 flex flex-wrap gap-2">
+                <div key={season._id} className="content-card p-4">
+                  <h3 className="font-display text-xl font-semibold">{season._id}</h3>
+                  <p className="mt-1.5 text-[13px] text-muted">{season.animeCount} {messages.season.animeCount}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
                     {season.animeTitles.slice(0, 4).map((title) => (
-                      <span key={title} className="rounded-full bg-accent-soft px-3 py-2 text-sm font-medium text-accent">
+                      <span key={title} className="rounded-full bg-accent-soft px-2.5 py-1.5 text-[12px] font-medium text-accent">
                         {title}
                       </span>
                     ))}
@@ -172,40 +172,40 @@ export default async function ExplorePage() {
                 </div>
               ))
             ) : (
-              <div className="rounded-3xl border border-line bg-white/45 p-5 text-muted">{messages.season.empty}</div>
+              <div className="content-card p-4 text-sm text-muted">{messages.season.empty}</div>
             )}
           </div>
         </div>
       </section>
 
-      <section className="mt-8 panel p-6 md:p-8">
+      <section className="mt-6 panel p-5 md:mt-8 md:p-6">
         <div className="flex items-end justify-between gap-4">
           <div>
             <p className="eyebrow">{messages.categories.eyebrow}</p>
-            <h2 className="mt-3 font-display text-3xl font-semibold">{messages.explore.categoriesTitle}</h2>
+            <h2 className="mt-2.5 font-display text-2xl font-semibold md:text-[1.7rem]">{messages.explore.categoriesTitle}</h2>
           </div>
           <Link className="button-secondary" href="/categories">{messages.explore.openDetail}</Link>
         </div>
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_320px]">
+        <div className="mt-5 grid gap-3.5 lg:grid-cols-[1fr_300px]">
           <div className="grid-auto-fit">
             {categoryRows.length ? (
               categoryRows.map((category) => (
-                <Link key={category._id} href={`/category/${category._id}`} className="rounded-3xl border border-line bg-white/45 p-5 transition-transform hover:-translate-y-0.5">
-                  <p className="text-sm uppercase tracking-[0.16em] text-muted">{messages.category.eyebrow}</p>
-                  <h3 className="mt-3 font-display text-2xl font-semibold capitalize">{category._id.replace(/-/g, " ")}</h3>
-                  <p className="mt-2 text-sm text-muted">{category.count} {messages.categories.itemSuffix}</p>
-                  <p className="mt-2 text-sm text-muted">{messages.categories.latest}: {formatDate(locale, category.latestPublishedAt || new Date())}</p>
+                <Link key={category._id} href={`/category/${category._id}`} className="content-card p-4 transition-transform hover:-translate-y-0.5">
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-muted">{messages.category.eyebrow}</p>
+                  <h3 className="mt-2 font-display text-xl font-semibold capitalize">{category._id.replace(/-/g, " ")}</h3>
+                  <p className="mt-1.5 text-[13px] text-muted">{category.count} {messages.categories.itemSuffix}</p>
+                  <p className="mt-1.5 text-[13px] text-muted">{messages.categories.latest}: {formatDate(locale, category.latestPublishedAt || new Date())}</p>
                 </Link>
               ))
             ) : (
-              <div className="rounded-3xl border border-line bg-white/45 p-5 text-muted">{messages.categories.empty}</div>
+              <div className="content-card p-4 text-sm text-muted">{messages.categories.empty}</div>
             )}
           </div>
 
-          <aside className="rounded-3xl border border-line bg-white/45 p-5">
-            <p className="text-sm uppercase tracking-[0.16em] text-muted">{messages.categories.animeTitle}</p>
-            <div className="mt-4 flex flex-wrap gap-3">
+          <aside className="content-card p-4">
+            <p className="text-[11px] uppercase tracking-[0.16em] text-muted">{messages.categories.animeTitle}</p>
+            <div className="mt-3 flex flex-wrap gap-2.5">
               {animeRows.length ? (
                 animeRows.map((anime) => (
                   <Link key={anime._id.toString()} className="button-secondary" href={`/anime/${anime.slug}`}>
@@ -213,7 +213,7 @@ export default async function ExplorePage() {
                   </Link>
                 ))
               ) : (
-                <p className="text-sm text-muted">{messages.explore.animeFallback}</p>
+                <p className="text-[13px] text-muted">{messages.explore.animeFallback}</p>
               )}
             </div>
           </aside>

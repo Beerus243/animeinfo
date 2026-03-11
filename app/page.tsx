@@ -43,19 +43,19 @@ export default async function Home() {
   }));
 
   return (
-    <div className="shell-container py-8 md:py-12">
-      <section className="panel grid gap-8 overflow-hidden px-6 py-8 md:grid-cols-[1.2fr_0.8fr] md:px-10 md:py-12">
-        <div className="space-y-6">
+    <div className="shell-container py-6 md:py-10">
+      <section className="panel grid gap-6 overflow-hidden px-5 py-6 md:grid-cols-[1.2fr_0.8fr] md:px-8 md:py-9">
+        <div className="space-y-5">
           <span className="eyebrow">{messages.home.eyebrow}</span>
-          <div className="space-y-4">
-            <h1 className="max-w-3xl font-display text-5xl font-bold leading-[1.02] tracking-tight md:text-7xl">
+          <div className="space-y-3">
+            <h1 className="max-w-3xl font-display text-4xl font-bold leading-[1.02] tracking-tight md:text-6xl">
               {messages.home.title}
             </h1>
-            <p className="max-w-2xl text-lg leading-8 text-muted">
+            <p className="max-w-2xl text-base leading-7 text-muted md:text-[17px]">
               {messages.home.description}
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2.5">
             <Link className="button-primary" href="/articles">
               {messages.home.browse}
             </Link>
@@ -64,25 +64,25 @@ export default async function Home() {
             </Link>
           </div>
         </div>
-        <div className="panel bg-surface-strong p-6">
-          <p className="text-sm uppercase tracking-[0.2em] text-muted">{messages.home.featured}</p>
+        <div className="panel bg-surface-strong p-5 md:p-6">
+          <p className="text-[12px] uppercase tracking-[0.18em] text-muted">{messages.home.featured}</p>
           {featured ? (
-            <div className="mt-4 space-y-4">
-              <p className="text-sm text-muted">{featured.category || messages.home.industry}</p>
-              <h2 className="font-display text-3xl font-semibold">
+            <div className="mt-3.5 space-y-3.5">
+              <p className="text-[13px] text-muted">{featured.category || messages.home.industry}</p>
+              <h2 className="font-display text-2xl font-semibold md:text-[1.7rem]">
                 {featured.title}
               </h2>
-              <p className="text-muted">{featured.excerpt || messages.home.noSummary}</p>
+              <p className="text-sm leading-6 text-muted md:text-[15px]">{featured.excerpt || messages.home.noSummary}</p>
               <Link className="button-primary" href={`/article/${featured.slug}`}>
                 {messages.home.readArticle}
               </Link>
             </div>
           ) : (
-            <div className="mt-4 space-y-4">
-              <h2 className="font-display text-3xl font-semibold">
+            <div className="mt-3.5 space-y-3.5">
+              <h2 className="font-display text-2xl font-semibold md:text-[1.7rem]">
                 {messages.home.waitingTitle}
               </h2>
-              <p className="text-muted">
+              <p className="text-sm leading-6 text-muted md:text-[15px]">
                 {messages.home.waitingDescription}
               </p>
             </div>
@@ -91,12 +91,12 @@ export default async function Home() {
       </section>
 
       {notificationOptions.length ? (
-        <section className="mt-8 space-y-4">
+        <section className="mt-6 space-y-3.5 md:mt-8">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="eyebrow">{messages.home.subscribeEyebrow}</p>
-              <h2 className="mt-3 font-display text-3xl font-semibold">{messages.home.subscribeTitle}</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-muted">{messages.home.subscribeDescription}</p>
+              <h2 className="mt-2.5 font-display text-2xl font-semibold md:text-[1.7rem]">{messages.home.subscribeTitle}</h2>
+              <p className="mt-2.5 max-w-2xl text-[13px] leading-6 text-muted md:text-sm">{messages.home.subscribeDescription}</p>
             </div>
             <Link className="button-secondary" href="/airing">
               {messages.home.subscribeSecondaryCta}
@@ -106,12 +106,12 @@ export default async function Home() {
         </section>
       ) : null}
 
-      <section className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-6">
+      <section className="mt-6 grid gap-6 md:mt-8 lg:grid-cols-[1fr_300px]">
+        <div className="space-y-5">
           <div className="flex items-end justify-between gap-4">
             <div>
               <p className="eyebrow">{messages.home.latestEyebrow}</p>
-              <h2 className="mt-3 font-display text-3xl font-semibold">
+              <h2 className="mt-2.5 font-display text-2xl font-semibold md:text-[1.7rem]">
                 {messages.home.latestTitle}
               </h2>
             </div>
@@ -135,20 +135,20 @@ export default async function Home() {
                 />
               ))
             ) : (
-              <div className="panel p-6 text-muted">
+              <div className="panel p-5 text-sm text-muted">
                 {messages.home.noArticles}
               </div>
             )}
           </div>
         </div>
-        <aside className="space-y-6">
+        <aside className="space-y-5">
           <AdUnit slot="header" />
-          <div className="panel p-6">
+          <div className="panel p-5 md:p-6">
             <p className="eyebrow">{messages.home.seoEyebrow}</p>
-            <h3 className="mt-4 font-display text-2xl font-semibold">
+            <h3 className="mt-3 font-display text-xl font-semibold md:text-2xl">
               {messages.home.seoTitle}
             </h3>
-            <p className="mt-3 text-sm leading-7 text-muted">
+            <p className="mt-2.5 text-[13px] leading-6 text-muted md:text-sm">
               {messages.home.seoDescription} {absoluteUrl("/")}{messages.home.seoDescriptionTail}
             </p>
           </div>

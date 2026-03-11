@@ -63,42 +63,42 @@ export default async function AiringPage() {
   }));
 
   return (
-    <div className="shell-container py-8 md:py-12">
+    <div className="shell-container py-6 md:py-9">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <section className="panel px-6 py-8 md:px-10 md:py-12">
+      <section className="panel px-5 py-6 md:px-8 md:py-8">
         <span className="eyebrow">{messages.airing.eyebrow}</span>
-        <h1 className="mt-5 font-display text-4xl font-semibold md:text-6xl">{messages.airing.title}</h1>
-        <p className="mt-4 max-w-3xl text-lg leading-8 text-muted">{messages.airing.description}</p>
-        <div className="mt-6 flex flex-wrap gap-3 text-sm text-muted">
-          <span className="rounded-full border border-line px-4 py-2">{currentSeasonLabel}</span>
-          <span className="rounded-full border border-line px-4 py-2">{airingAnimes.length} {messages.airing.airingCountSuffix}</span>
-          <span className="rounded-full border border-line px-4 py-2">{popularAiringAnimes.length} {messages.airing.popularCountSuffix}</span>
+        <h1 className="mt-4 font-display text-3xl font-semibold md:text-5xl">{messages.airing.title}</h1>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-muted md:text-base md:leading-7">{messages.airing.description}</p>
+        <div className="mt-5 flex flex-wrap gap-2.5 text-[13px] text-muted md:text-sm">
+          <span className="rounded-full border border-line px-3 py-1.5">{currentSeasonLabel}</span>
+          <span className="rounded-full border border-line px-3 py-1.5">{airingAnimes.length} {messages.airing.airingCountSuffix}</span>
+          <span className="rounded-full border border-line px-3 py-1.5">{popularAiringAnimes.length} {messages.airing.popularCountSuffix}</span>
         </div>
       </section>
 
-      <div className="mt-8">
+      <div className="mt-6 md:mt-8">
         <NotificationSignupForm animeOptions={notificationOptions} sourcePage="/airing" />
       </div>
 
-      <section className="mt-8">
+      <section className="mt-6 md:mt-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="eyebrow">{messages.airing.airingEyebrow}</p>
-            <h2 className="mt-3 font-display text-3xl font-semibold">{messages.airing.airingTitle}</h2>
+            <h2 className="mt-2.5 font-display text-2xl font-semibold md:text-[1.7rem]">{messages.airing.airingTitle}</h2>
           </div>
         </div>
-        <div className="grid-auto-fit mt-6">
+        <div className="grid-auto-fit mt-5 md:mt-6">
           {airingAnimes.length ? (
             airingAnimes.map((anime) => (
-              <Link key={anime._id.toString()} href={`/anime/${anime.slug}`} className="panel p-6 transition-transform hover:-translate-y-0.5">
-                <p className="text-sm uppercase tracking-[0.16em] text-muted">{anime.currentSeasonLabel || currentSeasonLabel}</p>
-                <h3 className="mt-4 font-display text-3xl font-semibold">{anime.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-muted">{anime.synopsis || messages.anime.synopsisFallback}</p>
-                <div className="mt-5 flex flex-wrap gap-2 text-sm text-muted">
-                  <span className="rounded-full bg-accent-soft px-3 py-2 text-accent">{anime.releaseDay || messages.airing.unknownReleaseDay}</span>
+              <Link key={anime._id.toString()} href={`/anime/${anime.slug}`} className="content-card p-4 transition-transform hover:-translate-y-0.5">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-muted">{anime.currentSeasonLabel || currentSeasonLabel}</p>
+                <h3 className="mt-3 font-display text-2xl font-semibold md:text-[1.65rem]">{anime.title}</h3>
+                <p className="mt-2.5 text-[13px] leading-6 text-muted md:text-sm">{anime.synopsis || messages.anime.synopsisFallback}</p>
+                <div className="mt-4 flex flex-wrap gap-2 text-[13px] text-muted md:text-sm">
+                  <span className="rounded-full bg-accent-soft px-2.5 py-1.5 text-accent">{anime.releaseDay || messages.airing.unknownReleaseDay}</span>
                   {anime.nextEpisodeAt ? (
-                    <span className="rounded-full border border-line px-3 py-2">
+                    <span className="rounded-full border border-line px-2.5 py-1.5">
                       {messages.airing.nextEpisodePrefix} {formatDateTime(locale, anime.nextEpisodeAt)}
                     </span>
                   ) : null}
@@ -106,25 +106,25 @@ export default async function AiringPage() {
               </Link>
             ))
           ) : (
-            <div className="panel p-6 text-muted">{messages.airing.empty}</div>
+            <div className="panel p-5 text-sm text-muted">{messages.airing.empty}</div>
           )}
         </div>
       </section>
 
-      <section className="mt-8 panel px-6 py-8 md:px-8">
+      <section className="mt-6 panel px-5 py-6 md:mt-8 md:px-6 md:py-7">
         <p className="eyebrow">{messages.airing.popularEyebrow}</p>
-        <h2 className="mt-3 font-display text-3xl font-semibold">{messages.airing.popularTitle}</h2>
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <h2 className="mt-2.5 font-display text-2xl font-semibold md:text-[1.7rem]">{messages.airing.popularTitle}</h2>
+        <div className="mt-5 grid gap-3.5 md:grid-cols-2 xl:grid-cols-4">
           {popularAiringAnimes.length ? (
             popularAiringAnimes.map((anime, index) => (
-              <Link key={anime._id.toString()} href={`/anime/${anime.slug}`} className="rounded-3xl border border-line bg-white/55 p-5 transition-transform hover:-translate-y-0.5">
-                <p className="text-sm uppercase tracking-[0.16em] text-muted">Top {index + 1}</p>
-                <h3 className="mt-3 font-display text-2xl font-semibold">{anime.title}</h3>
-                <p className="mt-2 text-sm text-muted">{messages.airing.popularityPrefix} {anime.popularityScore || 0}</p>
+              <Link key={anime._id.toString()} href={`/anime/${anime.slug}`} className="content-card p-4 transition-transform hover:-translate-y-0.5">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-muted">Top {index + 1}</p>
+                <h3 className="mt-2 font-display text-xl font-semibold">{anime.title}</h3>
+                <p className="mt-1.5 text-[13px] text-muted">{messages.airing.popularityPrefix} {anime.popularityScore || 0}</p>
               </Link>
             ))
           ) : (
-            <div className="panel p-6 text-muted md:col-span-2 xl:col-span-4">{messages.airing.popularEmpty}</div>
+            <div className="panel p-5 text-sm text-muted md:col-span-2 xl:col-span-4">{messages.airing.popularEmpty}</div>
           )}
         </div>
       </section>

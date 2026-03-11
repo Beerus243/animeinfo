@@ -72,29 +72,29 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   });
 
   return (
-    <div className="shell-container py-8 md:py-12">
+    <div className="shell-container py-6 md:py-9">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <section className="panel px-6 py-8 md:px-10 md:py-12">
+      <section className="panel px-5 py-6 md:px-8 md:py-8">
         <span className="eyebrow">{messages.search.eyebrow}</span>
-        <h1 className="mt-5 font-display text-4xl font-semibold md:text-6xl">{messages.search.title}</h1>
-        <p className="mt-4 max-w-3xl text-lg leading-8 text-muted">{messages.search.description}</p>
-        <form action="/search" className="mt-8 flex flex-col gap-3 md:flex-row">
+        <h1 className="mt-4 font-display text-3xl font-semibold md:text-5xl">{messages.search.title}</h1>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-muted md:text-base md:leading-7">{messages.search.description}</p>
+        <form action="/search" className="mt-6 flex flex-col gap-2.5 md:flex-row">
           <input
-            className="w-full rounded-2xl border border-line bg-white/80 px-4 py-3 dark:bg-background/70"
+            className="w-full rounded-2xl border border-line bg-white/80 px-3.5 py-2.5 text-sm dark:bg-background/70"
             defaultValue={query}
             name="q"
             placeholder={messages.search.placeholder}
             type="search"
           />
-          <button className="button-primary md:min-w-40" type="submit">
+          <button className="button-primary md:min-w-32" type="submit">
             {messages.search.submit}
           </button>
         </form>
       </section>
 
-      <div className="mt-8">
+      <div className="mt-6 md:mt-8">
         {query ? (
-          <p className="mb-6 text-sm text-muted">{messages.search.summaryPrefix} <span className="font-medium text-foreground">{query}</span></p>
+          <p className="mb-5 text-[13px] text-muted md:text-sm">{messages.search.summaryPrefix} <span className="font-medium text-foreground">{query}</span></p>
         ) : null}
         <div className="grid-auto-fit">
           {query ? (
@@ -113,10 +113,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 />
               ))
             ) : (
-              <div className="panel p-6 text-muted">{messages.search.empty}</div>
+              <div className="panel p-5 text-sm text-muted">{messages.search.empty}</div>
             )
           ) : (
-            <div className="panel p-6 text-muted">{messages.search.idle}</div>
+            <div className="panel p-5 text-sm text-muted">{messages.search.idle}</div>
           )}
         </div>
       </div>

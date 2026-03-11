@@ -55,18 +55,18 @@ export default async function RecommendationsPage() {
   });
 
   return (
-    <div className="shell-container py-8 md:py-12">
+    <div className="shell-container py-6 md:py-9">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <section className="panel px-6 py-8 md:px-10 md:py-12">
+      <section className="panel px-5 py-6 md:px-8 md:py-8">
         <span className="eyebrow">{messages.recommendations.eyebrow}</span>
-        <h1 className="mt-5 font-display text-4xl font-semibold md:text-6xl">{messages.recommendations.title}</h1>
-        <p className="mt-4 max-w-3xl text-lg leading-8 text-muted">{messages.recommendations.description}</p>
+        <h1 className="mt-4 font-display text-3xl font-semibold md:text-5xl">{messages.recommendations.title}</h1>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-muted md:text-base md:leading-7">{messages.recommendations.description}</p>
       </section>
 
-      <section className="mt-8 space-y-8">
+      <section className="mt-6 space-y-6 md:mt-8 md:space-y-8">
         <div>
-          <h2 className="font-display text-3xl font-semibold">{messages.recommendations.animeTitle}</h2>
-          <div className="grid-auto-fit mt-6">
+          <h2 className="font-display text-2xl font-semibold md:text-[1.7rem]">{messages.recommendations.animeTitle}</h2>
+          <div className="grid-auto-fit mt-5 md:mt-6">
             {animeRecommendations.length ? (
               animeRecommendations.map((article) => (
                 <ArticleCard
@@ -82,14 +82,14 @@ export default async function RecommendationsPage() {
                 />
               ))
             ) : (
-              <div className="panel p-6 text-muted">{messages.recommendations.emptyAnime}</div>
+              <div className="panel p-5 text-sm text-muted">{messages.recommendations.emptyAnime}</div>
             )}
           </div>
         </div>
 
         <div>
-          <h2 className="font-display text-3xl font-semibold">{messages.recommendations.mangaTitle}</h2>
-          <div className="grid-auto-fit mt-6">
+          <h2 className="font-display text-2xl font-semibold md:text-[1.7rem]">{messages.recommendations.mangaTitle}</h2>
+          <div className="grid-auto-fit mt-5 md:mt-6">
             {dedupedMangaRecommendations.length ? (
               dedupedMangaRecommendations.map((article) => (
                 <ArticleCard
@@ -105,7 +105,7 @@ export default async function RecommendationsPage() {
                 />
               ))
             ) : (
-              <div className="panel p-6 text-muted">{messages.recommendations.emptyManga}</div>
+              <div className="panel p-5 text-sm text-muted">{messages.recommendations.emptyManga}</div>
             )}
           </div>
         </div>

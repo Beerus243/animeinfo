@@ -64,16 +64,16 @@ export default async function TrendingPage() {
   });
 
   return (
-    <div className="shell-container py-8 md:py-12">
+    <div className="shell-container py-6 md:py-9">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <section className="panel px-6 py-8 md:px-10 md:py-12">
+      <section className="panel px-5 py-6 md:px-8 md:py-8">
         <span className="eyebrow">{messages.trending.eyebrow}</span>
-        <h1 className="mt-5 font-display text-4xl font-semibold md:text-6xl">{messages.trending.title}</h1>
-        <p className="mt-4 max-w-3xl text-lg leading-8 text-muted">{messages.trending.description}</p>
-        <div className="mt-8 grid gap-4 lg:grid-cols-2">
-          <div className="rounded-3xl border border-line bg-surface-strong p-6">
-            <p className="text-sm uppercase tracking-[0.16em] text-muted">{messages.trending.topCategories}</p>
-            <div className="mt-5 flex flex-wrap gap-3">
+        <h1 className="mt-4 font-display text-3xl font-semibold md:text-5xl">{messages.trending.title}</h1>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-muted md:text-base md:leading-7">{messages.trending.description}</p>
+        <div className="mt-6 grid gap-3.5 lg:grid-cols-2">
+          <div className="content-card p-4 md:p-5">
+            <p className="text-[11px] uppercase tracking-[0.16em] text-muted">{messages.trending.topCategories}</p>
+            <div className="mt-4 flex flex-wrap gap-2.5">
               {effectiveCategoryRows.map((category) => (
                 <Link key={category._id} className="button-secondary" href={`/search?q=${encodeURIComponent(category._id)}`}>
                   {category._id} · {category.count}
@@ -81,9 +81,9 @@ export default async function TrendingPage() {
               ))}
             </div>
           </div>
-          <div className="rounded-3xl border border-line bg-surface-strong p-6">
-            <p className="text-sm uppercase tracking-[0.16em] text-muted">{messages.trending.hotTopics}</p>
-            <div className="mt-5 flex flex-wrap gap-3">
+          <div className="content-card p-4 md:p-5">
+            <p className="text-[11px] uppercase tracking-[0.16em] text-muted">{messages.trending.hotTopics}</p>
+            <div className="mt-4 flex flex-wrap gap-2.5">
               {effectiveTagRows.map((tag) => (
                 <Link key={tag._id} className="button-secondary" href={`/tag/${slugify(tag._id)}`}>
                   #{tag._id} · {tag.count}
@@ -95,32 +95,32 @@ export default async function TrendingPage() {
       </section>
 
       {rssSnapshot.liveItems.length ? (
-        <section className="mt-8 panel px-6 py-8 md:px-8">
+        <section className="mt-6 panel px-5 py-6 md:mt-8 md:px-6 md:py-7">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="eyebrow">{messages.trending.rssEyebrow}</p>
-              <h2 className="mt-3 font-display text-3xl font-semibold">{messages.trending.rssTitle}</h2>
+              <h2 className="mt-2.5 font-display text-2xl font-semibold md:text-[1.7rem]">{messages.trending.rssTitle}</h2>
             </div>
           </div>
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          <div className="mt-5 grid gap-3.5 lg:grid-cols-2">
             {rssSnapshot.liveItems.map((item) => (
               <a
                 key={`${item.sourceLabel}-${item.url}`}
-                className="rounded-3xl border border-line bg-white/45 p-5 transition-transform hover:-translate-y-0.5"
+                className="content-card p-4 transition-transform hover:-translate-y-0.5"
                 href={item.url}
                 rel="noreferrer"
                 target="_blank"
               >
-                <p className="text-sm uppercase tracking-[0.16em] text-muted">{item.sourceLabel}</p>
-                <h3 className="mt-3 font-display text-2xl font-semibold">{item.title}</h3>
-                {item.publishedAt ? <p className="mt-3 text-sm text-muted">{formatDate(locale, item.publishedAt)}</p> : null}
+                <p className="text-[11px] uppercase tracking-[0.16em] text-muted">{item.sourceLabel}</p>
+                <h3 className="mt-2 font-display text-xl font-semibold md:text-[1.35rem]">{item.title}</h3>
+                {item.publishedAt ? <p className="mt-2 text-[13px] text-muted">{formatDate(locale, item.publishedAt)}</p> : null}
               </a>
             ))}
           </div>
         </section>
       ) : null}
 
-      <div className="grid-auto-fit mt-8">
+      <div className="grid-auto-fit mt-6 md:mt-8">
         {articles.length ? (
           articles.map((article) => (
             <ArticleCard
@@ -136,13 +136,13 @@ export default async function TrendingPage() {
             />
           ))
         ) : (
-          <div className="panel p-6 text-muted">{messages.trending.noArticles}</div>
+          <div className="panel p-5 text-sm text-muted">{messages.trending.noArticles}</div>
         )}
       </div>
 
       {articles.length ? (
-        <section className="mt-8 panel px-6 py-6 md:px-8">
-          <p className="text-sm text-muted">
+        <section className="mt-6 panel px-5 py-5 md:mt-8 md:px-6">
+          <p className="text-[13px] text-muted md:text-sm">
             {messages.news.pagePrefix} 1. {messages.categories.latest}: {formatDate(locale, articles[0].publishedAt || new Date())}
           </p>
         </section>

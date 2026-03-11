@@ -17,14 +17,14 @@ export default function LanguageSwitcher({ compact = false }: LanguageSwitcherPr
   const activeOption = options.find((option) => option.locale === locale) ?? options[0];
 
   return (
-    <label className={`relative inline-flex items-center ${compact ? "min-w-32" : "min-w-40"}`} htmlFor="language-switcher">
+    <label className={`relative inline-flex items-center ${compact ? "min-w-28" : "min-w-36"}`} htmlFor="language-switcher">
       <span className="sr-only">{messages.localeLabel}</span>
-      <span aria-hidden="true" className={`pointer-events-none absolute ${compact ? "left-3 text-sm" : "left-4 text-base"}`}>
+      <span aria-hidden="true" className={`pointer-events-none absolute ${compact ? "left-2.5 text-[13px]" : "left-4 text-base"}`}>
         {activeOption.flag}
       </span>
       <select
         aria-label={messages.localeLabel}
-        className={`button-secondary w-full appearance-none ${compact ? "pl-9 pr-8 text-sm" : "pl-11 pr-10"}`}
+        className={`button-secondary w-full appearance-none ${compact ? "pl-8 pr-7 text-[13px]" : "pl-11 pr-10"}`}
         id="language-switcher"
         onChange={(event) => setLocale(event.target.value as Locale)}
         value={locale}
@@ -35,7 +35,7 @@ export default function LanguageSwitcher({ compact = false }: LanguageSwitcherPr
           </option>
         ))}
       </select>
-      <span aria-hidden="true" className={`pointer-events-none absolute ${compact ? "right-3 text-[10px]" : "right-4 text-xs"} text-muted`}>
+      <span aria-hidden="true" className={`pointer-events-none absolute ${compact ? "right-2.5 text-[9px]" : "right-4 text-xs"} text-muted`}>
         ▾
       </span>
     </label>

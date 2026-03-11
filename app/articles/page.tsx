@@ -36,13 +36,13 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
-    <div className="shell-container py-8 md:py-12">
-      <div className="panel px-6 py-8 md:px-10">
+    <div className="shell-container py-6 md:py-9">
+      <div className="panel px-5 py-6 md:px-8 md:py-8">
         <span className="eyebrow">{messages.news.eyebrow}</span>
-        <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="mt-3.5 flex flex-col gap-3.5 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1 className="font-display text-4xl font-semibold md:text-5xl">{messages.news.title}</h1>
-            <p className="mt-3 max-w-2xl text-muted">
+            <h1 className="font-display text-3xl font-semibold md:text-4xl">{messages.news.title}</h1>
+            <p className="mt-2.5 max-w-2xl text-sm leading-6 text-muted md:text-[15px]">
               {messages.news.pagePrefix} {page} {messages.news.pageMiddle} {totalPages}. {messages.news.pageSuffix}
             </p>
           </div>
@@ -50,7 +50,7 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
         </div>
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_300px]">
+      <div className="mt-6 grid gap-5 md:mt-8 lg:grid-cols-[1fr_280px]">
         <div className="grid-auto-fit">
           {articles.map((article) => (
             <ArticleCard
@@ -66,14 +66,14 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
             />
           ))}
         </div>
-        <aside className="space-y-6">
+        <aside className="space-y-5">
           <AdUnit slot="sidebar" />
-          <div className="panel p-6 text-sm leading-7 text-muted">{messages.news.archiveNote}</div>
-          <div className="panel p-6">
+          <div className="panel p-5 text-[13px] leading-6 text-muted md:text-sm">{messages.news.archiveNote}</div>
+          <div className="panel p-5 md:p-6">
             <p className="eyebrow">{messages.recommendations.eyebrow}</p>
-            <h2 className="mt-4 font-display text-2xl font-semibold">{messages.recommendations.title}</h2>
-            <p className="mt-3 text-sm leading-7 text-muted">{messages.recommendations.description}</p>
-            <div className="mt-5 flex items-center justify-between gap-4">
+            <h2 className="mt-3 font-display text-xl font-semibold md:text-2xl">{messages.recommendations.title}</h2>
+            <p className="mt-2.5 text-[13px] leading-6 text-muted md:text-sm">{messages.recommendations.description}</p>
+            <div className="mt-4 flex items-center justify-between gap-4">
               <span className="text-sm text-muted">{recommendationCount}</span>
               <Link className="button-secondary" href="/recommendations">
                 {messages.recommendations.explore}
@@ -83,7 +83,7 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
         </aside>
       </div>
 
-      <div className="mt-8 flex items-center justify-between">
+      <div className="mt-6 flex items-center justify-between md:mt-8">
         <Link className="button-secondary" href={page > 1 ? `/articles?page=${page - 1}` : "/articles"}>
           {messages.news.previous}
         </Link>
