@@ -16,6 +16,12 @@ type CategoryRow = {
   latestPublishedAt?: Date;
 };
 
+type AnimeGenreRow = {
+  _id: string;
+  count: number;
+  latestUpdatedAt?: Date;
+};
+
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getServerLocale();
   const messages = getMessages(locale);
@@ -33,15 +39,40 @@ export default async function CategoriesPage() {
 
   await connectToDatabase();
 
-  const [categories, animes] = await Promise.all([
+  const [articleCategories, animeGenreCategories, animes] = await Promise.all([
     Article.aggregate<CategoryRow>([
       { $match: { status: "published", category: { $type: "string", $ne: "" } } },
       { $group: { _id: "$category", count: { $sum: 1 }, latestPublishedAt: { $max: "$publishedAt" } } },
       { $sort: { count: -1, latestPublishedAt: -1, _id: 1 } },
       { $limit: 24 },
     ]),
+    Anime.aggregate<AnimeGenreRow>([
+      { $match: { genres: { $exists: true, $ne: [] } } },
+      { $unwind: "$genres" },
+      { $match: { genres: { $type: "string", $ne: "" } } },
+      { $group: { _id: "$genres", count: { $sum: 1 }, latestUpdatedAt: { $max: "$updatedAt" } } },
+      { $sort: { count: -1, latestUpdatedAt: -1, _id: 1 } },
+      { $limit: 24 },
+    ]),
     Anime.find({}).sort({ updatedAt: -1 }).limit(8).lean(),
   ]);
+
+  const categoryMap = new Map<string, CategoryRow>();
+  for (const category of articleCategories) {
+    categoryMap.set(category._id, category);
+  }
+  for (const category of animeGenreCategories) {
+    const existing = categoryMap.get(category._id);
+    categoryMap.set(category._id, {
+      _id: category._id,
+      count: (existing?.count || 0) + category.count,
+      latestPublishedAt: existing?.latestPublishedAt || category.latestUpdatedAt,
+    });
+  }
+
+  const categories = Array.from(categoryMap.values())
+    .sort((a, b) => b.count - a.count || (b.latestPublishedAt?.getTime() || 0) - (a.latestPublishedAt?.getTime() || 0) || a._id.localeCompare(b._id))
+    .slice(0, 24);
 
   const jsonLd = buildCollectionJsonLd({
     title: messages.categories.title,

@@ -2,10 +2,12 @@ import Link from "next/link";
 
 import AdUnit from "@/app/components/AdUnit";
 import ArticleCard from "@/app/components/ArticleCard";
+import NotificationSignupForm from "@/app/components/NotificationSignupForm";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { absoluteUrl } from "@/lib/seo";
 import { connectToDatabase } from "@/lib/mongodb";
+import Anime from "@/models/Anime";
 import Article from "@/models/Article";
 
 export const dynamic = "force-dynamic";
@@ -13,21 +15,32 @@ export const dynamic = "force-dynamic";
 async function getHomepageArticles() {
   await connectToDatabase();
 
-  const [featured, latest] = await Promise.all([
+  const [featured, latest, airingAnimes] = await Promise.all([
     Article.find({ status: "published" }).sort({ publishedAt: -1, updatedAt: -1 }).limit(1).lean(),
     Article.find({ status: "published" }).sort({ publishedAt: -1, updatedAt: -1 }).limit(6).lean(),
+    Anime.find({ notificationsEnabled: { $ne: false }, status: "airing" })
+      .sort({ isPopularNow: -1, popularityScore: -1, nextEpisodeAt: 1, updatedAt: -1 })
+      .limit(4)
+      .lean(),
   ]);
 
   return {
     featured: featured[0] || null,
     latest,
+    airingAnimes,
   };
 }
 
 export default async function Home() {
   const locale = await getServerLocale();
   const messages = getMessages(locale);
-  const { featured, latest } = await getHomepageArticles();
+  const { featured, latest, airingAnimes } = await getHomepageArticles();
+
+  const notificationOptions = airingAnimes.map((anime) => ({
+    slug: anime.slug,
+    title: anime.title,
+    releaseDay: anime.releaseDay ?? undefined,
+  }));
 
   return (
     <div className="shell-container py-8 md:py-12">
@@ -43,7 +56,7 @@ export default async function Home() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link className="button-primary" href="/news">
+            <Link className="button-primary" href="/articles">
               {messages.home.browse}
             </Link>
             <Link className="button-secondary" href="/trending">
@@ -77,6 +90,22 @@ export default async function Home() {
         </div>
       </section>
 
+      {notificationOptions.length ? (
+        <section className="mt-8 space-y-4">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="eyebrow">{messages.home.subscribeEyebrow}</p>
+              <h2 className="mt-3 font-display text-3xl font-semibold">{messages.home.subscribeTitle}</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-muted">{messages.home.subscribeDescription}</p>
+            </div>
+            <Link className="button-secondary" href="/airing">
+              {messages.home.subscribeSecondaryCta}
+            </Link>
+          </div>
+          <NotificationSignupForm animeOptions={notificationOptions} preselectedSlugs={notificationOptions.slice(0, 2).map((anime) => anime.slug)} sourcePage="/" />
+        </section>
+      ) : null}
+
       <section className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
           <div className="flex items-end justify-between gap-4">
@@ -86,7 +115,7 @@ export default async function Home() {
                 {messages.home.latestTitle}
               </h2>
             </div>
-            <Link className="text-sm font-semibold text-accent" href="/news">
+            <Link className="text-sm font-semibold text-accent" href="/articles">
               {messages.home.viewAll}
             </Link>
           </div>

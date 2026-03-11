@@ -8,7 +8,10 @@ import Article from "@/models/Article";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: absoluteUrl("/"), changeFrequency: "hourly", priority: 1 },
-    { url: absoluteUrl("/news"), changeFrequency: "hourly", priority: 0.9 },
+    { url: absoluteUrl("/articles"), changeFrequency: "hourly", priority: 0.9 },
+    { url: absoluteUrl("/airing"), changeFrequency: "hourly", priority: 0.88 },
+    { url: absoluteUrl("/explore"), changeFrequency: "daily", priority: 0.84 },
+    { url: absoluteUrl("/recommendations"), changeFrequency: "daily", priority: 0.78 },
     { url: absoluteUrl("/trending"), changeFrequency: "hourly", priority: 0.85 },
     { url: absoluteUrl("/season"), changeFrequency: "daily", priority: 0.8 },
     { url: absoluteUrl("/categories"), changeFrequency: "daily", priority: 0.8 },

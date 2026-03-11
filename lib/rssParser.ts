@@ -20,6 +20,14 @@ export type NormalizedRssItem = {
   content?: string;
 };
 
+export type ConfiguredRssSource = {
+  feedUrl: string;
+  kind: "news" | "recommendation";
+  recommendationType?: "anime" | "manga";
+  sourceCategory?: string;
+  defaultTags?: string[];
+};
+
 function getMetaContent(html: string, attributeName: string, attributeValue: string) {
   const escapedValue = attributeValue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const patterns = [
@@ -109,9 +117,39 @@ export async function fetchRssFeed(feedUrl: string) {
   }));
 }
 
-export function getConfiguredRssSources() {
-  return (process.env.RSS_SOURCES || "")
+function parseConfiguredSources(
+  rawValue: string | undefined,
+  config: Omit<ConfiguredRssSource, "feedUrl">,
+) {
+  return (rawValue || "")
     .split(",")
     .map((source) => source.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .map<ConfiguredRssSource>((feedUrl) => ({ feedUrl, ...config }));
+}
+
+export function getConfiguredRssSourceGroups() {
+  return [
+    ...parseConfiguredSources(process.env.RSS_SOURCES, {
+      kind: "news",
+      sourceCategory: "news",
+      defaultTags: ["news"],
+    }),
+    ...parseConfiguredSources(process.env.RSS_RECOMMENDATION_ANIME_SOURCES, {
+      kind: "recommendation",
+      recommendationType: "anime",
+      sourceCategory: "anime-recommendations",
+      defaultTags: ["recommendation", "anime"],
+    }),
+    ...parseConfiguredSources(process.env.RSS_RECOMMENDATION_MANGA_SOURCES, {
+      kind: "recommendation",
+      recommendationType: "manga",
+      sourceCategory: "manga-recommendations",
+      defaultTags: ["recommendation", "manga"],
+    }),
+  ];
+}
+
+export function getConfiguredRssSources() {
+  return getConfiguredRssSourceGroups().map((source) => source.feedUrl);
 }

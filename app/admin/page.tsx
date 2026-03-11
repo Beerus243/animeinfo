@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import CreateDraftButtons from "@/app/admin/components/CreateDraftButtons";
 import AdminLogoutButton from "@/app/admin/components/AdminLogoutButton";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
@@ -47,6 +48,13 @@ export default async function AdminPage() {
           ))}
         </div>
         <div className="mt-8 flex flex-wrap gap-3">
+          <CreateDraftButtons />
+          <Link className="button-secondary" href="/admin/anime">
+            {messages.admin.manageAnime}
+          </Link>
+          <Link className="button-secondary" href="/admin/subscribers">
+            {messages.admin.manageSubscribers}
+          </Link>
           <Link className="button-primary" href="/admin/drafts">
             {messages.admin.openDrafts}
           </Link>

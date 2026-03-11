@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { isAdminRequestAuthorized, isCronSecretAuthorized } from "@/lib/adminAuth";
+import { importConfiguredAnimeFeeds } from "@/lib/animeFeedImport";
 import { uploadRemoteImageToCloudinary } from "@/lib/cloudinary";
 import { connectToDatabase } from "@/lib/mongodb";
-import { fetchRssFeed, getConfiguredRssSources } from "@/lib/rssParser";
+import { fetchRssFeed, getConfiguredRssSourceGroups } from "@/lib/rssParser";
+import { getRssTrendSnapshot, persistRssTrendSnapshot } from "@/lib/rssTrends";
 import Article from "@/models/Article";
 import Source from "@/models/Source";
+
+function mergeTags(existingTags: unknown, defaultTags: string[] = []) {
+  const sourceTags = Array.isArray(existingTags) ? existingTags.filter((tag): tag is string => typeof tag === "string") : [];
+  return Array.from(new Set([...sourceTags, ...defaultTags]));
+}
 
 export async function GET(request: NextRequest) {
   const isAuthorized = (await isAdminRequestAuthorized(request)) || isCronSecretAuthorized(request);
@@ -13,7 +20,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const sources = getConfiguredRssSources();
+  const sources = getConfiguredRssSourceGroups();
   if (!sources.length) {
     return NextResponse.json({ error: "No RSS sources configured." }, { status: 400 });
   }
@@ -25,13 +32,23 @@ export async function GET(request: NextRequest) {
   let enriched = 0;
   const failures: Array<{ source: string; error: string }> = [];
 
-  for (const sourceUrl of sources) {
+  for (const source of sources) {
     try {
-      const items = await fetchRssFeed(sourceUrl);
+      const items = await fetchRssFeed(source.feedUrl);
 
       await Source.updateOne(
-        { feedUrl: sourceUrl },
-        { $set: { name: new URL(sourceUrl).hostname, active: true } },
+        { feedUrl: source.feedUrl },
+        {
+          $set: {
+            name: new URL(source.feedUrl).hostname,
+            active: true,
+            category: source.sourceCategory,
+            mapping: {
+              category: source.sourceCategory,
+              defaultTags: source.defaultTags,
+            },
+          },
+        },
         { upsert: true },
       );
 
@@ -41,11 +58,32 @@ export async function GET(request: NextRequest) {
         }
 
         const existingArticle = await Article.findOne({ originalUrl: item.originalUrl })
-          .select({ _id: 1, coverImage: 1, seo: 1, status: 1 })
+          .select({ _id: 1, coverImage: 1, seo: 1, tags: 1, section: 1, recommendationType: 1, category: 1 })
           .lean();
 
         if (existingArticle) {
           duplicates += 1;
+
+          const nextTags = mergeTags(existingArticle.tags, source.defaultTags);
+          const shouldEnrichMeta =
+            existingArticle.section !== source.kind ||
+            existingArticle.recommendationType !== source.recommendationType ||
+            existingArticle.category !== source.sourceCategory ||
+            nextTags.length !== (Array.isArray(existingArticle.tags) ? existingArticle.tags.length : 0);
+
+          if (shouldEnrichMeta) {
+            await Article.updateOne(
+              { _id: existingArticle._id },
+              {
+                $set: {
+                  section: source.kind,
+                  recommendationType: source.recommendationType,
+                  category: existingArticle.category || source.sourceCategory,
+                  tags: nextTags,
+                },
+              },
+            );
+          }
 
           if (!existingArticle.coverImage && item.coverImage) {
             const mirroredCoverImage = await uploadRemoteImageToCloudinary(item.coverImage, item.slug);
@@ -74,6 +112,10 @@ export async function GET(request: NextRequest) {
           excerpt: item.excerpt,
           content: item.content,
           coverImage: mirroredCoverImage,
+          category: source.sourceCategory,
+          tags: source.defaultTags,
+          section: source.kind,
+          recommendationType: source.recommendationType,
           sourceName: item.sourceName,
           status: "draft",
           publishedAt: item.publishedAt,
@@ -88,10 +130,29 @@ export async function GET(request: NextRequest) {
       }
     } catch (error) {
       failures.push({
-        source: sourceUrl,
+        source: source.feedUrl,
         error: error instanceof Error ? error.message : "Unknown import error",
       });
     }
+  }
+
+  const animeImport = await importConfiguredAnimeFeeds();
+  for (const failure of animeImport.failures) {
+    failures.push({ source: failure.feedUrl, error: failure.error });
+  }
+
+  let trendSnapshotStored = false;
+  try {
+    const trendSnapshot = await getRssTrendSnapshot();
+    if (trendSnapshot.liveItems.length || trendSnapshot.sourceRows.length || trendSnapshot.topicRows.length) {
+      await persistRssTrendSnapshot(trendSnapshot);
+      trendSnapshotStored = true;
+    }
+  } catch (error) {
+    failures.push({
+      source: "rss-trends",
+      error: error instanceof Error ? error.message : "Unable to persist trend snapshot",
+    });
   }
 
   return NextResponse.json({
@@ -100,6 +161,10 @@ export async function GET(request: NextRequest) {
     imported,
     duplicates,
     enriched,
+    animeImported: animeImport.imported,
+    animeUpdated: animeImport.updated,
+    animeTotalItems: animeImport.totalItems,
+    trendSnapshotStored,
     failures,
   });
 }

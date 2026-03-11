@@ -1,0 +1,64 @@
+import { formatDateTime, getMessages } from "@/lib/i18n/messages";
+import { getServerLocale } from "@/lib/i18n/server";
+import { connectToDatabase } from "@/lib/mongodb";
+import Anime from "@/models/Anime";
+import NotificationSubscription from "@/models/NotificationSubscription";
+
+export const dynamic = "force-dynamic";
+
+export default async function AdminSubscribersPage() {
+  const locale = await getServerLocale();
+  const messages = getMessages(locale);
+
+  await connectToDatabase();
+
+  const subscriptions = await NotificationSubscription.find({ active: true })
+    .sort({ updatedAt: -1, createdAt: -1 })
+    .lean();
+
+  const animeSlugs = Array.from(new Set(subscriptions.flatMap((subscription) => subscription.animeSlugs || [])));
+  const animes = await Anime.find({ slug: { $in: animeSlugs } }).select({ slug: 1, title: 1 }).lean();
+  const animeMap = new Map(animes.map((anime) => [anime.slug, anime.title]));
+
+  return (
+    <div className="shell-container py-8 md:py-12">
+      <section className="panel px-6 py-8 md:px-10 md:py-12">
+        <span className="eyebrow">{messages.adminSubscribers.eyebrow}</span>
+        <h1 className="mt-5 font-display text-4xl font-semibold md:text-5xl">{messages.adminSubscribers.title}</h1>
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-muted">{messages.adminSubscribers.description}</p>
+      </section>
+
+      {subscriptions.length ? (
+        <div className="grid-auto-fit mt-8">
+          {subscriptions.map((subscription) => {
+            const followedTitles = (subscription.animeSlugs || []).map((slug) => animeMap.get(slug) || slug);
+
+            return (
+              <article key={subscription._id.toString()} className="panel p-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="font-display text-2xl font-semibold">{subscription.email}</h2>
+                  <span className="rounded-full border border-line px-3 py-2 text-sm text-muted">
+                    {followedTitles.length} {messages.adminSubscribers.followedSuffix}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm text-muted">{messages.adminSubscribers.sourcePrefix} {subscription.sourcePage || "-"}</p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {followedTitles.map((title) => (
+                    <span key={title} className="rounded-full bg-accent-soft px-3 py-2 text-sm font-medium text-accent">
+                      {title}
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-5 text-sm text-muted">
+                  {messages.adminSubscribers.lastNotifiedPrefix} {subscription.lastNotifiedAt ? formatDateTime(locale, subscription.lastNotifiedAt) : messages.adminSubscribers.neverNotified}
+                </p>
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="panel mt-8 p-6 text-muted">{messages.adminSubscribers.empty}</div>
+      )}
+    </div>
+  );
+}

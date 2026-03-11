@@ -12,6 +12,17 @@ const ArticleSchema = new Schema(
     category: { type: String, trim: true, index: true },
     anime: { type: String, trim: true, index: true },
     tags: [{ type: String, trim: true }],
+    section: {
+      type: String,
+      enum: ["news", "recommendation"],
+      default: "news",
+      index: true,
+    },
+    recommendationType: {
+      type: String,
+      enum: ["anime", "manga"],
+      index: true,
+    },
     status: {
       type: String,
       enum: ["draft", "review", "published"],

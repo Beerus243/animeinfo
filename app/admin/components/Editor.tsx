@@ -15,6 +15,8 @@ type EditorProps = {
     anime?: string;
     tags?: string[];
     coverImage?: string;
+    section?: "news" | "recommendation";
+    recommendationType?: "anime" | "manga";
     seo?: {
       metaTitle?: string;
       metaDesc?: string;
@@ -25,7 +27,7 @@ type EditorProps = {
 
 export default function Editor({ initialArticle }: EditorProps) {
   const { messages } = useLanguage();
-  const [form, setForm] = useState({
+  const initialFormState = {
     title: initialArticle.title || "",
     excerpt: initialArticle.excerpt || "",
     content: initialArticle.content || "",
@@ -33,26 +35,18 @@ export default function Editor({ initialArticle }: EditorProps) {
     anime: initialArticle.anime || "",
     tags: (initialArticle.tags || []).join(", "),
     coverImage: initialArticle.coverImage || "",
+    section: initialArticle.section || "news",
+    recommendationType: initialArticle.recommendationType || "anime",
     metaTitle: initialArticle.seo?.metaTitle || "",
     metaDesc: initialArticle.seo?.metaDesc || "",
     ogImage: initialArticle.seo?.ogImage || "",
-  });
+  };
+  const [form, setForm] = useState(initialFormState);
   const [status, setStatus] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const formRef = useRef(form);
-  const lastSavedRef = useRef(JSON.stringify({
-    title: initialArticle.title || "",
-    excerpt: initialArticle.excerpt || "",
-    content: initialArticle.content || "",
-    category: initialArticle.category || "",
-    anime: initialArticle.anime || "",
-    tags: (initialArticle.tags || []).join(", "),
-    coverImage: initialArticle.coverImage || "",
-    metaTitle: initialArticle.seo?.metaTitle || "",
-    metaDesc: initialArticle.seo?.metaDesc || "",
-    ogImage: initialArticle.seo?.ogImage || "",
-  }));
+  const lastSavedRef = useRef(JSON.stringify(initialFormState));
   const deferredPreview = useMemo(() => ({
     title: form.metaTitle || form.title || messages.editor.articleTitleFallback,
     description: form.metaDesc || form.excerpt || messages.editor.metaFallback,
@@ -93,6 +87,8 @@ export default function Editor({ initialArticle }: EditorProps) {
         anime: currentForm.anime,
         tags: currentForm.tags,
         coverImage: currentForm.coverImage,
+        section: currentForm.section,
+        recommendationType: currentForm.section === "recommendation" ? currentForm.recommendationType : null,
         seo: {
           metaTitle: currentForm.metaTitle,
           metaDesc: currentForm.metaDesc,
@@ -211,6 +207,31 @@ export default function Editor({ initialArticle }: EditorProps) {
           />
         </div>
         <div className="space-y-5">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="space-y-2 text-sm text-muted">
+              <span>{messages.editor.sectionLabel}</span>
+              <select
+                className="w-full rounded-2xl border border-line bg-white/70 px-4 py-3 text-foreground"
+                value={form.section}
+                onChange={(event) => updateField("section", event.target.value)}
+              >
+                <option value="news">{messages.editor.sectionNews}</option>
+                <option value="recommendation">{messages.editor.sectionRecommendation}</option>
+              </select>
+            </label>
+            <label className="space-y-2 text-sm text-muted">
+              <span>{messages.editor.recommendationTypeLabel}</span>
+              <select
+                className="w-full rounded-2xl border border-line bg-white/70 px-4 py-3 text-foreground"
+                disabled={form.section !== "recommendation"}
+                value={form.recommendationType}
+                onChange={(event) => updateField("recommendationType", event.target.value)}
+              >
+                <option value="anime">{messages.editor.recommendationTypeAnime}</option>
+                <option value="manga">{messages.editor.recommendationTypeManga}</option>
+              </select>
+            </label>
+          </div>
           <input
             className="w-full rounded-2xl border border-line bg-white/70 px-4 py-3"
             value={form.category}
@@ -271,7 +292,11 @@ export default function Editor({ initialArticle }: EditorProps) {
           <div className="rounded-3xl border border-line bg-white/55 p-5">
             <p className="text-xs uppercase tracking-[0.16em] text-muted">{messages.editor.livePreview}</p>
             <div className="mt-4 space-y-3">
-              <p className="eyebrow">{form.category || messages.editor.categoryFallback}</p>
+              <p className="eyebrow">
+                {form.section === "recommendation"
+                  ? `${messages.editor.sectionRecommendation} · ${form.recommendationType === "manga" ? messages.editor.recommendationTypeManga : messages.editor.recommendationTypeAnime}`
+                  : form.category || messages.editor.categoryFallback}
+              </p>
               <h2 className="font-display text-2xl font-semibold">{form.title || messages.editor.articleTitleFallback}</h2>
               <p className="text-sm leading-7 text-muted">{form.excerpt || messages.editor.excerptPreviewFallback}</p>
             </div>

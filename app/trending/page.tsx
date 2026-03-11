@@ -5,6 +5,7 @@ import ArticleCard from "@/app/components/ArticleCard";
 import { formatDate, getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
+import { getRssTrendSnapshot } from "@/lib/rssTrends";
 import { buildCollectionJsonLd, buildMetadata } from "@/lib/seo";
 import { slugify } from "@/lib/slugify";
 import Article from "@/models/Article";
@@ -28,7 +29,7 @@ export default async function TrendingPage() {
 
   await connectToDatabase();
 
-  const [articles, categoryRows, tagRows] = await Promise.all([
+  const [articles, categoryRows, tagRows, rssSnapshot] = await Promise.all([
     Article.find({ status: "published" })
       .sort({ publishedAt: -1, updatedAt: -1 })
       .limit(12)
@@ -47,13 +48,19 @@ export default async function TrendingPage() {
       { $sort: { count: -1, _id: 1 } },
       { $limit: 10 },
     ]),
+    getRssTrendSnapshot(),
   ]);
+
+  const effectiveCategoryRows = categoryRows.length ? categoryRows : rssSnapshot.sourceRows;
+  const effectiveTagRows = tagRows.length ? tagRows : rssSnapshot.topicRows;
 
   const jsonLd = buildCollectionJsonLd({
     title: messages.trending.title,
     description: messages.trending.description,
     path: "/trending",
-    itemPaths: articles.map((article) => `/article/${article.slug}`),
+    itemPaths: articles.length
+      ? articles.map((article) => `/article/${article.slug}`)
+      : rssSnapshot.liveItems.map((item) => item.url),
   });
 
   return (
@@ -67,8 +74,8 @@ export default async function TrendingPage() {
           <div className="rounded-3xl border border-line bg-surface-strong p-6">
             <p className="text-sm uppercase tracking-[0.16em] text-muted">{messages.trending.topCategories}</p>
             <div className="mt-5 flex flex-wrap gap-3">
-              {categoryRows.map((category) => (
-                <Link key={category._id} className="button-secondary" href={`/category/${category._id}`}>
+              {effectiveCategoryRows.map((category) => (
+                <Link key={category._id} className="button-secondary" href={`/search?q=${encodeURIComponent(category._id)}`}>
                   {category._id} · {category.count}
                 </Link>
               ))}
@@ -77,7 +84,7 @@ export default async function TrendingPage() {
           <div className="rounded-3xl border border-line bg-surface-strong p-6">
             <p className="text-sm uppercase tracking-[0.16em] text-muted">{messages.trending.hotTopics}</p>
             <div className="mt-5 flex flex-wrap gap-3">
-              {tagRows.map((tag) => (
+              {effectiveTagRows.map((tag) => (
                 <Link key={tag._id} className="button-secondary" href={`/tag/${slugify(tag._id)}`}>
                   #{tag._id} · {tag.count}
                 </Link>
@@ -86,6 +93,32 @@ export default async function TrendingPage() {
           </div>
         </div>
       </section>
+
+      {rssSnapshot.liveItems.length ? (
+        <section className="mt-8 panel px-6 py-8 md:px-8">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="eyebrow">{messages.trending.rssEyebrow}</p>
+              <h2 className="mt-3 font-display text-3xl font-semibold">{messages.trending.rssTitle}</h2>
+            </div>
+          </div>
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            {rssSnapshot.liveItems.map((item) => (
+              <a
+                key={`${item.sourceLabel}-${item.url}`}
+                className="rounded-3xl border border-line bg-white/45 p-5 transition-transform hover:-translate-y-0.5"
+                href={item.url}
+                rel="noreferrer"
+                target="_blank"
+              >
+                <p className="text-sm uppercase tracking-[0.16em] text-muted">{item.sourceLabel}</p>
+                <h3 className="mt-3 font-display text-2xl font-semibold">{item.title}</h3>
+                {item.publishedAt ? <p className="mt-3 text-sm text-muted">{formatDate(locale, item.publishedAt)}</p> : null}
+              </a>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <div className="grid-auto-fit mt-8">
         {articles.length ? (

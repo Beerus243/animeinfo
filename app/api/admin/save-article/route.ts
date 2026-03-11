@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { isAdminRequestAuthorized } from "@/lib/adminAuth";
+import { ensureUniqueArticleSlug } from "@/lib/articleDrafts";
 import { connectToDatabase } from "@/lib/mongodb";
-import { slugify } from "@/lib/slugify";
 import Article from "@/models/Article";
 
 export async function POST(request: NextRequest) {
@@ -17,12 +17,20 @@ export async function POST(request: NextRequest) {
 
   await connectToDatabase();
 
+  const slug = await ensureUniqueArticleSlug(payload.title, { excludeId: payload.id });
+
+  const section = payload.section === "recommendation" ? "recommendation" : "news";
+  const recommendationType =
+    section === "recommendation" && (payload.recommendationType === "anime" || payload.recommendationType === "manga")
+      ? payload.recommendationType
+      : undefined;
+
   const article = await Article.findByIdAndUpdate(
     payload.id,
     {
       $set: {
         title: payload.title,
-        slug: slugify(payload.title),
+        slug,
         excerpt: payload.excerpt,
         content: payload.content,
         category: payload.category,
@@ -32,6 +40,8 @@ export async function POST(request: NextRequest) {
           .map((tag) => tag.trim())
           .filter(Boolean),
         coverImage: payload.coverImage,
+        section,
+        recommendationType,
         seo: {
           metaTitle: payload.seo?.metaTitle,
           metaDesc: payload.seo?.metaDesc,
@@ -39,6 +49,7 @@ export async function POST(request: NextRequest) {
         },
         status: "review",
       },
+      ...(section === "news" ? { $unset: { recommendationType: 1 } } : {}),
     },
     { new: true },
   ).lean();

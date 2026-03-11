@@ -15,10 +15,9 @@ export default async function Header() {
   const isAdmin = await verifyAdminSession(sessionValue);
   const links = [
     { href: "/", label: messages.header.home },
-    { href: "/news", label: messages.header.news },
-    { href: "/trending", label: messages.header.trending },
-    { href: "/season", label: messages.header.season },
-    { href: "/categories", label: messages.header.categories },
+    { href: "/articles", label: messages.header.news },
+    { href: "/airing", label: messages.header.airing },
+    { href: "/explore", label: messages.header.explore },
     ...(isAdmin ? [{ href: "/admin", label: messages.header.dashboard }] : []),
   ];
 

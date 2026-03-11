@@ -6,3 +6,7 @@ import { slugify } from "@/lib/slugify";
 test("slugify normalizes anime titles", () => {
   assert.equal(slugify("Frieren: Beyond Journey's End"), "frieren-beyond-journey-s-end");
 });
+
+test("slugify falls back to empty string for unsupported content", () => {
+  assert.equal(slugify("!!!"), "");
+});
