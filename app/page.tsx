@@ -46,8 +46,8 @@ export default async function Home() {
             <Link className="button-primary" href="/news">
               {messages.home.browse}
             </Link>
-            <Link className="button-secondary" href="/admin/drafts">
-              {messages.home.reviewDrafts}
+            <Link className="button-secondary" href="/trending">
+              {messages.home.exploreTrending}
             </Link>
           </div>
         </div>
@@ -60,7 +60,7 @@ export default async function Home() {
                 {featured.title}
               </h2>
               <p className="text-muted">{featured.excerpt || messages.home.noSummary}</p>
-              <Link className="button-primary" href={`/news/${featured.slug}`}>
+              <Link className="button-primary" href={`/article/${featured.slug}`}>
                 {messages.home.readArticle}
               </Link>
             </div>

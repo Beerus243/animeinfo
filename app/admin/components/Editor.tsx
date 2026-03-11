@@ -79,13 +79,10 @@ export default function Editor({ initialArticle }: EditorProps) {
     setStatus(reason === "auto" ? messages.editor.autosaving : messages.editor.saving);
     const currentForm = formRef.current;
 
-    const adminToken = window.localStorage.getItem("animeinfo-admin-token") || "";
-
     const response = await fetch("/api/admin/save-article", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-admin-token": adminToken,
       },
       body: JSON.stringify({
         id: initialArticle._id,
@@ -267,7 +264,7 @@ export default function Editor({ initialArticle }: EditorProps) {
             <p className="text-xs uppercase tracking-[0.16em] text-muted">{messages.editor.serpPreview}</p>
             <div className="mt-4 space-y-2">
               <p className="line-clamp-2 text-lg font-semibold text-[#1a0dab] dark:text-[#8ab4f8]">{deferredPreview.title}</p>
-              <p className="text-sm text-success">animeinfo.com/news/{deferredPreview.slug || messages.editor.slugFallback}</p>
+              <p className="text-sm text-success">animeinfo.com/article/{deferredPreview.slug || messages.editor.slugFallback}</p>
               <p className="text-sm leading-6 text-muted">{deferredPreview.description}</p>
             </div>
           </div>

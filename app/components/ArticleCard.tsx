@@ -32,7 +32,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               src={article.coverImage}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/45 via-black/10 to-transparent" />
           </>
         ) : null}
       </div>
@@ -53,7 +53,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
             {article.excerpt || messages.card.excerptFallback}
           </p>
         </div>
-        <Link aria-label={`${messages.card.readAriaPrefix} ${article.title}`} className="button-secondary" href={`/news/${article.slug}`}>
+        <Link aria-label={`${messages.card.readAriaPrefix} ${article.title}`} className="button-secondary" href={`/article/${article.slug}`}>
           {messages.card.readMore}
         </Link>
       </div>

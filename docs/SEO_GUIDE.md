@@ -8,6 +8,6 @@
 
 ## Technical coverage
 
-- `app/news/[slug]/page.tsx` emits canonical metadata and JSON-LD.
+- `app/article/[slug]/page.tsx` emits canonical metadata and JSON-LD.
 - `app/sitemap.ts` indexes published articles only.
 - Category and anime hub pages create thematic internal linking.

@@ -1,9 +1,11 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import ArticleCard from "@/app/components/ArticleCard";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
+import { buildCollectionJsonLd, buildMetadata } from "@/lib/seo";
 import Anime from "@/models/Anime";
 import Article from "@/models/Article";
 
@@ -12,6 +14,30 @@ export const dynamic = "force-dynamic";
 type AnimePageProps = {
   params: Promise<{ slug: string }>;
 };
+
+export async function generateMetadata({ params }: AnimePageProps): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const messages = getMessages(locale);
+  const { slug } = await params;
+
+  await connectToDatabase();
+  const anime = await Anime.findOne({ slug }).lean();
+
+  if (!anime) {
+    return buildMetadata({
+      title: slug,
+      description: messages.anime.synopsisFallback,
+      path: `/anime/${slug}`,
+    });
+  }
+
+  return buildMetadata({
+    title: anime.title,
+    description: anime.synopsis || messages.anime.synopsisFallback,
+    path: `/anime/${slug}`,
+    image: anime.coverImage || undefined,
+  });
+}
 
 export default async function AnimePage({ params }: AnimePageProps) {
   const locale = await getServerLocale();
@@ -28,8 +54,16 @@ export default async function AnimePage({ params }: AnimePageProps) {
     notFound();
   }
 
+  const jsonLd = buildCollectionJsonLd({
+    title: anime.title,
+    description: anime.synopsis || messages.anime.synopsisFallback,
+    path: `/anime/${slug}`,
+    itemPaths: articles.map((article) => `/article/${article.slug}`),
+  });
+
   return (
     <div className="shell-container py-8 md:py-12">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <section className="panel px-6 py-8 md:px-10 md:py-12">
         <span className="eyebrow">{messages.anime.eyebrow}</span>
         <h1 className="mt-5 font-display text-4xl font-semibold md:text-6xl">

@@ -19,13 +19,10 @@ export default function PublishButton({ articleId, currentStatus }: PublishButto
     setPending(true);
     setErrorMessage(null);
 
-    const adminToken = window.localStorage.getItem("animeinfo-admin-token") || "";
-
     const response = await fetch("/api/admin/publish", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-admin-token": adminToken,
       },
       body: JSON.stringify({ id: articleId }),
     });

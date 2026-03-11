@@ -15,7 +15,7 @@ function bytesToBase64Url(bytes: Uint8Array) {
 }
 
 function getAdminSessionSecret() {
-  return process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_TOKEN || "animeinfo-dev-session-secret";
+  return process.env.ADMIN_SESSION_SECRET || "animeinfo-dev-session-secret";
 }
 
 async function signValue(value: string) {
@@ -33,7 +33,7 @@ async function signValue(value: string) {
 export function getAdminCredentials() {
   return {
     email: process.env.ADMIN_EMAIL || "admin@animeinfo.local",
-    password: process.env.ADMIN_PASSWORD || process.env.ADMIN_TOKEN || "",
+    password: process.env.ADMIN_PASSWORD || "change_me_secure_token",
   };
 }
 
@@ -79,25 +79,20 @@ export async function verifyAdminSession(sessionValue?: string | null) {
   }
 }
 
-export async function isAdminRequestAuthorized(request: NextRequest, options?: { allowQueryToken?: boolean }) {
+export async function isAdminRequestAuthorized(request: NextRequest) {
   const sessionValue = request.cookies.get(adminSessionCookieName)?.value;
-  if (await verifyAdminSession(sessionValue)) {
-    return true;
-  }
+  return verifyAdminSession(sessionValue);
+}
 
-  const adminToken = process.env.ADMIN_TOKEN;
-  if (!adminToken) {
+export function isCronSecretAuthorized(request: NextRequest) {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
     return false;
   }
 
-  const headerToken = request.headers.get("x-admin-token") || request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-  if (headerToken === adminToken) {
-    return true;
-  }
+  const providedSecret =
+    request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
+    request.nextUrl.searchParams.get("token");
 
-  if (options?.allowQueryToken && request.nextUrl.searchParams.get("token") === adminToken) {
-    return true;
-  }
-
-  return false;
+  return providedSecret === cronSecret;
 }

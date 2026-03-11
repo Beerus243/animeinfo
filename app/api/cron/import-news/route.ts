@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { isAdminRequestAuthorized } from "@/lib/adminAuth";
+import { isAdminRequestAuthorized, isCronSecretAuthorized } from "@/lib/adminAuth";
 import { uploadRemoteImageToCloudinary } from "@/lib/cloudinary";
 import { connectToDatabase } from "@/lib/mongodb";
 import { fetchRssFeed, getConfiguredRssSources } from "@/lib/rssParser";
@@ -8,7 +8,8 @@ import Article from "@/models/Article";
 import Source from "@/models/Source";
 
 export async function GET(request: NextRequest) {
-  if (!(await isAdminRequestAuthorized(request, { allowQueryToken: true }))) {
+  const isAuthorized = (await isAdminRequestAuthorized(request)) || isCronSecretAuthorized(request);
+  if (!isAuthorized) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

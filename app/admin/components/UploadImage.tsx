@@ -21,11 +21,8 @@ export default function UploadImage({ onUploaded }: UploadImageProps) {
 
     setStatus(messages.upload.signing);
 
-    const adminToken = window.localStorage.getItem("animeinfo-admin-token") || "";
-
     const signatureResponse = await fetch("/api/upload/image", {
       method: "POST",
-      headers: { "x-admin-token": adminToken },
     });
     const signature = await signatureResponse.json();
 

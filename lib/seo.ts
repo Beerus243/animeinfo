@@ -15,6 +15,10 @@ type ArticleSeoInput = SeoInput & {
   tags?: string[];
 };
 
+type CollectionSeoInput = SeoInput & {
+  itemPaths?: string[];
+};
+
 function getSiteUrl() {
   return (process.env.SITE_URL || "http://localhost:3000").replace(/\/$/, "");
 }
@@ -75,5 +79,20 @@ export function buildArticleJsonLd(input: ArticleSeoInput) {
         url: absoluteUrl("/og/placeholder-1200x630.svg"),
       },
     },
+  };
+}
+
+export function buildCollectionJsonLd(input: CollectionSeoInput) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: input.title,
+    description: input.description,
+    url: absoluteUrl(input.path),
+    hasPart: input.itemPaths?.slice(0, 20).map((path, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      url: absoluteUrl(path),
+    })),
   };
 }

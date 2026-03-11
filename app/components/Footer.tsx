@@ -8,8 +8,10 @@ export default async function Footer() {
   return (
     <footer className="px-3 py-10">
       <div className="shell-container panel flex flex-col gap-4 px-6 py-6 text-sm text-muted md:flex-row md:items-center md:justify-between">
-        <p>{messages.footer.line1}</p>
-        <p>{messages.footer.line2}</p>
+        <div className="space-y-2">
+          <p>{messages.footer.line1}</p>
+          <p>{messages.footer.line2}</p>
+        </div>
       </div>
     </footer>
   );
