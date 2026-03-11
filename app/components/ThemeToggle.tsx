@@ -22,7 +22,11 @@ function getSnapshot(): ThemeMode {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-export default function ThemeToggle() {
+type ThemeToggleProps = {
+  compact?: boolean;
+};
+
+export default function ThemeToggle({ compact = false }: ThemeToggleProps) {
   const theme = useSyncExternalStore(subscribe, getSnapshot, () => "light");
   const { messages } = useLanguage();
 
@@ -37,12 +41,12 @@ export default function ThemeToggle() {
   return (
     <button
       aria-label={theme === "dark" ? messages.theme.toLight : messages.theme.toDark}
-      className="button-secondary min-w-11 px-4"
+      className={`button-secondary ${compact ? "min-w-10 px-3 text-sm" : "min-w-11 px-4"}`}
       onClick={toggleTheme}
       type="button"
     >
       <span aria-hidden="true">{theme === "dark" ? "☀" : "☾"}</span>
-      <span className="hidden sm:inline">{theme === "dark" ? messages.theme.light : messages.theme.dark}</span>
+      <span className={compact ? "hidden" : "hidden sm:inline"}>{theme === "dark" ? messages.theme.light : messages.theme.dark}</span>
     </button>
   );
 }

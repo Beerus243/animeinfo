@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "cloudinary": "^2.8.0",
+    "lucide-react": "^0.577.0",
     "mongoose": "^8.19.2",
     "next": "16.1.6",
     "next-cloudinary": "^6.17.5",
