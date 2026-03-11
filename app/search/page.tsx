@@ -67,11 +67,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         { "localizations.fr.content": regex },
         { "localizations.fr.seo.metaTitle": regex },
         { "localizations.fr.seo.metaDesc": regex },
-        { "localizations.en.title": regex },
-        { "localizations.en.excerpt": regex },
-        { "localizations.en.content": regex },
-        { "localizations.en.seo.metaTitle": regex },
-        { "localizations.en.seo.metaDesc": regex },
       ],
     })
       .sort({ publishedAt: -1, updatedAt: -1 })

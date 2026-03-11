@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import LanguageSwitcher from "@/app/components/LanguageSwitcher";
 import ThemeToggle from "@/app/components/ThemeToggle";
 
 type MobileNavProps = {
@@ -100,7 +99,6 @@ export default function MobileNav({ links, ariaLabel }: MobileNavProps) {
             ))}
           </nav>
           <div className="mt-auto flex items-center gap-1.5 border-t border-line/80 pt-4">
-            <LanguageSwitcher compact />
             <ThemeToggle compact />
           </div>
         </div>

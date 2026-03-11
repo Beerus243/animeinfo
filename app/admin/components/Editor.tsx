@@ -80,6 +80,7 @@ type EditorProps = {
 
 export default function Editor({ initialArticle, rewritingEnabled, translationEnabled }: EditorProps) {
   const { messages } = useLanguage();
+  const frenchOnlyMode = !translationEnabled;
   const [activeLocale, setActiveLocale] = useState<EditorLocale>("fr");
   const [aiRewritten, setAiRewritten] = useState(Boolean(initialArticle.aiRewritten));
   const [isRewriting, setIsRewriting] = useState(false);
@@ -136,6 +137,12 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, ""),
   }), [form.localizations.en.title, form.localizations.fr.title, localizedForm.excerpt, localizedForm.seo.metaDesc, localizedForm.seo.metaTitle, localizedForm.title, messages.editor.articleTitleFallback, messages.editor.metaFallback]);
+
+  useEffect(() => {
+    if (frenchOnlyMode && activeLocale !== "fr") {
+      setActiveLocale("fr");
+    }
+  }, [activeLocale, frenchOnlyMode]);
 
   useEffect(() => {
     formRef.current = form;
@@ -472,8 +479,8 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
               </div>
               <span className="status-chip status-chip-success">{localeCompletion[activeLocale]}/3</span>
             </div>
-            <div className="mt-4 grid gap-2 sm:grid-cols-2">
-              {(["fr", "en"] as const).map((localeOption) => {
+            <div className={`mt-4 grid gap-2 ${frenchOnlyMode ? "sm:grid-cols-1" : "sm:grid-cols-2"}`}>
+              {(frenchOnlyMode ? (["fr"] as const) : (["fr", "en"] as const)).map((localeOption) => {
                 const isActive = activeLocale === localeOption;
 
                 return (
@@ -497,37 +504,39 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
                 );
               })}
             </div>
-            <div className="mt-4 rounded-2xl border border-line bg-white/45 p-3 dark:bg-white/5">
-              <p className="text-xs uppercase tracking-[0.16em] text-muted">{messages.editor.rewriteAssistTitle}</p>
-              <p className="mt-2 text-[13px] leading-6 text-muted">{messages.editor.rewriteAssistDescription}</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button className="button-primary" disabled={!rewritingEnabled || isRewriting} onClick={() => void autoRewriteLocale(activeLocale)} type="button">
-                  {isRewriting
-                    ? messages.editor.autoRewritePending.replace("{locale}", activeLocale.toUpperCase())
-                    : messages.editor.autoRewriteCurrent.replace("{locale}", activeLocale.toUpperCase())}
-                </button>
+            {rewritingEnabled ? (
+              <div className="mt-4 rounded-2xl border border-line bg-white/45 p-3 dark:bg-white/5">
+                <p className="text-xs uppercase tracking-[0.16em] text-muted">{messages.editor.rewriteAssistTitle}</p>
+                <p className="mt-2 text-[13px] leading-6 text-muted">{messages.editor.rewriteAssistDescription}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button className="button-primary" disabled={isRewriting} onClick={() => void autoRewriteLocale(activeLocale)} type="button">
+                    {isRewriting
+                      ? messages.editor.autoRewritePending.replace("{locale}", activeLocale.toUpperCase())
+                      : messages.editor.autoRewriteCurrent.replace("{locale}", activeLocale.toUpperCase())}
+                  </button>
+                </div>
               </div>
-              {!rewritingEnabled ? <p className="mt-3 text-[12px] text-muted">{messages.editor.autoRewriteUnavailable}</p> : null}
-            </div>
-            <div className="rounded-2xl border border-line bg-white/45 p-3 dark:bg-white/5">
-              <p className="text-xs uppercase tracking-[0.16em] text-muted">{messages.editor.translationAssistTitle}</p>
-              <p className="mt-2 text-[13px] leading-6 text-muted">{messages.editor.translationAssistDescription}</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button className="button-secondary" onClick={() => prefillLocaleFrom("fr", "en")} type="button">
-                  {messages.editor.prefillFromFr}
-                </button>
-                <button className="button-secondary" onClick={() => prefillLocaleFrom("en", "fr")} type="button">
-                  {messages.editor.prefillFromEn}
-                </button>
-                <button className="button-primary" disabled={!translationEnabled || isTranslating || isRewriting} onClick={() => void autoTranslateFrom("fr", "en")} type="button">
-                  {isTranslating ? messages.editor.autoTranslatePending : messages.editor.autoTranslateFromFr}
-                </button>
-                <button className="button-primary" disabled={!translationEnabled || isTranslating || isRewriting} onClick={() => void autoTranslateFrom("en", "fr")} type="button">
-                  {isTranslating ? messages.editor.autoTranslatePending : messages.editor.autoTranslateFromEn}
-                </button>
+            ) : null}
+            {translationEnabled ? (
+              <div className="rounded-2xl border border-line bg-white/45 p-3 dark:bg-white/5">
+                <p className="text-xs uppercase tracking-[0.16em] text-muted">{messages.editor.translationAssistTitle}</p>
+                <p className="mt-2 text-[13px] leading-6 text-muted">{messages.editor.translationAssistDescription}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button className="button-secondary" onClick={() => prefillLocaleFrom("fr", "en")} type="button">
+                    {messages.editor.prefillFromFr}
+                  </button>
+                  <button className="button-secondary" onClick={() => prefillLocaleFrom("en", "fr")} type="button">
+                    {messages.editor.prefillFromEn}
+                  </button>
+                  <button className="button-primary" disabled={isTranslating || isRewriting} onClick={() => void autoTranslateFrom("fr", "en")} type="button">
+                    {isTranslating ? messages.editor.autoTranslatePending : messages.editor.autoTranslateFromFr}
+                  </button>
+                  <button className="button-primary" disabled={isTranslating || isRewriting} onClick={() => void autoTranslateFrom("en", "fr")} type="button">
+                    {isTranslating ? messages.editor.autoTranslatePending : messages.editor.autoTranslateFromEn}
+                  </button>
+                </div>
               </div>
-              {!translationEnabled ? <p className="mt-3 text-[12px] text-muted">{messages.editor.autoTranslateUnavailable}</p> : null}
-            </div>
+            ) : null}
           </div>
           <input
             aria-label={messages.editor.titleAria}

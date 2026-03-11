@@ -46,7 +46,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const slugs = Array.from(new Set([
       article.slug,
       article.localizations?.fr?.slug,
-      article.localizations?.en?.slug,
     ].filter(Boolean)));
 
     return slugs.map((slug) => ({

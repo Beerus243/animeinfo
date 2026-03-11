@@ -1,9 +1,9 @@
 import Link from "next/link";
 
 import CreateDraftButtons from "@/app/admin/components/CreateDraftButtons";
-import ImportRecommendationsButton from "@/app/admin/components/ImportRecommendationsButton";
 import ProcessDraftsButton from "@/app/admin/components/ProcessDraftsButton";
 import AdminLogoutButton from "@/app/admin/components/AdminLogoutButton";
+import { isFrenchAiPipelineConfigured } from "@/lib/articleTranslation";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -14,6 +14,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const locale = await getServerLocale();
   const messages = getMessages(locale);
+  const aiEnabled = isFrenchAiPipelineConfigured();
   await connectToDatabase();
 
   const [drafts, review, published] = await Promise.all([
@@ -27,10 +28,12 @@ export default async function AdminPage() {
     Article.countDocuments({ status: { $in: ["draft", "review"] }, aiStatus: "failed" }),
   ]);
 
-  const stats = [
+  const coreStats = [
     { label: messages.admin.drafts, value: drafts },
     { label: messages.admin.inReview, value: review },
     { label: messages.admin.published, value: published },
+  ];
+  const aiStats = [
     { label: messages.admin.draftAiPending, value: aiPending },
     { label: messages.admin.draftAiDone, value: aiDone },
     { label: messages.admin.draftAiFailed, value: aiFailed },
@@ -50,40 +53,50 @@ export default async function AdminPage() {
           <AdminLogoutButton />
         </div>
         <div className="grid-auto-fit mt-8">
-          {stats.map((stat) => (
+          {coreStats.map((stat) => (
             <div key={stat.label} className="content-card rounded-3xl p-5 md:p-6">
               <p className="text-[11px] uppercase tracking-[0.16em] text-muted md:text-sm">{stat.label}</p>
               <p className="mt-3 font-display text-3xl font-semibold md:mt-4 md:text-4xl">{stat.value}</p>
             </div>
           ))}
         </div>
+        {aiEnabled ? (
+          <div className="grid-auto-fit mt-5">
+            {aiStats.map((stat) => (
+              <div key={stat.label} className="content-card rounded-3xl p-5 md:p-6">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-muted md:text-sm">{stat.label}</p>
+                <p className="mt-3 font-display text-3xl font-semibold md:mt-4 md:text-4xl">{stat.value}</p>
+              </div>
+            ))}
+          </div>
+        ) : null}
         <div className="mt-8 flex flex-wrap gap-2.5 md:gap-3">
           <CreateDraftButtons />
-          <Link className="button-secondary" href="/admin/anime">
-            {messages.admin.manageAnime}
-          </Link>
-          <Link className="button-secondary" href="/admin/subscribers">
-            {messages.admin.manageSubscribers}
-          </Link>
           <Link className="button-primary" href="/admin/drafts">
             {messages.admin.openDrafts}
           </Link>
-          <ImportRecommendationsButton
-            idleLabel={messages.admin.importRecommendations}
-            pendingLabel={messages.admin.importingRecommendations}
-            successLabel={messages.admin.importRecommendationsSuccess}
-            emptyLabel={messages.admin.importRecommendationsEmpty}
-            failedLabel={messages.admin.importRecommendationsFailed}
-          />
-          <ProcessDraftsButton
-            idleLabel={messages.admin.processDrafts}
-            pendingLabel={messages.admin.processingDrafts}
-            successLabel={messages.admin.processDraftsSuccess}
-            emptyLabel={messages.admin.processDraftsEmpty}
-            failedLabel={messages.admin.processDraftsFailed}
-          />
+          <Link className="button-secondary" href="/admin/anime">
+            {messages.admin.manageAnime}
+          </Link>
+          {aiEnabled ? (
+            <ProcessDraftsButton
+              idleLabel={messages.admin.processDrafts}
+              pendingLabel={messages.admin.processingDrafts}
+              successLabel={messages.admin.processDraftsSuccess}
+              emptyLabel={messages.admin.processDraftsEmpty}
+              failedLabel={messages.admin.processDraftsFailed}
+            />
+          ) : null}
           <Link className="button-secondary" href="/api/cron/import-news">
             {messages.admin.triggerImport}
+          </Link>
+        </div>
+        <div className="mt-5 flex flex-wrap gap-4 text-sm text-muted">
+          <Link href="/admin/subscribers" className="font-medium text-accent">
+            {messages.admin.manageSubscribers}
+          </Link>
+          <Link href="/recommendations" className="font-medium text-accent">
+            {messages.recommendations.title}
           </Link>
         </div>
       </section>

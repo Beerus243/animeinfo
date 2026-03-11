@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import DraftCard from "@/app/admin/components/DraftCard";
 import ProcessDraftsButton from "@/app/admin/components/ProcessDraftsButton";
+import { isFrenchAiPipelineConfigured } from "@/lib/articleTranslation";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -16,6 +17,7 @@ type DraftsPageProps = {
 export default async function DraftsPage({ searchParams }: DraftsPageProps) {
   const locale = await getServerLocale();
   const messages = getMessages(locale);
+  const aiEnabled = isFrenchAiPipelineConfigured();
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const filter = ["all", "no-image", "ai-pending", "ai-done", "ai-failed"].includes(resolvedSearchParams?.filter || "")
     ? (resolvedSearchParams?.filter as "all" | "no-image" | "ai-pending" | "ai-done" | "ai-failed")
@@ -62,22 +64,26 @@ export default async function DraftsPage({ searchParams }: DraftsPageProps) {
           <Link className={filter === "no-image" ? "button-primary" : "button-secondary"} href="/admin/drafts?filter=no-image">
             {messages.admin.draftWithoutImage}
           </Link>
-          <Link className={filter === "ai-pending" ? "button-primary" : "button-secondary"} href="/admin/drafts?filter=ai-pending">
-            {messages.admin.draftAiPending}
-          </Link>
-          <Link className={filter === "ai-done" ? "button-primary" : "button-secondary"} href="/admin/drafts?filter=ai-done">
-            {messages.admin.draftAiDone}
-          </Link>
-          <Link className={filter === "ai-failed" ? "button-primary" : "button-secondary"} href="/admin/drafts?filter=ai-failed">
-            {messages.admin.draftAiFailed}
-          </Link>
-          <ProcessDraftsButton
-            idleLabel={messages.admin.processDrafts}
-            pendingLabel={messages.admin.processingDrafts}
-            successLabel={messages.admin.processDraftsSuccess}
-            emptyLabel={messages.admin.processDraftsEmpty}
-            failedLabel={messages.admin.processDraftsFailed}
-          />
+          {aiEnabled ? (
+            <>
+              <Link className={filter === "ai-pending" ? "button-primary" : "button-secondary"} href="/admin/drafts?filter=ai-pending">
+                {messages.admin.draftAiPending}
+              </Link>
+              <Link className={filter === "ai-done" ? "button-primary" : "button-secondary"} href="/admin/drafts?filter=ai-done">
+                {messages.admin.draftAiDone}
+              </Link>
+              <Link className={filter === "ai-failed" ? "button-primary" : "button-secondary"} href="/admin/drafts?filter=ai-failed">
+                {messages.admin.draftAiFailed}
+              </Link>
+              <ProcessDraftsButton
+                idleLabel={messages.admin.processDrafts}
+                pendingLabel={messages.admin.processingDrafts}
+                successLabel={messages.admin.processDraftsSuccess}
+                emptyLabel={messages.admin.processDraftsEmpty}
+                failedLabel={messages.admin.processDraftsFailed}
+              />
+            </>
+          ) : null}
         </div>
       </section>
       {drafts.length ? (

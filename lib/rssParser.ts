@@ -47,12 +47,16 @@ function getMetaContent(html: string, attributeName: string, attributeValue: str
 }
 
 async function fetchHtml(url: string) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12_000);
+
   const response = await fetch(url, {
     headers: {
       "user-agent": "AnimeInfoBot/1.0 (+https://animeinfo.local)",
     },
     next: { revalidate: 0 },
-  });
+    signal: controller.signal,
+  }).finally(() => clearTimeout(timeoutId));
 
   if (!response.ok) {
     throw new Error(`Unable to fetch source page: ${response.status}`);

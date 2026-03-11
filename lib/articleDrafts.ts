@@ -34,7 +34,6 @@ export async function ensureUniqueArticleSlug(title: string, options: UniqueSlug
       $or: [
         { slug: candidate },
         { "localizations.fr.slug": candidate },
-        { "localizations.en.slug": candidate },
       ],
       ...(options.excludeId ? { _id: { $ne: options.excludeId } } : {}),
     })

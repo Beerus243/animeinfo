@@ -187,6 +187,33 @@ export async function importConfiguredArticleSources(kind?: EditorialSection) {
           }
         }
 
+        if (!localizations) {
+          localizations = {
+            fr: {
+              slug: rootSlug,
+              title: rootTitle,
+              excerpt: rootExcerpt,
+              content: rootContent,
+              seo: {
+                metaTitle: rootSeo.metaTitle,
+                metaDesc: rootSeo.metaDesc,
+                ogImage: rootSeo.ogImage,
+              },
+            },
+            en: {
+              slug: "",
+              title: "",
+              excerpt: "",
+              content: "",
+              seo: {
+                metaTitle: "",
+                metaDesc: "",
+                ogImage: rootSeo.ogImage,
+              },
+            },
+          };
+        }
+
         await Article.create({
           title: rootTitle,
           slug: rootSlug,

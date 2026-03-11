@@ -26,7 +26,6 @@ async function getArticle(slug: string) {
     $or: [
       { slug },
       { "localizations.fr.slug": slug },
-      { "localizations.en.slug": slug },
     ],
   }).lean();
 }
@@ -56,10 +55,8 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
   const localized = resolveArticleLocalization(hydratedArticle, locale);
   const localizedSlug = localized.slug || hydratedArticle.slug;
   const frSlug = hydratedArticle.localizations?.fr?.slug || hydratedArticle.slug;
-  const enSlug = hydratedArticle.localizations?.en?.slug;
   const languageAlternates = {
     fr: `/article/${frSlug}`,
-    ...(enSlug ? { en: `/article/${enSlug}` } : {}),
     "x-default": `/article/${frSlug}`,
   };
 

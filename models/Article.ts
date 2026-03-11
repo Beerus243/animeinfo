@@ -68,7 +68,6 @@ const ArticleSchema = new Schema(
     },
     localizations: {
       fr: { type: LocalizedArticleSchema, default: () => ({}) },
-      en: { type: LocalizedArticleSchema, default: () => ({}) },
     },
   },
   {

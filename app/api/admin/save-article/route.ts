@@ -32,17 +32,10 @@ export async function POST(request: NextRequest) {
 
   const frTitle = localizations.fr.title || preferredLocalization.title;
   const frSlug = await ensureUniqueArticleSlug(frTitle || preferredLocalization.title, { excludeId: payload.id });
-  const enSlug = localizations.en.title
-    ? await ensureUniqueArticleSlug(localizations.en.title, { excludeId: payload.id, reservedSlugs: [frSlug] })
-    : "";
   const localizationsWithSlugs = {
     fr: {
       ...localizations.fr,
       slug: frSlug,
-    },
-    en: {
-      ...localizations.en,
-      slug: enSlug,
     },
   };
 

@@ -72,17 +72,6 @@ export async function POST(request: NextRequest) {
           ogImage: "",
         },
       },
-      en: {
-        slug: "",
-        title: "",
-        excerpt: "",
-        content: "",
-        seo: {
-          metaTitle: "",
-          metaDesc: "",
-          ogImage: "",
-        },
-      },
     },
   });
 

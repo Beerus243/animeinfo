@@ -3,7 +3,6 @@ import { cookies } from "next/headers";
 
 import MobileNav from "@/app/components/MobileNav";
 import NavLinks from "@/app/components/NavLinks";
-import LanguageSwitcher from "@/app/components/LanguageSwitcher";
 import ThemeToggle from "@/app/components/ThemeToggle";
 import { adminSessionCookieName, verifyAdminSession } from "@/lib/adminAuth";
 import { getMessages } from "@/lib/i18n/messages";
@@ -16,10 +15,9 @@ export default async function Header() {
   const sessionValue = cookieStore.get(adminSessionCookieName)?.value;
   const isAdmin = await verifyAdminSession(sessionValue);
   const links = [
-    { href: "/", label: messages.header.home },
     { href: "/articles", label: messages.header.news },
     { href: "/airing", label: messages.header.airing },
-    { href: "/explore", label: messages.header.explore },
+    { href: "/recommendations", label: messages.recommendations.eyebrow },
     ...(isAdmin ? [{ href: "/admin", label: messages.header.dashboard }] : []),
   ];
 
@@ -41,7 +39,6 @@ export default async function Header() {
           </div>
           <NavLinks links={links} />
           <div className="hidden items-center gap-1.5 md:flex">
-            <LanguageSwitcher />
             <ThemeToggle />
           </div>
         </div>
