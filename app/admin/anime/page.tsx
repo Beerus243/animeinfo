@@ -23,7 +23,27 @@ export default async function AdminAnimePage({ searchParams }: AdminAnimePagePro
 
   await connectToDatabase();
 
-  const query = filter === "popular" ? { isPopularNow: true } : filter === "airing" ? { status: "airing" } : {};
+  const hideLegacyAiring = (await Anime.countDocuments({ status: "airing", tags: "icotaku" })) > 0;
+
+  const visibleAnimeQuery = hideLegacyAiring
+    ? {
+        $or: [
+          { status: { $ne: "airing" } },
+          { status: "airing", tags: "icotaku" },
+        ],
+      }
+    : {};
+
+  const query = filter === "popular"
+    ? {
+        isPopularNow: true,
+        ...visibleAnimeQuery,
+      }
+    : filter === "airing"
+      ? hideLegacyAiring
+        ? { status: "airing", tags: "icotaku" }
+        : { status: "airing" }
+      : visibleAnimeQuery;
   const [animes, emailSubscriptionCount, pushSubscriptionCount] = await Promise.all([
     Anime.find(query).sort({ isPopularNow: -1, popularityScore: -1, updatedAt: -1 }).lean(),
     NotificationSubscription.countDocuments({ active: true }),

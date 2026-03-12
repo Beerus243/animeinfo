@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { isAdminRequestAuthorized, isCronSecretAuthorized } from "@/lib/adminAuth";
 import { importConfiguredArticleSources } from "@/lib/articleImport";
-import { importConfiguredAnimeFeeds } from "@/lib/animeFeedImport";
+import { getConfiguredAnimeFeeds, importSelectedAnimeFeeds, refreshIcotakuAiringFeed } from "@/lib/animeFeedImport";
 import { connectToDatabase } from "@/lib/mongodb";
 import { hasAnyReleaseDeliveryChannel, sendDueReleaseAlerts } from "@/lib/releaseAlerts";
 import { getRssTrendSnapshot, persistRssTrendSnapshot } from "@/lib/rssTrends";
@@ -21,8 +21,12 @@ export async function GET(request: NextRequest) {
   await connectToDatabase();
   const failures = [...articleImport.failures];
 
-  const animeImport = await importConfiguredAnimeFeeds();
-  for (const failure of animeImport.failures) {
+  const icotakuRefresh = await refreshIcotakuAiringFeed();
+  const secondaryAnimeImport = await importSelectedAnimeFeeds(
+    getConfiguredAnimeFeeds().filter((feed) => feed.feedUrl !== "icotaku://airing"),
+  );
+
+  for (const failure of secondaryAnimeImport.failures) {
     failures.push({ source: failure.feedUrl, error: failure.error });
   }
 
@@ -59,9 +63,10 @@ export async function GET(request: NextRequest) {
     duplicates: articleImport.duplicates,
     enriched: articleImport.enriched,
     aiProcessed: articleImport.aiProcessed,
-    animeImported: animeImport.imported,
-    animeUpdated: animeImport.updated,
-    animeTotalItems: animeImport.totalItems,
+    animeImported: icotakuRefresh.imported + secondaryAnimeImport.imported,
+    animeUpdated: icotakuRefresh.updated + secondaryAnimeImport.updated,
+    animeTotalItems: icotakuRefresh.totalItems + secondaryAnimeImport.totalItems,
+    animeIcotakuRemoved: icotakuRefresh.removed,
     trendSnapshotStored,
     releaseAlerts,
     failures,

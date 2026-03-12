@@ -33,6 +33,30 @@ export type ConfiguredAnimeFeed = {
   currentSeasonLabel?: string;
 };
 
+export async function cleanupLegacyAiringAnime() {
+  const result = await Anime.deleteMany({
+    status: "airing",
+    tags: { $ne: "icotaku" },
+  });
+
+  return result.deletedCount || 0;
+}
+
+export async function refreshIcotakuAiringFeed() {
+  const removed = await cleanupLegacyAiringAnime();
+  const result = await importAnimeFeed({
+    feedUrl: "icotaku://airing",
+    status: "airing",
+    sourceName: "anime-airing-feed",
+    currentSeasonLabel: getCurrentSeasonLabel(),
+  });
+
+  return {
+    removed,
+    ...result,
+  };
+}
+
 function stripHtml(value?: string) {
   return String(value || "")
     .replace(/<[^>]+>/g, " ")
@@ -254,8 +278,7 @@ export function getConfiguredAnimeFeeds() {
   ];
 }
 
-export async function importConfiguredAnimeFeeds() {
-  const feeds = getConfiguredAnimeFeeds();
+export async function importSelectedAnimeFeeds(feeds: ConfiguredAnimeFeed[]) {
   const results: Array<{ feedUrl: string; imported: number; updated: number; totalItems: number }> = [];
   const failures: Array<{ feedUrl: string; error: string }> = [];
 
@@ -281,4 +304,9 @@ export async function importConfiguredAnimeFeeds() {
     updated: results.reduce((sum, item) => sum + item.updated, 0),
     totalItems: results.reduce((sum, item) => sum + item.totalItems, 0),
   };
+}
+
+export async function importConfiguredAnimeFeeds() {
+  const feeds = getConfiguredAnimeFeeds();
+  return importSelectedAnimeFeeds(feeds);
 }

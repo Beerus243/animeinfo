@@ -61,6 +61,14 @@ export default function AdminAnimeActions() {
         {creating ? messages.adminAnime.creating : messages.adminAnime.create}
       </button>
       <ImportAnimeFeedsButton />
+      <ImportAnimeFeedsButton
+        mode="icotaku-refresh"
+        idleLabel={messages.adminAnime.refreshIcotaku}
+        pendingLabel={messages.adminAnime.refreshingIcotaku}
+        successLabel={messages.adminAnime.refreshIcotakuSuccess}
+        emptyLabel={messages.adminAnime.refreshIcotakuEmpty}
+        failedLabel={messages.adminAnime.refreshIcotakuFailed}
+      />
       <button className="button-secondary" disabled={sending} onClick={() => void handleSendAlerts()} type="button">
         {sending ? messages.adminAnime.sendingAlerts : messages.adminAnime.sendAlerts}
       </button>
