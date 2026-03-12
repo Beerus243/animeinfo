@@ -23,6 +23,10 @@ Set these variables in the Vercel project before the first production deployment
 - `CLOUDINARY_URL`
 - `RESEND_API_KEY`
 - `RESEND_FROM_EMAIL`
+- `WEB_PUSH_VAPID_PUBLIC_KEY`
+- `WEB_PUSH_VAPID_PRIVATE_KEY`
+- `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY`
+- `WEB_PUSH_SUBJECT`
 
 Recommendations:
 
@@ -31,6 +35,7 @@ Recommendations:
 - Set `SITE_URL` to the final public domain.
 - Mirror the same variables in Preview only when you want preview deployments to use the live database and media account.
 - Set `RESEND_FROM_EMAIL` to a verified sender/domain in Resend before using release alerts.
+- Generate VAPID keys with `npm run generate:vapid` and store the public/private values in Vercel before enabling browser push.
 
 ## Import operations
 
@@ -70,10 +75,13 @@ Rejected during validation from this environment:
 ## Release alerts
 
 - Visitor subscriptions are created through `/api/notifications/subscribe`.
+- Browser push subscriptions are created through `/api/notifications/push-subscribe` after the visitor grants notification permission.
 - Admin can manage anime metadata via `/admin/anime`.
 - Admin can manually trigger delivery through `/api/admin/send-release-alerts`.
 - The alert sender currently targets anime with `status="airing"` and `nextEpisodeAt` within the next 72 hours.
 - Delivery uses Resend through `RESEND_API_KEY` and `RESEND_FROM_EMAIL`.
+- Web push delivery uses VAPID keys plus a service worker served from `/push-sw.js`.
+- Cron-triggered release alerts are deduplicated by anime slug and episode timestamp for each recipient/channel.
 
 ## Backups
 

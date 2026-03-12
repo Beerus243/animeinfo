@@ -31,6 +31,16 @@ export default function DraftCard({ draft }: DraftCardProps) {
 
   return (
     <article className="content-card p-5 md:p-6">
+      {draft.coverImage ? (
+        <div className="mb-4 overflow-hidden rounded-[1rem] border border-line bg-black/5">
+          <img
+            alt={draft.title}
+            className="h-48 w-full object-cover"
+            loading="lazy"
+            src={draft.coverImage}
+          />
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-[11px] uppercase tracking-[0.16em] text-muted md:text-xs">{draft.sourceName || messages.draftCard.importedSource}</p>
         <div className="flex flex-wrap items-center gap-2">

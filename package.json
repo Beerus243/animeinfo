@@ -7,11 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "generate:vapid": "tsx scripts/generate-vapid-keys.ts",
     "import:example": "tsx scripts/import-example.ts",
+    "reset:import:french": "tsx scripts/reset-and-import-french-feeds.ts",
     "migrate:cloudinary-images": "tsx scripts/migrate-cloudinary-images.ts",
     "migrate:article-localizations": "tsx scripts/migrate-article-localizations.ts"
   },
   "dependencies": {
+    "@types/web-push": "^3.6.4",
     "cloudinary": "^2.8.0",
     "lucide-react": "^0.577.0",
     "mongoose": "^8.19.2",
@@ -19,7 +22,8 @@
     "next-cloudinary": "^6.17.5",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "rss-parser": "^3.13.0"
+    "rss-parser": "^3.13.0",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -457,7 +457,7 @@ export async function ensureArticleLocalization<T extends TranslatableArticle>(a
   });
 
   const articleId = article._id ? article._id.toString() : undefined;
-  const reservedSlugs = [article.slug, article.localizations?.fr?.slug, article.localizations?.en?.slug]
+  const reservedSlugs = [article.slug, article.localizations?.fr?.slug]
     .filter((value): value is string => Boolean(value));
   const localizedSlug = translation.title
     ? await ensureUniqueArticleSlug(translation.title, { excludeId: articleId, reservedSlugs })
@@ -484,34 +484,7 @@ export async function ensureArticleLocalization<T extends TranslatableArticle>(a
     [`localizations.${locale}`]: nextLocalization,
   };
 
-  const hasEnglishLocalization = hasContent({
-    title: article.localizations?.en?.title || undefined,
-    excerpt: article.localizations?.en?.excerpt || undefined,
-    content: article.localizations?.en?.content || undefined,
-    seo: {
-      metaTitle: article.localizations?.en?.seo?.metaTitle || undefined,
-      metaDesc: article.localizations?.en?.seo?.metaDesc || undefined,
-    },
-  });
-
   if (locale === "fr") {
-    if (resolved.sourceLocale === "en" && !hasEnglishLocalization) {
-      const preservedEnglishLocalization = {
-        slug: article.localizations?.en?.slug || article.slug || "",
-        title: article.title || "",
-        excerpt: article.excerpt || "",
-        content: article.content || "",
-        seo: {
-          metaTitle: article.seo?.metaTitle || "",
-          metaDesc: article.seo?.metaDesc || "",
-          ogImage: article.localizations?.en?.seo?.ogImage || article.seo?.ogImage || "",
-        },
-      };
-
-      nextLocalizations.en = preservedEnglishLocalization;
-      updateSet["localizations.en"] = preservedEnglishLocalization;
-    }
-
     updateSet.title = nextLocalization.title;
     updateSet.slug = localizedSlug;
     updateSet.excerpt = nextLocalization.excerpt;

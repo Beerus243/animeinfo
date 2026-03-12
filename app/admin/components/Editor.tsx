@@ -81,6 +81,7 @@ type EditorProps = {
 export default function Editor({ initialArticle, rewritingEnabled, translationEnabled }: EditorProps) {
   const { messages } = useLanguage();
   const frenchOnlyMode = !translationEnabled;
+  const availableLocales = frenchOnlyMode ? (["fr"] as const) : (["fr", "en"] as const);
   const [activeLocale, setActiveLocale] = useState<EditorLocale>("fr");
   const [aiRewritten, setAiRewritten] = useState(Boolean(initialArticle.aiRewritten));
   const [isRewriting, setIsRewriting] = useState(false);
@@ -126,17 +127,21 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
   const localizedForm = form.localizations[activeLocale];
   const localeCompletion = useMemo(() => ({
     fr: [form.localizations.fr.title, form.localizations.fr.excerpt, form.localizations.fr.content].filter((value) => value.trim()).length,
-    en: [form.localizations.en.title, form.localizations.en.excerpt, form.localizations.en.content].filter((value) => value.trim()).length,
-  }), [form.localizations.en.content, form.localizations.en.excerpt, form.localizations.en.title, form.localizations.fr.content, form.localizations.fr.excerpt, form.localizations.fr.title]);
+    ...(translationEnabled
+      ? {
+          en: [form.localizations.en.title, form.localizations.en.excerpt, form.localizations.en.content].filter((value) => value.trim()).length,
+        }
+      : {}),
+  }), [translationEnabled, form.localizations.en.content, form.localizations.en.excerpt, form.localizations.en.title, form.localizations.fr.content, form.localizations.fr.excerpt, form.localizations.fr.title]);
   const deferredPreview = useMemo(() => ({
     title: localizedForm.seo.metaTitle || localizedForm.title || messages.editor.articleTitleFallback,
     description: localizedForm.seo.metaDesc || localizedForm.excerpt || messages.editor.metaFallback,
-    slug: (localizedForm.title || form.localizations.fr.title || form.localizations.en.title)
+    slug: (localizedForm.title || form.localizations.fr.title)
       .trim()
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, ""),
-  }), [form.localizations.en.title, form.localizations.fr.title, localizedForm.excerpt, localizedForm.seo.metaDesc, localizedForm.seo.metaTitle, localizedForm.title, messages.editor.articleTitleFallback, messages.editor.metaFallback]);
+  }), [form.localizations.fr.title, localizedForm.excerpt, localizedForm.seo.metaDesc, localizedForm.seo.metaTitle, localizedForm.title, messages.editor.articleTitleFallback, messages.editor.metaFallback]);
 
   useEffect(() => {
     if (frenchOnlyMode && activeLocale !== "fr") {
@@ -480,7 +485,7 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
               <span className="status-chip status-chip-success">{localeCompletion[activeLocale]}/3</span>
             </div>
             <div className={`mt-4 grid gap-2 ${frenchOnlyMode ? "sm:grid-cols-1" : "sm:grid-cols-2"}`}>
-              {(frenchOnlyMode ? (["fr"] as const) : (["fr", "en"] as const)).map((localeOption) => {
+              {availableLocales.map((localeOption) => {
                 const isActive = activeLocale === localeOption;
 
                 return (
@@ -630,25 +635,31 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
           />
           <UploadImage
             onUploaded={(url) => {
+              const nextLocalizations = {
+                ...formRef.current.localizations,
+                fr: {
+                  ...formRef.current.localizations.fr,
+                  seo: {
+                    ...formRef.current.localizations.fr.seo,
+                    ogImage: url,
+                  },
+                },
+              };
+
+              if (translationEnabled) {
+                nextLocalizations.en = {
+                  ...formRef.current.localizations.en,
+                  seo: {
+                    ...formRef.current.localizations.en.seo,
+                    ogImage: url,
+                  },
+                };
+              }
+
               updateForm({
                 ...formRef.current,
                 coverImage: url,
-                localizations: {
-                  fr: {
-                    ...formRef.current.localizations.fr,
-                    seo: {
-                      ...formRef.current.localizations.fr.seo,
-                      ogImage: url,
-                    },
-                  },
-                  en: {
-                    ...formRef.current.localizations.en,
-                    seo: {
-                      ...formRef.current.localizations.en.seo,
-                      ogImage: url,
-                    },
-                  },
-                },
+                localizations: nextLocalizations,
               });
               setToast(messages.editor.imageToast);
             }}

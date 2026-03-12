@@ -31,6 +31,7 @@ Open [http://localhost:3000](http://localhost:3000).
 - `npm run build`: production build
 - `npm run start`: start production server
 - `npm run lint`: run ESLint
+- `npm run generate:vapid`: generate VAPID keys for browser push notifications
 - `npm run import:example`: run the local RSS import script
 
 ## Project Areas
@@ -97,6 +98,13 @@ Release-alert delivery can be enabled with:
 - `RESEND_API_KEY`
 - `RESEND_FROM_EMAIL`
 
+Browser push delivery can be enabled with:
+
+- `WEB_PUSH_VAPID_PUBLIC_KEY`
+- `WEB_PUSH_VAPID_PRIVATE_KEY`
+- `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY`
+- `WEB_PUSH_SUBJECT`
+
 Without those variables, subscriptions are stored but no email is sent.
 
 ## Admin And Cron Auth
@@ -127,6 +135,8 @@ The older OpenAI-compatible variables remain supported for backward compatibilit
 - `OPENAI_BASE_URL`
 
 Use a different value for `CRON_SECRET` than the admin password. The admin interface now uses session auth only; `ADMIN_TOKEN` is no longer used.
+
+When web push is configured, visitor-facing notification forms can subscribe the browser directly. Push notifications are deduplicated per anime and episode time so the cron job can run every 30 minutes without resending the same alert repeatedly.
 
 ## Deployment Notes
 

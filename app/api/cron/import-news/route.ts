@@ -4,6 +4,7 @@ import { isAdminRequestAuthorized, isCronSecretAuthorized } from "@/lib/adminAut
 import { importConfiguredArticleSources } from "@/lib/articleImport";
 import { importConfiguredAnimeFeeds } from "@/lib/animeFeedImport";
 import { connectToDatabase } from "@/lib/mongodb";
+import { hasAnyReleaseDeliveryChannel, sendDueReleaseAlerts } from "@/lib/releaseAlerts";
 import { getRssTrendSnapshot, persistRssTrendSnapshot } from "@/lib/rssTrends";
 
 export async function GET(request: NextRequest) {
@@ -26,6 +27,7 @@ export async function GET(request: NextRequest) {
   }
 
   let trendSnapshotStored = false;
+  let releaseAlerts: Awaited<ReturnType<typeof sendDueReleaseAlerts>> | null = null;
   try {
     const trendSnapshot = await getRssTrendSnapshot();
     if (trendSnapshot.liveItems.length || trendSnapshot.sourceRows.length || trendSnapshot.topicRows.length) {
@@ -39,6 +41,17 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  if (hasAnyReleaseDeliveryChannel()) {
+    try {
+      releaseAlerts = await sendDueReleaseAlerts();
+    } catch (error) {
+      failures.push({
+        source: "release-alerts",
+        error: error instanceof Error ? error.message : "Unable to send release alerts",
+      });
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     sources: articleImport.sources,
@@ -50,6 +63,7 @@ export async function GET(request: NextRequest) {
     animeUpdated: animeImport.updated,
     animeTotalItems: animeImport.totalItems,
     trendSnapshotStored,
+    releaseAlerts,
     failures,
   });
 }

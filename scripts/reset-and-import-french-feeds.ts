@@ -36,14 +36,18 @@ async function main() {
   loadEnvFile(".env.local");
   await connectToDatabase();
 
-  console.log("[1/4] Suppression des brouillons et reviews...");
+  console.log("[1/5] Suppression des brouillons et reviews...");
 
   const deleteResult = await Article.deleteMany({ status: { $in: ["draft", "review"] } });
-  console.log(`[1/4] ${deleteResult.deletedCount || 0} brouillon(s) supprime(s).`);
+  console.log(`[1/5] ${deleteResult.deletedCount || 0} brouillon(s) supprime(s).`);
 
-  console.log("[2/4] Nettoyage des articles publies (reinit AI + suppression localizations.en)...");
+  console.log("[2/5] Suppression des recommandations existantes...");
+  const deletedRecommendations = await Article.deleteMany({ section: "recommendation" });
+  console.log(`[2/5] ${deletedRecommendations.deletedCount || 0} recommandation(s) supprimee(s).`);
+
+  console.log("[3/5] Nettoyage des articles publies news (reinit AI + suppression localizations.en)...");
   const cleanupResult = await Article.updateMany(
-    { status: "published" },
+    { status: "published", section: "news" },
     {
       $unset: {
         aiError: 1,
@@ -56,19 +60,20 @@ async function main() {
       },
     },
   );
-  console.log(`[2/4] ${cleanupResult.modifiedCount || 0} article(s) publie(s) nettoye(s).`);
+  console.log(`[3/5] ${cleanupResult.modifiedCount || 0} article(s) publie(s) nettoye(s).`);
 
-  console.log("[3/4] Import des news FR...");
+  console.log("[4/5] Import des news FR...");
   const news = await importConfiguredArticleSources("news");
-  console.log(`[3/4] News importees: ${news.imported}, doublons: ${news.duplicates}, erreurs: ${news.failures.length}.`);
+  console.log(`[4/5] News importees: ${news.imported}, doublons: ${news.duplicates}, erreurs: ${news.failures.length}.`);
 
-  console.log("[4/4] Import des recommandations FR...");
+  console.log("[5/5] Import des recommandations FR...");
   const recommendations = await importConfiguredArticleSources("recommendation");
-  console.log(`[4/4] Recommandations importees: ${recommendations.imported}, doublons: ${recommendations.duplicates}, erreurs: ${recommendations.failures.length}.`);
+  console.log(`[5/5] Recommandations importees: ${recommendations.imported}, doublons: ${recommendations.duplicates}, erreurs: ${recommendations.failures.length}.`);
 
   console.log(
     JSON.stringify({
       deletedDrafts: deleteResult.deletedCount || 0,
+      deletedRecommendations: deletedRecommendations.deletedCount || 0,
       resetPublished: cleanupResult.modifiedCount || 0,
       news,
       recommendations,

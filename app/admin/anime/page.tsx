@@ -7,6 +7,7 @@ import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import Anime from "@/models/Anime";
 import NotificationSubscription from "@/models/NotificationSubscription";
+import WebPushSubscription from "@/models/WebPushSubscription";
 
 export const dynamic = "force-dynamic";
 
@@ -23,9 +24,10 @@ export default async function AdminAnimePage({ searchParams }: AdminAnimePagePro
   await connectToDatabase();
 
   const query = filter === "popular" ? { isPopularNow: true } : filter === "airing" ? { status: "airing" } : {};
-  const [animes, subscriptionCount] = await Promise.all([
+  const [animes, emailSubscriptionCount, pushSubscriptionCount] = await Promise.all([
     Anime.find(query).sort({ isPopularNow: -1, popularityScore: -1, updatedAt: -1 }).lean(),
     NotificationSubscription.countDocuments({ active: true }),
+    WebPushSubscription.countDocuments({ active: true }),
   ]);
 
   return (
@@ -41,7 +43,7 @@ export default async function AdminAnimePage({ searchParams }: AdminAnimePagePro
         </div>
         <div className="mt-6 flex flex-wrap items-start gap-2.5 md:gap-3">
           <AdminAnimeActions />
-          <span className="rounded-full border border-line px-3 py-2 text-sm text-muted">{subscriptionCount} {messages.adminAnime.subscriptions}</span>
+          <span className="rounded-full border border-line px-3 py-2 text-sm text-muted">{emailSubscriptionCount + pushSubscriptionCount} {messages.adminAnime.subscriptions}</span>
         </div>
       </section>
 

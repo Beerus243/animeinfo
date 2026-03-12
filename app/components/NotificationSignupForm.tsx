@@ -19,6 +19,19 @@ type NotificationSignupFormProps = {
   compact?: boolean;
 };
 
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const normalized = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(normalized);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let index = 0; index < rawData.length; index += 1) {
+    outputArray[index] = rawData.charCodeAt(index);
+  }
+
+  return outputArray;
+}
+
 export default function NotificationSignupForm({
   animeOptions,
   locale,
@@ -27,9 +40,17 @@ export default function NotificationSignupForm({
   preselectedSlugs = [],
   compact = false,
 }: NotificationSignupFormProps) {
+  const pushPublicKey = process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY || "";
+  const pushSupported =
+    Boolean(pushPublicKey) &&
+    typeof window !== "undefined" &&
+    "Notification" in window &&
+    "serviceWorker" in navigator &&
+    "PushManager" in window;
   const [email, setEmail] = useState("");
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>(preselectedSlugs);
   const [pending, setPending] = useState(false);
+  const [pushPending, setPushPending] = useState(false);
   const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const selectedCount = selectedSlugs.length;
@@ -75,6 +96,71 @@ export default function NotificationSignupForm({
     } catch {
       setStatus({ type: "error", message: messages.error });
       setPending(false);
+    }
+  }
+
+  async function handlePushSubscribe() {
+    if (!selectedCount) {
+      setStatus({ type: "error", message: messages.error });
+      return;
+    }
+
+    if (!pushPublicKey) {
+      setStatus({ type: "error", message: messages.pushUnavailable });
+      return;
+    }
+
+    if (!pushSupported) {
+      setStatus({ type: "error", message: messages.pushUnsupported });
+      return;
+    }
+
+    setPushPending(true);
+    setStatus(null);
+
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        setStatus({ type: "error", message: messages.pushPermissionDenied });
+        setPushPending(false);
+        return;
+      }
+
+      const registration = await navigator.serviceWorker.register("/push-sw.js", { scope: "/" });
+      const existingSubscription = await registration.pushManager.getSubscription();
+      const subscription = existingSubscription || await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(pushPublicKey),
+      });
+
+      const response = await fetch("/api/notifications/push-subscribe", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          animeSlugs: selectedSlugs,
+          locale,
+          sourcePage,
+          subscription: subscription.toJSON(),
+        }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setStatus({ type: "error", message: payload?.error || messages.error });
+        setPushPending(false);
+        return;
+      }
+
+      setStatus({
+        type: "success",
+        message: messages.pushSuccess.replace("{count}", String(payload?.count || selectedCount)),
+      });
+      setPushPending(false);
+    } catch {
+      setStatus({ type: "error", message: messages.error });
+      setPushPending(false);
     }
   }
 
@@ -134,10 +220,16 @@ export default function NotificationSignupForm({
               value={email}
             />
           </label>
-          <button className="button-primary w-full" disabled={pending || selectedCount === 0} type="submit">
-            {pending ? messages.pending : messages.submit}
-          </button>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <button className="button-primary w-full" disabled={pending || pushPending || selectedCount === 0} type="submit">
+              {pending ? messages.pending : messages.submit}
+            </button>
+            <button className="button-secondary w-full" disabled={pending || pushPending || selectedCount === 0} onClick={() => void handlePushSubscribe()} type="button">
+              {pushPending ? messages.pushPending : messages.pushSubmit}
+            </button>
+          </div>
           <p className="text-sm leading-7 text-muted">{messages.legalHint}</p>
+          {!pushSupported ? <p className="text-sm leading-7 text-muted">{messages.pushUnsupported}</p> : null}
           {status ? (
             <p className={`text-sm ${status.type === "success" ? "text-success" : "text-warning"}`}>{status.message}</p>
           ) : null}
