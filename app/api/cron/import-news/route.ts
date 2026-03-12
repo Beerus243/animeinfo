@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { isAdminRequestAuthorized, isCronSecretAuthorized } from "@/lib/adminAuth";
-import { importConfiguredArticleSources } from "@/lib/articleImport";
+import { importConfiguredArticleSources, publishEligibleImportedRecommendations } from "@/lib/articleImport";
 import { getConfiguredAnimeFeeds, importSelectedAnimeFeeds, refreshIcotakuAiringFeed } from "@/lib/animeFeedImport";
 import { connectToDatabase } from "@/lib/mongodb";
 import { hasAnyReleaseDeliveryChannel, sendDueReleaseAlerts } from "@/lib/releaseAlerts";
@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
 
   await connectToDatabase();
   const failures = [...articleImport.failures];
+  const autoPublishedRecommendations = await publishEligibleImportedRecommendations();
 
   const icotakuRefresh = await refreshIcotakuAiringFeed();
   const secondaryAnimeImport = await importSelectedAnimeFeeds(
@@ -63,6 +64,7 @@ export async function GET(request: NextRequest) {
     duplicates: articleImport.duplicates,
     enriched: articleImport.enriched,
     aiProcessed: articleImport.aiProcessed,
+    autoPublishedRecommendations,
     animeImported: icotakuRefresh.imported + secondaryAnimeImport.imported,
     animeUpdated: icotakuRefresh.updated + secondaryAnimeImport.updated,
     animeTotalItems: icotakuRefresh.totalItems + secondaryAnimeImport.totalItems,

@@ -1,13 +1,17 @@
 import Link from "next/link";
 
 import CreateDraftButtons from "@/app/admin/components/CreateDraftButtons";
+import ImportRecommendationsButton from "@/app/admin/components/ImportRecommendationsButton";
 import ProcessDraftsButton from "@/app/admin/components/ProcessDraftsButton";
 import AdminLogoutButton from "@/app/admin/components/AdminLogoutButton";
 import { isFrenchAiPipelineConfigured } from "@/lib/articleTranslation";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
+import Anime from "@/models/Anime";
 import Article from "@/models/Article";
+import NotificationSubscription from "@/models/NotificationSubscription";
+import WebPushSubscription from "@/models/WebPushSubscription";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +31,14 @@ export default async function AdminPage() {
     Article.countDocuments({ status: { $in: ["draft", "review"] }, aiStatus: "done" }),
     Article.countDocuments({ status: { $in: ["draft", "review"] }, aiStatus: "failed" }),
   ]);
+  const [publishedRecommendations, draftRecommendations, airingAnimeCount, popularAnimeCount, emailSubscribers, pushSubscribers] = await Promise.all([
+    Article.countDocuments({ status: "published", section: "recommendation" }),
+    Article.countDocuments({ status: { $in: ["draft", "review"] }, section: "recommendation" }),
+    Anime.countDocuments({ status: "airing" }),
+    Anime.countDocuments({ isPopularNow: true }),
+    NotificationSubscription.countDocuments({ active: true }),
+    WebPushSubscription.countDocuments({ active: true }),
+  ]);
 
   const coreStats = [
     { label: messages.admin.drafts, value: drafts },
@@ -37,6 +49,13 @@ export default async function AdminPage() {
     { label: messages.admin.draftAiPending, value: aiPending },
     { label: messages.admin.draftAiDone, value: aiDone },
     { label: messages.admin.draftAiFailed, value: aiFailed },
+  ];
+  const operationStats = [
+    { label: messages.admin.publishedRecommendations, value: publishedRecommendations, href: "/recommendations" },
+    { label: messages.admin.pendingRecommendations, value: draftRecommendations, href: "/admin/drafts" },
+    { label: messages.admin.airingAnimeCount, value: airingAnimeCount, href: "/admin/anime?filter=airing" },
+    { label: messages.admin.popularAnimeCount, value: popularAnimeCount, href: "/admin/anime?filter=popular" },
+    { label: messages.admin.subscribersCount, value: emailSubscribers + pushSubscribers, href: "/admin/subscribers" },
   ];
 
   return (
@@ -78,6 +97,13 @@ export default async function AdminPage() {
           <Link className="button-secondary" href="/admin/anime">
             {messages.admin.manageAnime}
           </Link>
+          <ImportRecommendationsButton
+            idleLabel={messages.admin.importRecommendations}
+            pendingLabel={messages.admin.importingRecommendations}
+            successLabel={messages.admin.importRecommendationsSuccess}
+            emptyLabel={messages.admin.importRecommendationsEmpty}
+            failedLabel={messages.admin.importRecommendationsFailed}
+          />
           {aiEnabled ? (
             <ProcessDraftsButton
               idleLabel={messages.admin.processDrafts}
@@ -98,6 +124,41 @@ export default async function AdminPage() {
           <Link href="/recommendations" className="font-medium text-accent">
             {messages.recommendations.title}
           </Link>
+        </div>
+
+        <div className="mt-8 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="content-card rounded-3xl p-5 md:p-6">
+            <p className="eyebrow">{messages.admin.opsEyebrow}</p>
+            <h2 className="mt-3 font-display text-2xl font-semibold md:text-[1.7rem]">{messages.admin.opsTitle}</h2>
+            <p className="mt-2.5 max-w-2xl text-sm leading-6 text-muted">{messages.admin.opsDescription}</p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {operationStats.map((stat) => (
+                <Link key={stat.label} href={stat.href} className="rounded-2xl border border-line bg-white/35 p-4 transition-transform hover:-translate-y-0.5 dark:bg-white/3">
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-muted">{stat.label}</p>
+                  <p className="mt-3 font-display text-3xl font-semibold">{stat.value}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="content-card rounded-3xl p-5 md:p-6">
+            <p className="eyebrow">{messages.admin.workflowEyebrow}</p>
+            <h2 className="mt-3 font-display text-2xl font-semibold md:text-[1.7rem]">{messages.admin.workflowTitle}</h2>
+            <div className="mt-5 space-y-4 text-sm leading-6 text-muted">
+              <div>
+                <p className="font-semibold text-foreground">{messages.admin.workflowAutomaticTitle}</p>
+                <p className="mt-1.5">{messages.admin.workflowAutomaticDescription}</p>
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">{messages.admin.workflowManualTitle}</p>
+                <p className="mt-1.5">{messages.admin.workflowManualDescription}</p>
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">{messages.admin.workflowQualityTitle}</p>
+                <p className="mt-1.5">{messages.admin.workflowQualityDescription}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </div>

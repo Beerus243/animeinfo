@@ -6,10 +6,66 @@ import { fetchRssFeed, getConfiguredRssSourceGroups } from "@/lib/rssParser";
 import Article from "@/models/Article";
 import Source from "@/models/Source";
 
+function hasMeaningfulText(value: unknown, minimumLength: number) {
+  return typeof value === "string" && value.trim().length >= minimumLength;
+}
+
+function buildRecommendationAutopublishFilter() {
+  return {
+    section: "recommendation" as const,
+    status: { $in: ["draft", "review"] },
+    aiStatus: "done" as const,
+    coverImage: { $type: "string", $ne: "" },
+    excerpt: { $type: "string", $ne: "" },
+    content: { $type: "string", $ne: "" },
+    "seo.metaTitle": { $type: "string", $ne: "" },
+    "seo.metaDesc": { $type: "string", $ne: "" },
+  };
+}
+
 export async function publishImportedRecommendations() {
   const result = await Article.updateMany(
     {
       section: "recommendation",
+      status: { $in: ["draft", "review"] },
+    },
+    {
+      $set: {
+        status: "published",
+      },
+    },
+  );
+
+  return result.modifiedCount || 0;
+}
+
+export async function publishEligibleImportedRecommendations() {
+  const eligibleRecommendations = await Article.find(buildRecommendationAutopublishFilter())
+    .select({ _id: 1, excerpt: 1, content: 1, seo: 1, localizations: 1 })
+    .lean();
+
+  const eligibleIds = eligibleRecommendations
+    .filter((article) => {
+      const localizedFr = article.localizations?.fr;
+
+      return (
+        hasMeaningfulText(article.excerpt, 90) &&
+        hasMeaningfulText(article.content, 220) &&
+        hasMeaningfulText(article.seo?.metaTitle, 20) &&
+        hasMeaningfulText(article.seo?.metaDesc, 60) &&
+        hasMeaningfulText(localizedFr?.title, 12) &&
+        hasMeaningfulText(localizedFr?.excerpt, 90)
+      );
+    })
+    .map((article) => article._id);
+
+  if (!eligibleIds.length) {
+    return 0;
+  }
+
+  const result = await Article.updateMany(
+    {
+      _id: { $in: eligibleIds },
       status: { $in: ["draft", "review"] },
     },
     {
