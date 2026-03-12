@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f6f1e8;
+  --background: #f5ede2;
   --foreground: #1c160f;
-  --surface: rgba(255, 252, 245, 0.82);
-  --surface-strong: rgba(255, 249, 240, 0.94);
+  --surface: rgba(255, 251, 246, 0.84);
+  --surface-strong: rgba(241, 231, 218, 0.92);
   --muted: #6f6457;
-  --accent: #eb5e28;
+  --accent: #de5a24;
   --accent-contrast: #fff8f1;
-  --accent-soft: rgba(235, 94, 40, 0.12);
+  --accent-soft: rgba(222, 90, 36, 0.12);
   --success: #1d7a62;
   --warning: #a16412;
   --line: rgba(28, 22, 15, 0.08);
@@ -20,11 +20,11 @@
   --background: #101215;
   --foreground: #f4efe8;
   --surface: rgba(24, 28, 33, 0.82);
-  --surface-strong: rgba(19, 22, 27, 0.96);
+  --surface-strong: rgba(29, 35, 42, 0.94);
   --muted: #b5b0aa;
-  --accent: #ff6257;
+  --accent: #ff6a4d;
   --accent-contrast: #1a1010;
-  --accent-soft: rgba(255, 98, 87, 0.14);
+  --accent-soft: rgba(255, 106, 77, 0.14);
   --success: #3db89b;
   --warning: #f0b04d;
   --line: rgba(255, 255, 255, 0.1);
@@ -63,8 +63,8 @@ body {
   font-size: 17px;
   line-height: 1.55;
   background-image:
-    radial-gradient(circle at top left, rgba(235, 94, 40, 0.16), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(53, 141, 123, 0.15), transparent 24%),
+    radial-gradient(circle at top left, rgba(222, 90, 36, 0.14), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(53, 141, 123, 0.1), transparent 24%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.32), transparent 35%);
 }
 
@@ -275,7 +275,7 @@ img {
   min-height: 100dvh;
   flex-direction: column;
   border-left: 1px solid color-mix(in srgb, var(--accent) 10%, var(--line) 90%);
-  background: color-mix(in srgb, var(--surface-strong) 94%, white 6%);
+  background: color-mix(in srgb, var(--surface-strong) 96%, white 4%);
   padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
   box-shadow: -20px 0 48px color-mix(in srgb, var(--shadow) 84%, rgba(16, 18, 21, 0.16) 16%);
   backdrop-filter: blur(20px);
@@ -299,7 +299,7 @@ img {
 }
 
 .mobile-nav-link-active {
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  background: color-mix(in srgb, var(--accent) 14%, white 4%);
   color: var(--accent);
 }
 
@@ -316,6 +316,84 @@ img {
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.footer-panel {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--surface) 82%, white 18%), color-mix(in srgb, var(--surface-strong) 88%, transparent 12%)),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 10%, transparent), transparent 34%);
+}
+
+.social-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.social-link {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+  padding: 0.8rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 12%, var(--line) 88%);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--surface-strong) 76%, white 24%);
+  transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease;
+}
+
+.social-link:hover {
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--surface-strong) 86%, white 14%);
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--line) 76%);
+}
+
+.social-link-muted {
+  opacity: 0.78;
+  background: color-mix(in srgb, var(--surface-strong) 72%, transparent 28%);
+}
+
+.social-link-muted:hover {
+  transform: none;
+  border-color: color-mix(in srgb, var(--accent) 12%, var(--line) 88%);
+  background: color-mix(in srgb, var(--surface-strong) 72%, transparent 28%);
+}
+
+.social-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+@media (max-width: 767px) {
+  .footer-panel {
+    gap: 1.25rem;
+  }
+
+  .shell-container {
+    width: min(1080px, calc(100vw - 1rem));
+  }
+
+  .social-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .social-link {
+    padding: 0.78rem;
+    border-radius: 0.95rem;
+  }
+}
+
+@media (max-width: 479px) {
+  .social-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .status-chip {

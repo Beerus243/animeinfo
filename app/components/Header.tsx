@@ -35,7 +35,14 @@ export default async function Header() {
                 <p className="text-[9px] uppercase tracking-[0.14em] text-muted md:text-[10px]">{messages.header.tagline}</p>
               </div>
             </Link>
-            <MobileNav ariaLabel="Navigation principale" links={links} />
+            <MobileNav
+              ariaLabel="Navigation principale"
+              closeLabel={messages.header.menuClose}
+              description={messages.header.mobileDescription}
+              links={links}
+              openLabel={messages.header.menuOpen}
+              title={messages.header.mobileTitle}
+            />
           </div>
           <NavLinks links={links} />
           <div className="hidden items-center gap-1.5 md:flex">

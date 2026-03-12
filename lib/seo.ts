@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { getSocialSameAs } from "@/lib/socialLinks";
+
 type SeoInput = {
   title: string;
   description: string;
@@ -39,7 +41,7 @@ function getSiteUrlSource() {
   return { url: (explicitSiteUrl || "http://localhost:3000").replace(/\/$/, ""), source: explicitSiteUrl ? "SITE_URL_LOCALHOST" as const : "DEFAULT_LOCALHOST" as const };
 }
 
-function getSiteUrl() {
+export function getSiteUrl() {
   return getSiteUrlSource().url;
 }
 
@@ -77,6 +79,7 @@ export function buildMetadata(input: SeoInput): Metadata {
       title: input.title,
       description: input.description,
       url: canonical,
+      siteName: "AnimeInfo",
       type: input.type || "website",
       images: input.image ? [{ url: absoluteUrl(input.image) }] : undefined,
     },
@@ -86,6 +89,46 @@ export function buildMetadata(input: SeoInput): Metadata {
       description: input.description,
       images: input.image ? [absoluteUrl(input.image)] : undefined,
     },
+  };
+}
+
+export function buildBrandJsonLd(description: string) {
+  const websiteUrl = absoluteUrl("/");
+  const sameAs = getSocialSameAs();
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${websiteUrl}#organization`,
+        name: "AnimeInfo",
+        alternateName: "Anime info",
+        url: websiteUrl,
+        description,
+        logo: {
+          "@type": "ImageObject",
+          url: absoluteUrl("/og/placeholder-1200x630.svg"),
+        },
+        sameAs: sameAs.length ? sameAs : undefined,
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${websiteUrl}#website`,
+        name: "AnimeInfo",
+        alternateName: "Anime info",
+        url: websiteUrl,
+        description,
+        publisher: {
+          "@id": `${websiteUrl}#organization`,
+        },
+        potentialAction: {
+          "@type": "SearchAction",
+          target: absoluteUrl("/search?q={search_term_string}"),
+          "query-input": "required name=search_term_string",
+        },
+      },
+    ],
   };
 }
 

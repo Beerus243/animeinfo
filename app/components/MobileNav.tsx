@@ -3,18 +3,25 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import ThemeToggle from "@/app/components/ThemeToggle";
 
 type MobileNavProps = {
   links: Array<{ href: string; label: string }>;
   ariaLabel: string;
+  openLabel: string;
+  closeLabel: string;
+  title: string;
+  description: string;
 };
 
-export default function MobileNav({ links, ariaLabel }: MobileNavProps) {
+export default function MobileNav({ links, ariaLabel, openLabel, closeLabel, title, description }: MobileNavProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const panelId = useId();
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const firstLinkRef = useRef<HTMLAnchorElement | null>(null);
 
   useEffect(() => {
     setOpen(false);
@@ -40,6 +47,9 @@ export default function MobileNav({ links, ariaLabel }: MobileNavProps) {
 
     if (open) {
       document.body.style.overflow = "hidden";
+      requestAnimationFrame(() => firstLinkRef.current?.focus());
+    } else {
+      triggerRef.current?.focus();
     }
 
     return () => {
@@ -58,8 +68,10 @@ export default function MobileNav({ links, ariaLabel }: MobileNavProps) {
   return (
     <div className="md:hidden">
       <button
+        ref={triggerRef}
+        aria-controls={panelId}
         aria-expanded={open}
-        aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
+        aria-label={open ? closeLabel : openLabel}
         className={open ? "nav-icon-button nav-icon-button-active" : "nav-icon-button"}
         onClick={() => setOpen((current) => !current)}
         type="button"
@@ -67,20 +79,23 @@ export default function MobileNav({ links, ariaLabel }: MobileNavProps) {
         {open ? <X size={17} strokeWidth={2.25} /> : <Menu size={17} strokeWidth={2.25} />}
       </button>
 
-      {open ? <button aria-label="Fermer le menu" className="mobile-nav-backdrop" onClick={() => setOpen(false)} type="button" /> : null}
+      {open ? <button aria-label={closeLabel} className="mobile-nav-backdrop" onClick={() => setOpen(false)} type="button" /> : null}
 
       <div
         aria-hidden={!open}
         className={`mobile-nav-panel ${open ? "mobile-nav-panel-open" : "mobile-nav-panel-closed"}`}
+        id={panelId}
+        role="dialog"
+        aria-modal="true"
       >
         <div className="mobile-nav-surface">
           <div className="flex items-start justify-between gap-3 border-b border-line/80 pb-4">
             <div>
               <p className="text-[10px] uppercase tracking-[0.18em] text-muted">AnimeInfo</p>
-              <p className="mt-1 text-base font-semibold text-foreground">Navigation</p>
-              <p className="mt-1 text-[13px] text-muted">Acces rapide aux sections principales.</p>
+              <p className="mt-1 text-base font-semibold text-foreground">{title}</p>
+              <p className="mt-1 text-[13px] text-muted">{description}</p>
             </div>
-            <button aria-label="Fermer le menu" className="nav-icon-button" onClick={() => setOpen(false)} type="button">
+            <button aria-label={closeLabel} className="nav-icon-button" onClick={() => setOpen(false)} type="button">
               <X size={17} strokeWidth={2.25} />
             </button>
           </div>
@@ -89,6 +104,7 @@ export default function MobileNav({ links, ariaLabel }: MobileNavProps) {
               <Link
                 aria-current={isActivePath(link.href) ? "page" : undefined}
                 key={link.href}
+                ref={index === 0 ? firstLinkRef : undefined}
                 href={link.href}
                 className={isActivePath(link.href) ? "mobile-nav-link mobile-nav-link-active" : "mobile-nav-link"}
                 onClick={() => setOpen(false)}
