@@ -2,6 +2,7 @@ import Parser from "rss-parser";
 
 import { ensureUniqueAnimeSlug } from "@/lib/animeAdmin";
 import { getCurrentSeasonLabel } from "@/lib/animeSeason";
+import { importIcotakuAiringCalendar } from "@/lib/icotaku";
 import { importVoiranimeCatalog } from "@/lib/voiranime";
 import Anime from "@/models/Anime";
 
@@ -46,6 +47,58 @@ function resolveFeedImage(item: { "media:thumbnail"?: { $?: { url?: string } }; 
 }
 
 export async function importAnimeFeed(options: ImportAnimeFeedOptions): Promise<ImportAnimeFeedResult> {
+  if (options.feedUrl === "icotaku://airing") {
+    const items = await importIcotakuAiringCalendar();
+    let imported = 0;
+    let updated = 0;
+
+    for (const item of items) {
+      const existing = await Anime.findOne({ title: item.title }).select({ _id: 1, synopsis: 1, coverImage: 1, genres: 1, tags: 1 }).lean();
+
+      if (existing) {
+        await Anime.updateOne(
+          { _id: existing._id },
+          {
+            $set: {
+              status: "airing",
+              currentSeasonLabel: item.currentSeasonLabel,
+              nextEpisodeAt: item.nextEpisodeAt,
+              releaseDay: item.releaseDay,
+              notificationsEnabled: true,
+            },
+            $addToSet: {
+              tags: "icotaku",
+              ...(item.currentSeasonLabel ? { seasons: item.currentSeasonLabel } : {}),
+            },
+          },
+        );
+        updated += 1;
+        continue;
+      }
+
+      const slug = await ensureUniqueAnimeSlug(item.title);
+      await Anime.create({
+        title: item.title,
+        slug,
+        synopsis: undefined,
+        coverImage: undefined,
+        genres: [],
+        tags: ["icotaku", item.status],
+        seasons: item.currentSeasonLabel ? [item.currentSeasonLabel] : [],
+        status: item.status,
+        currentSeasonLabel: item.currentSeasonLabel,
+        releaseDay: item.releaseDay,
+        nextEpisodeAt: item.nextEpisodeAt,
+        notificationsEnabled: true,
+        popularityScore: 0,
+        isPopularNow: false,
+      });
+      imported += 1;
+    }
+
+    return { imported, updated, totalItems: items.length };
+  }
+
   if (options.feedUrl === "voiranime://airing" || options.feedUrl === "voiranime://upcoming") {
     const items = await importVoiranimeCatalog(options.feedUrl === "voiranime://airing" ? "airing" : "upcoming");
     let imported = 0;
@@ -185,7 +238,7 @@ function parseConfiguredAnimeFeeds(rawValue: string | undefined, config: Omit<Co
 
 export function getConfiguredAnimeFeeds() {
   const currentSeasonLabel = getCurrentSeasonLabel();
-  const airingRaw = process.env.ANIME_AIRING_FEEDS || "voiranime://airing,https://myanimelist.net/rss.php?type=season";
+  const airingRaw = process.env.ANIME_AIRING_FEEDS || "icotaku://airing";
   const upcomingRaw = process.env.ANIME_UPCOMING_FEEDS || "voiranime://upcoming,https://myanimelist.net/rss.php?type=upcoming";
 
   return [

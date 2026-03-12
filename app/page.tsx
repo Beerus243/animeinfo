@@ -3,6 +3,7 @@ import Link from "next/link";
 import AdUnit from "@/app/components/AdUnit";
 import ArticleCard from "@/app/components/ArticleCard";
 import NotificationSignupForm from "@/app/components/NotificationSignupForm";
+import { getPreferredAiringFilter } from "@/lib/airingAnime";
 import { resolveArticleLocalization } from "@/lib/articleLocalization";
 import { ensureArticlesLocalization } from "@/lib/articleTranslation";
 import { getMessages } from "@/lib/i18n/messages";
@@ -16,11 +17,12 @@ export const dynamic = "force-dynamic";
 
 async function getHomepageArticles() {
   await connectToDatabase();
+  const airingFilter = await getPreferredAiringFilter();
 
   const [featured, latest, airingAnimes] = await Promise.all([
     Article.find({ status: "published" }).sort({ publishedAt: -1, updatedAt: -1 }).limit(1).lean(),
     Article.find({ status: "published" }).sort({ publishedAt: -1, updatedAt: -1 }).limit(6).lean(),
-    Anime.find({ notificationsEnabled: { $ne: false }, status: "airing" })
+    Anime.find(airingFilter)
       .sort({ isPopularNow: -1, popularityScore: -1, nextEpisodeAt: 1, updatedAt: -1 })
       .limit(4)
       .lean(),

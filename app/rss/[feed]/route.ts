@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
 import { getCurrentSeasonLabel } from "@/lib/animeSeason";
+import { getPreferredAiringFilter } from "@/lib/airingAnime";
 import { connectToDatabase } from "@/lib/mongodb";
 import { getLatestPersistedTrendSnapshot, getRssTrendSnapshot } from "@/lib/rssTrends";
 import { buildRssFeed } from "@/lib/rssXml";
@@ -38,10 +39,7 @@ function notFoundFeed() {
 
 async function buildAiringFeed() {
   const currentSeasonLabel = getCurrentSeasonLabel();
-  const animes = await Anime.find({
-    notificationsEnabled: { $ne: false },
-    $or: [{ status: "airing" }, { currentSeasonLabel }, { seasons: currentSeasonLabel }],
-  })
+  const animes = await Anime.find(await getPreferredAiringFilter())
     .sort({ isPopularNow: -1, popularityScore: -1, nextEpisodeAt: 1, updatedAt: -1 })
     .limit(30)
     .lean();

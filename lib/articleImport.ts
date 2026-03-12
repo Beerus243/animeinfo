@@ -6,6 +6,22 @@ import { fetchRssFeed, getConfiguredRssSourceGroups } from "@/lib/rssParser";
 import Article from "@/models/Article";
 import Source from "@/models/Source";
 
+export async function publishImportedRecommendations() {
+  const result = await Article.updateMany(
+    {
+      section: "recommendation",
+      status: { $in: ["draft", "review"] },
+    },
+    {
+      $set: {
+        status: "published",
+      },
+    },
+  );
+
+  return result.modifiedCount || 0;
+}
+
 function mergeTags(existingTags: unknown, defaultTags: string[] = []) {
   const sourceTags = Array.isArray(existingTags) ? existingTags.filter((tag): tag is string => typeof tag === "string") : [];
   return Array.from(new Set([...sourceTags, ...defaultTags]));

@@ -1,5 +1,6 @@
 import type { PushSubscription } from "web-push";
 
+import { getPreferredAiringFilter } from "@/lib/airingAnime";
 import { absoluteUrl } from "@/lib/seo";
 import { isNotificationDeliveryConfigured, sendReleaseAlertEmail } from "@/lib/notifications";
 import { isWebPushConfigured, sendWebPushNotification } from "@/lib/webPush";
@@ -80,8 +81,7 @@ export async function sendDueReleaseAlerts() {
 
   const horizon = new Date(Date.now() + 1000 * 60 * 60 * 72);
   const dueAnimeRows = await Anime.find({
-    notificationsEnabled: { $ne: false },
-    status: "airing",
+    ...(await getPreferredAiringFilter()),
     nextEpisodeAt: { $exists: true, $ne: null, $lte: horizon },
   })
     .select({ slug: 1, title: 1, nextEpisodeAt: 1 })

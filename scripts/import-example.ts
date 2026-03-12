@@ -4,12 +4,12 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { getRssTrendSnapshot, persistRssTrendSnapshot } from "@/lib/rssTrends";
 
 async function run() {
+  await connectToDatabase();
+
   const articleImport = await importConfiguredArticleSources();
   if (!articleImport.sources) {
     throw new Error("No RSS sources configured.");
   }
-
-  await connectToDatabase();
 
   const animeImport = await importConfiguredAnimeFeeds();
   const trendSnapshot = await getRssTrendSnapshot();

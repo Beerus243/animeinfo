@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import NotificationSignupForm from "@/app/components/NotificationSignupForm";
+import { getPreferredAiringFilter } from "@/lib/airingAnime";
 import { formatDateTime, getMessages } from "@/lib/i18n/messages";
 import { getCurrentSeasonLabel } from "@/lib/animeSeason";
 import { getServerLocale } from "@/lib/i18n/server";
@@ -28,15 +29,7 @@ export default async function AiringPage() {
   const currentSeasonLabel = getCurrentSeasonLabel();
 
   await connectToDatabase();
-
-  const baseFilter = {
-    notificationsEnabled: { $ne: false },
-    $or: [
-      { status: "airing" },
-      { currentSeasonLabel },
-      { seasons: currentSeasonLabel },
-    ],
-  };
+  const baseFilter = await getPreferredAiringFilter();
 
   const [airingAnimes, popularAiringAnimes] = await Promise.all([
     Anime.find(baseFilter)

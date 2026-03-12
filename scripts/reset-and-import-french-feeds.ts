@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { importConfiguredArticleSources } from "@/lib/articleImport";
+import { importConfiguredArticleSources, publishImportedRecommendations } from "@/lib/articleImport";
 import { connectToDatabase } from "@/lib/mongodb";
 import Article from "@/models/Article";
 
@@ -69,6 +69,8 @@ async function main() {
   console.log("[5/5] Import des recommandations FR...");
   const recommendations = await importConfiguredArticleSources("recommendation");
   console.log(`[5/5] Recommandations importees: ${recommendations.imported}, doublons: ${recommendations.duplicates}, erreurs: ${recommendations.failures.length}.`);
+  const publishedRecommendations = await publishImportedRecommendations();
+  console.log(`[5/5] Recommandations publiees: ${publishedRecommendations}.`);
 
   console.log(
     JSON.stringify({
@@ -77,6 +79,7 @@ async function main() {
       resetPublished: cleanupResult.modifiedCount || 0,
       news,
       recommendations,
+      publishedRecommendations,
     }),
   );
 }

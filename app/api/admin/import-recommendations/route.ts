@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { isAdminRequestAuthorized } from "@/lib/adminAuth";
-import { importConfiguredArticleSources } from "@/lib/articleImport";
+import { importConfiguredArticleSources, publishImportedRecommendations } from "@/lib/articleImport";
 import { connectToDatabase } from "@/lib/mongodb";
 
 export async function POST(request: NextRequest) {
@@ -11,9 +11,11 @@ export async function POST(request: NextRequest) {
 
   await connectToDatabase();
   const result = await importConfiguredArticleSources("recommendation");
+  const published = await publishImportedRecommendations();
 
   return NextResponse.json({
     ok: true,
     ...result,
+    published,
   });
 }
