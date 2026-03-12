@@ -80,6 +80,7 @@ export default async function AdminAnimePage({ searchParams }: AdminAnimePagePro
                 popularityScore: anime.popularityScore ?? undefined,
                 isPopularNow: anime.isPopularNow ?? undefined,
                 notificationsEnabled: anime.notificationsEnabled ?? undefined,
+                tags: anime.tags ?? undefined,
               }}
             />
           ))}

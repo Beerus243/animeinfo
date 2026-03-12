@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { isAdminRequestAuthorized } from "@/lib/adminAuth";
-import { importConfiguredAnimeFeeds, refreshIcotakuAiringFeed } from "@/lib/animeFeedImport";
+import { cleanupLegacyUpcomingAnime, importConfiguredAnimeFeeds, refreshIcotakuAiringFeed } from "@/lib/animeFeedImport";
 import { connectToDatabase } from "@/lib/mongodb";
 
 export async function POST(request: NextRequest) {
@@ -24,6 +24,20 @@ export async function POST(request: NextRequest) {
       removed: result.removed,
       failures: [],
       message: result.totalItems === 0 ? "Icotaku responded but returned no airing anime items in this environment." : undefined,
+    });
+  }
+
+  if (payload?.mode === "cleanup-legacy-upcoming") {
+    const removed = await cleanupLegacyUpcomingAnime();
+
+    return NextResponse.json({
+      ok: true,
+      mode: "cleanup-legacy-upcoming",
+      imported: 0,
+      updated: 0,
+      totalItems: removed,
+      removed,
+      failures: [],
     });
   }
 

@@ -69,6 +69,14 @@ export default function AdminAnimeActions() {
         emptyLabel={messages.adminAnime.refreshIcotakuEmpty}
         failedLabel={messages.adminAnime.refreshIcotakuFailed}
       />
+      <ImportAnimeFeedsButton
+        mode="cleanup-legacy-upcoming"
+        idleLabel={messages.adminAnime.cleanupLegacyUpcoming}
+        pendingLabel={messages.adminAnime.cleaningLegacyUpcoming}
+        successLabel={messages.adminAnime.cleanupLegacyUpcomingSuccess}
+        emptyLabel={messages.adminAnime.cleanupLegacyUpcomingEmpty}
+        failedLabel={messages.adminAnime.cleanupLegacyUpcomingFailed}
+      />
       <button className="button-secondary" disabled={sending} onClick={() => void handleSendAlerts()} type="button">
         {sending ? messages.adminAnime.sendingAlerts : messages.adminAnime.sendAlerts}
       </button>

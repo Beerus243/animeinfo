@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useLanguage } from "@/app/components/LanguageProvider";
 
 type ImportAnimeFeedsButtonProps = {
-  mode?: "all" | "icotaku-refresh";
+  mode?: "all" | "icotaku-refresh" | "cleanup-legacy-upcoming";
   idleLabel?: string;
   pendingLabel?: string;
   successLabel?: string;

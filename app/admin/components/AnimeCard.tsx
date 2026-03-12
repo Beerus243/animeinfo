@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 
+import { useLanguage } from "@/app/components/LanguageProvider";
+
 type AnimeCardProps = {
   anime: {
     id: string;
@@ -11,10 +13,20 @@ type AnimeCardProps = {
     popularityScore?: number;
     isPopularNow?: boolean;
     notificationsEnabled?: boolean;
+    tags?: string[];
   };
 };
 
 export default function AnimeCard({ anime }: AnimeCardProps) {
+  const { messages } = useLanguage();
+  const sourceLabel = anime.tags?.includes("icotaku")
+    ? messages.adminAnime.sourceIcotaku
+    : anime.tags?.includes("voiranime")
+      ? messages.adminAnime.sourceVoiranime
+      : anime.tags?.includes("anime-upcoming-feed")
+        ? messages.adminAnime.sourceLegacyFeed
+        : messages.adminAnime.sourceManual;
+
   return (
     <article className="content-card p-5 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] uppercase tracking-[0.16em] text-muted md:text-xs">
@@ -23,6 +35,7 @@ export default function AnimeCard({ anime }: AnimeCardProps) {
       </div>
       <h2 className="mt-3 font-display text-xl font-semibold md:mt-4 md:text-2xl">{anime.title}</h2>
       <div className="mt-4 flex flex-wrap gap-2 text-sm text-muted">
+        <span className="rounded-full border border-line px-3 py-2">{sourceLabel}</span>
         <span className="rounded-full border border-line px-3 py-2">Popularity {anime.popularityScore || 0}</span>
         {anime.isPopularNow ? <span className="rounded-full bg-accent-soft px-3 py-2 font-medium text-accent">Popular</span> : null}
         <span className="rounded-full border border-line px-3 py-2">{anime.notificationsEnabled === false ? "Notifications off" : "Notifications on"}</span>

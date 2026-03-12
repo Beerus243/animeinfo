@@ -42,6 +42,18 @@ export async function cleanupLegacyAiringAnime() {
   return result.deletedCount || 0;
 }
 
+export async function cleanupLegacyUpcomingAnime() {
+  const result = await Anime.deleteMany({
+    status: "upcoming",
+    $or: [
+      { tags: "voiranime" },
+      { tags: "anime-upcoming-feed" },
+    ],
+  });
+
+  return result.deletedCount || 0;
+}
+
 export async function refreshIcotakuAiringFeed() {
   const removed = await cleanupLegacyAiringAnime();
   const result = await importAnimeFeed({

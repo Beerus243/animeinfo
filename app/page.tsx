@@ -8,7 +8,6 @@ import { resolveArticleLocalization } from "@/lib/articleLocalization";
 import { ensureArticlesLocalization } from "@/lib/articleTranslation";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
-import { absoluteUrl } from "@/lib/seo";
 import { connectToDatabase } from "@/lib/mongodb";
 import Anime from "@/models/Anime";
 import Article from "@/models/Article";
@@ -165,7 +164,7 @@ export default async function Home() {
               {messages.home.seoTitle}
             </h3>
             <p className="mt-2.5 text-[13px] leading-6 text-muted md:text-sm">
-              {messages.home.seoDescription} {absoluteUrl("/")}{messages.home.seoDescriptionTail}
+              {messages.home.seoDescription}
             </p>
           </div>
         </aside>
