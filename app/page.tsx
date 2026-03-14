@@ -51,6 +51,7 @@ export default async function Home() {
     title: anime.title,
     releaseDay: anime.releaseDay ?? undefined,
   }));
+  const getFallbackLetter = (title: string) => title.trim().charAt(0).toUpperCase() || "A";
 
   return (
     <div className="shell-container py-6 md:py-10">
@@ -74,29 +75,46 @@ export default async function Home() {
             </Link>
           </div>
         </div>
-        <div className="panel bg-surface-strong p-5 md:p-6">
-          <p className="text-[12px] uppercase tracking-[0.18em] text-muted">{messages.home.featured}</p>
-          {resolvedFeatured ? (
-            <div className="mt-3.5 space-y-3.5">
-              <p className="text-[13px] text-muted">{resolvedFeatured.category || messages.home.industry}</p>
-              <h2 className="font-display text-2xl font-semibold md:text-[1.7rem]">
-                {featuredContent?.title || resolvedFeatured.title}
-              </h2>
-              <p className="text-sm leading-6 text-muted md:text-[15px]">{featuredContent?.excerpt || messages.home.noSummary}</p>
-              <Link className="button-primary" href={`/article/${featuredContent?.slug || resolvedFeatured.slug}`}>
-                {messages.home.readArticle}
-              </Link>
+        <div className="panel home-featured-card relative overflow-hidden p-5 md:p-6">
+          {resolvedFeatured?.coverImage ? (
+            <div className="home-featured-media-layer" aria-hidden="true">
+              <Image
+                alt=""
+                className="h-full w-full object-cover"
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, 40vw"
+                src={resolvedFeatured.coverImage}
+              />
             </div>
-          ) : (
-            <div className="mt-3.5 space-y-3.5">
-              <h2 className="font-display text-2xl font-semibold md:text-[1.7rem]">
-                {messages.home.waitingTitle}
-              </h2>
-              <p className="text-sm leading-6 text-muted md:text-[15px]">
-                {messages.home.waitingDescription}
-              </p>
-            </div>
-          )}
+          ) : null}
+          <div className="home-featured-overlay" aria-hidden="true" />
+          <div className="home-featured-content">
+            <p className="text-[12px] uppercase tracking-[0.18em] text-muted">{messages.home.featured}</p>
+            {resolvedFeatured ? (
+              <div className="mt-3.5 space-y-3.5">
+                <span className="home-featured-category-badge">
+                  {resolvedFeatured.category || messages.home.industry}
+                </span>
+                <h2 className="font-display text-2xl font-semibold leading-[1.04] tracking-[-0.03em] md:text-[1.95rem]">
+                  {featuredContent?.title || resolvedFeatured.title}
+                </h2>
+                <p className="text-sm leading-6 text-muted md:text-[15px]">{featuredContent?.excerpt || messages.home.noSummary}</p>
+                <Link className="button-primary" href={`/article/${featuredContent?.slug || resolvedFeatured.slug}`}>
+                  {messages.home.readArticle}
+                </Link>
+              </div>
+            ) : (
+              <div className="mt-3.5 space-y-3.5">
+                <h2 className="font-display text-2xl font-semibold leading-[1.04] tracking-[-0.03em] md:text-[1.95rem]">
+                  {messages.home.waitingTitle}
+                </h2>
+                <p className="text-sm leading-6 text-muted md:text-[15px]">
+                  {messages.home.waitingDescription}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
@@ -170,8 +188,8 @@ export default async function Home() {
                         <Image alt={anime.title} className="h-full w-full object-cover" height={132} src={anime.coverImage} width={132} />
                       </div>
                     ) : (
-                      <div className="airing-mini-card-media airing-mini-card-fallback overflow-hidden">
-                        <span className="airing-mini-card-fallback-label">{messages.airing.airingEyebrow}</span>
+                      <div className="airing-mini-card-media airing-mini-card-fallback" aria-hidden="true">
+                        {getFallbackLetter(anime.title)}
                       </div>
                     )}
                     <div className="min-w-0">

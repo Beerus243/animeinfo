@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "generate:vapid": "tsx scripts/generate-vapid-keys.ts",
     "import:anime": "tsx scripts/import-anime-feeds.ts",
+    "backfill:recommendation-images": "tsx scripts/backfill-recommendation-images.ts",
     "cleanup:anime:legacy-upcoming": "tsx scripts/import-anime-feeds.ts --cleanup-legacy-upcoming",
     "import:example": "tsx scripts/import-example.ts",
     "reset:import:french": "tsx scripts/reset-and-import-french-feeds.ts",

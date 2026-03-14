@@ -1,3 +1,6 @@
+import { access } from "node:fs/promises";
+import path from "node:path";
+
 import Link from "next/link";
 
 import CreateDraftButtons from "@/app/admin/components/CreateDraftButtons";
@@ -8,6 +11,7 @@ import { isFrenchAiPipelineConfigured } from "@/lib/articleTranslation";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
+import { isWebPushConfigured } from "@/lib/webPush";
 import Anime from "@/models/Anime";
 import Article from "@/models/Article";
 import NotificationSubscription from "@/models/NotificationSubscription";
@@ -15,10 +19,20 @@ import WebPushSubscription from "@/models/WebPushSubscription";
 
 export const dynamic = "force-dynamic";
 
+async function hasPushServiceWorker() {
+  try {
+    await access(path.join(process.cwd(), "public", "push-sw.js"));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export default async function AdminPage() {
   const locale = await getServerLocale();
   const messages = getMessages(locale);
   const aiEnabled = isFrenchAiPipelineConfigured();
+  const pushConfigured = isWebPushConfigured();
   await connectToDatabase();
 
   const [drafts, review, published] = await Promise.all([
@@ -39,6 +53,7 @@ export default async function AdminPage() {
     NotificationSubscription.countDocuments({ active: true }),
     WebPushSubscription.countDocuments({ active: true }),
   ]);
+  const pushServiceWorkerAvailable = await hasPushServiceWorker();
 
   const coreStats = [
     { label: messages.admin.drafts, value: drafts },
@@ -157,6 +172,31 @@ export default async function AdminPage() {
                 <p className="font-semibold text-foreground">{messages.admin.workflowQualityTitle}</p>
                 <p className="mt-1.5">{messages.admin.workflowQualityDescription}</p>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 content-card rounded-3xl p-5 md:p-6">
+          <p className="eyebrow">{messages.admin.pushDiagnosticsEyebrow}</p>
+          <h2 className="mt-3 font-display text-2xl font-semibold md:text-[1.7rem]">{messages.admin.pushDiagnosticsTitle}</h2>
+          <p className="mt-2.5 max-w-3xl text-sm leading-6 text-muted">{messages.admin.pushDiagnosticsDescription}</p>
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            <div className="push-diagnostic-card">
+              <p className="push-diagnostic-label">{messages.admin.pushVapidLabel}</p>
+              <span className={`status-chip ${pushConfigured ? "status-chip-success" : "status-chip-danger"}`}>
+                {pushConfigured ? messages.admin.pushStatusReady : messages.admin.pushStatusMissing}
+              </span>
+            </div>
+            <div className="push-diagnostic-card">
+              <p className="push-diagnostic-label">{messages.admin.pushServiceWorkerLabel}</p>
+              <span className={`status-chip ${pushServiceWorkerAvailable ? "status-chip-success" : "status-chip-danger"}`}>
+                {pushServiceWorkerAvailable ? messages.admin.pushStatusReady : messages.admin.pushStatusMissing}
+              </span>
+            </div>
+            <div className="push-diagnostic-card">
+              <p className="push-diagnostic-label">{messages.admin.pushSubscribersLabel}</p>
+              <p className="mt-3 font-display text-3xl font-semibold">{pushSubscribers}</p>
+              <p className="mt-1 text-sm text-muted">{messages.admin.pushSubscribersDescription}</p>
             </div>
           </div>
         </div>

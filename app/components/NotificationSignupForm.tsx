@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
 
 import type { Locale, Messages } from "@/lib/i18n/messages";
 
@@ -8,6 +9,7 @@ type AnimeOption = {
   slug: string;
   title: string;
   releaseDay?: string;
+  coverImage?: string;
 };
 
 type NotificationSignupFormProps = {
@@ -17,6 +19,7 @@ type NotificationSignupFormProps = {
   sourcePage: string;
   preselectedSlugs?: string[];
   compact?: boolean;
+  maxVisible?: number;
 };
 
 function urlBase64ToUint8Array(base64String: string) {
@@ -32,6 +35,8 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
+const PUSH_SELECTION_STORAGE_KEY = "animeinfo-push-selection";
+
 export default function NotificationSignupForm({
   animeOptions,
   locale,
@@ -39,64 +44,109 @@ export default function NotificationSignupForm({
   sourcePage,
   preselectedSlugs = [],
   compact = false,
+  maxVisible,
 }: NotificationSignupFormProps) {
-  const pushPublicKey = process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY || "";
-  const pushSupported =
-    Boolean(pushPublicKey) &&
-    typeof window !== "undefined" &&
-    "Notification" in window &&
-    "serviceWorker" in navigator &&
-    "PushManager" in window;
-  const [email, setEmail] = useState("");
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [pushPublicKey, setPushPublicKey] = useState("");
+  const [pushConfigState, setPushConfigState] = useState<"loading" | "ready" | "missing">("loading");
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>(preselectedSlugs);
-  const [pending, setPending] = useState(false);
   const [pushPending, setPushPending] = useState(false);
   const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const selectedCount = selectedSlugs.length;
-  const visibleOptions = useMemo(() => animeOptions.slice(0, compact ? 1 : 8), [animeOptions, compact]);
+  const visibleOptions = useMemo(() => {
+    const limit = compact ? 1 : maxVisible ?? 8;
+    return animeOptions.slice(0, limit);
+  }, [animeOptions, compact, maxVisible]);
+  const browserPushSupported =
+    isHydrated &&
+    "Notification" in window &&
+    "serviceWorker" in navigator &&
+    "PushManager" in window;
+  const pushConfigured = Boolean(pushPublicKey);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadPushConfig() {
+      try {
+        const response = await fetch("/api/notifications/push-config", { cache: "no-store" });
+        const payload = await response.json().catch(() => ({}));
+
+        if (cancelled) {
+          return;
+        }
+
+        if (response.ok && payload?.configured && typeof payload?.publicKey === "string" && payload.publicKey) {
+          setPushPublicKey(payload.publicKey);
+          setPushConfigState("ready");
+          return;
+        }
+
+        setPushPublicKey("");
+        setPushConfigState("missing");
+      } catch {
+        if (!cancelled) {
+          setPushPublicKey("");
+          setPushConfigState("missing");
+        }
+      }
+    }
+
+    void loadPushConfig();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) {
+      return;
+    }
+
+    try {
+      const rawValue = window.localStorage.getItem(PUSH_SELECTION_STORAGE_KEY);
+      if (!rawValue) {
+        return;
+      }
+
+      const parsed = JSON.parse(rawValue);
+      if (!Array.isArray(parsed)) {
+        return;
+      }
+
+      const validSlugs = new Set(animeOptions.map((anime) => anime.slug));
+      const nextSelection = parsed.filter((value): value is string => typeof value === "string" && validSlugs.has(value));
+
+      if (nextSelection.length) {
+        setSelectedSlugs(nextSelection);
+      }
+    } catch {
+      window.localStorage.removeItem(PUSH_SELECTION_STORAGE_KEY);
+    }
+  }, [animeOptions, isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated) {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(PUSH_SELECTION_STORAGE_KEY, JSON.stringify(selectedSlugs));
+    } catch {
+      // Ignore storage errors silently and keep the selection in memory only.
+    }
+  }, [isHydrated, selectedSlugs]);
 
   function toggleAnime(slug: string) {
     setSelectedSlugs((current) =>
       current.includes(slug) ? current.filter((value) => value !== slug) : [...current, slug],
     );
-  }
-
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setPending(true);
-    setStatus(null);
-
-    try {
-      const response = await fetch("/api/notifications/subscribe", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          animeSlugs: selectedSlugs,
-          locale,
-          sourcePage,
-        }),
-      });
-
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setStatus({ type: "error", message: payload?.error || messages.error });
-        setPending(false);
-        return;
-      }
-
-      setStatus({
-        type: "success",
-        message: messages.success.replace("{count}", String(payload?.count || selectedCount)),
-      });
-      setPending(false);
-    } catch {
-      setStatus({ type: "error", message: messages.error });
-      setPending(false);
-    }
   }
 
   async function handlePushSubscribe() {
@@ -105,13 +155,13 @@ export default function NotificationSignupForm({
       return;
     }
 
-    if (!pushPublicKey) {
-      setStatus({ type: "error", message: messages.pushUnavailable });
+    if (!browserPushSupported) {
+      setStatus({ type: "error", message: messages.pushUnsupported });
       return;
     }
 
-    if (!pushSupported) {
-      setStatus({ type: "error", message: messages.pushUnsupported });
+    if (!pushConfigured) {
+      setStatus({ type: "error", message: messages.pushUnavailable });
       return;
     }
 
@@ -168,8 +218,19 @@ export default function NotificationSignupForm({
     return null;
   }
 
+  const pushActionDisabled =
+    pushPending ||
+    selectedCount === 0 ||
+    pushConfigState === "loading" ||
+    !browserPushSupported ||
+    !pushConfigured;
+
+  function getFallbackLetter(title: string) {
+    return title.trim().charAt(0).toUpperCase() || "A";
+  }
+
   return (
-    <form className="panel p-6 md:p-8" onSubmit={handleSubmit}>
+    <div className="panel notification-panel p-6 md:p-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <span className="eyebrow">{messages.eyebrow}</span>
@@ -187,17 +248,32 @@ export default function NotificationSignupForm({
             return (
               <label
                 key={anime.slug}
-                className={`content-card rounded-3xl px-4 py-4 transition-colors ${checked ? "border-accent bg-accent-soft" : ""}`}
+                className={`content-card notification-option rounded-3xl px-4 py-4 transition-colors ${checked ? "notification-option-active" : ""}`}
               >
-                <div className="flex items-start gap-3">
+                <div className="flex items-center gap-3">
                   <input
                     checked={checked}
-                    className="mt-1"
+                    className="mt-0.5"
                     onChange={() => toggleAnime(anime.slug)}
                     type="checkbox"
                     value={anime.slug}
                   />
-                  <div>
+                  <div className="notification-option-thumb overflow-hidden">
+                    {anime.coverImage ? (
+                      <Image
+                        alt={anime.title}
+                        className="h-full w-full object-cover"
+                        height={112}
+                        src={anime.coverImage}
+                        width={112}
+                      />
+                    ) : (
+                      <div className="notification-option-thumb-fallback">
+                        {getFallbackLetter(anime.title)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
                     <p className="font-semibold">{anime.title}</p>
                     <p className="mt-1 text-sm text-muted">
                       {anime.releaseDay ? `${messages.releaseDayPrefix} ${anime.releaseDay}` : messages.releaseFallback}
@@ -210,31 +286,21 @@ export default function NotificationSignupForm({
         </div>
 
         <div className="content-card space-y-4 rounded-3xl p-5">
-          <label className="block space-y-2">
-            <span className="text-sm font-medium">{messages.emailLabel}</span>
-            <input
-              className="w-full rounded-2xl border border-line bg-white/70 px-4 py-3 dark:bg-white/5"
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder={messages.emailPlaceholder}
-              type="email"
-              value={email}
-            />
-          </label>
-          <div className="grid gap-2 sm:grid-cols-2">
-            <button className="button-primary w-full" disabled={pending || pushPending || selectedCount === 0} type="submit">
-              {pending ? messages.pending : messages.submit}
-            </button>
-            <button className="button-secondary w-full" disabled={pending || pushPending || selectedCount === 0} onClick={() => void handlePushSubscribe()} type="button">
-              {pushPending ? messages.pushPending : messages.pushSubmit}
-            </button>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">{messages.pushSetupTitle}</p>
+            <p className="text-sm leading-7 text-muted">{messages.pushSetupDescription}</p>
           </div>
+          <button className="button-primary w-full" disabled={pushActionDisabled} onClick={() => void handlePushSubscribe()} type="button">
+            {pushPending ? messages.pushPending : messages.pushSubmit}
+          </button>
           <p className="text-sm leading-7 text-muted">{messages.legalHint}</p>
-          {!pushSupported ? <p className="text-sm leading-7 text-muted">{messages.pushUnsupported}</p> : null}
+          {isHydrated && !browserPushSupported ? <p className="text-sm leading-7 text-muted">{messages.pushUnsupported}</p> : null}
+          {pushConfigState === "missing" ? <p className="text-sm leading-7 text-muted">{messages.pushUnavailable}</p> : null}
           {status ? (
             <p className={`text-sm ${status.type === "success" ? "text-success" : "text-warning"}`}>{status.message}</p>
           ) : null}
         </div>
       </div>
-    </form>
+    </div>
   );
 }

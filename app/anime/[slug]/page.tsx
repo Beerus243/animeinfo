@@ -66,14 +66,15 @@ export default async function AnimePage({ params }: AnimePageProps) {
     path: `/anime/${slug}`,
     itemPaths: localizedArticles.map((article) => `/article/${resolveArticleLocalization(article, locale).slug || article.slug}`),
   });
+  const fallbackLetter = anime.title.trim().charAt(0).toUpperCase() || "A";
 
   return (
     <div className="shell-container py-8 md:py-12">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <section className="panel overflow-hidden px-6 py-8 md:px-10 md:py-12">
         <div className="grid gap-6 md:grid-cols-[280px_minmax(0,1fr)] md:items-start">
-          {anime.coverImage ? (
-            <div className="anime-hero-media overflow-hidden rounded-[1.4rem] border border-line/70">
+          <div className="anime-hero-media overflow-hidden rounded-[1.4rem] border border-line/70">
+            {anime.coverImage ? (
               <Image
                 alt={anime.title}
                 className="h-full w-full object-cover"
@@ -81,13 +82,13 @@ export default async function AnimePage({ params }: AnimePageProps) {
                 src={anime.coverImage}
                 width={520}
               />
-            </div>
-          ) : (
-            <div className="anime-hero-media anime-hero-fallback overflow-hidden rounded-[1.4rem] border border-line/70 p-6">
-              <span className="airing-card-fallback-chip">{messages.anime.eyebrow}</span>
-              <p className="anime-hero-fallback-title">{anime.title}</p>
-            </div>
-          )}
+            ) : (
+              <div className="anime-hero-placeholder">
+                <span className="anime-hero-placeholder-mark">{fallbackLetter}</span>
+                <span className="anime-hero-placeholder-title">{anime.title}</span>
+              </div>
+            )}
+          </div>
           <div>
             <span className="eyebrow">{messages.anime.eyebrow}</span>
             <h1 className="mt-5 font-display text-4xl font-semibold md:text-6xl">

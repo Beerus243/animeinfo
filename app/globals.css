@@ -120,36 +120,104 @@ img {
   box-shadow: 0 22px 54px color-mix(in srgb, var(--shadow) 80%, rgba(235, 94, 40, 0.12) 20%);
 }
 
-.article-card-fallback {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.16), transparent 36%),
-    linear-gradient(155deg, rgba(24, 19, 14, 0.14), rgba(24, 19, 14, 0.36));
+.article-card-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 28%);
+  pointer-events: none;
 }
 
-.article-card-fallback-chip {
+.article-card-image-overlay {
+  background:
+    linear-gradient(180deg, rgba(14, 12, 10, 0.12), transparent 26%),
+    linear-gradient(0deg, rgba(14, 12, 10, 0.74), rgba(14, 12, 10, 0.16) 45%, transparent 74%);
+}
+
+.article-card-category-badge,
+.home-featured-category-badge {
   display: inline-flex;
-  align-self: flex-start;
-  padding: 0.3rem 0.65rem;
+  align-items: center;
+  border: 1px solid rgba(255, 248, 241, 0.16);
   border-radius: 999px;
-  background: rgba(255, 248, 241, 0.16);
-  color: #fff8f1;
-  font-size: 0.68rem;
-  font-weight: 600;
+  padding: 0.42rem 0.78rem;
+  background: rgba(19, 16, 13, 0.5);
+  color: #fff3ea;
+  font-size: 0.72rem;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  backdrop-filter: blur(12px);
 }
 
-.article-card-fallback-title {
-  max-width: 20rem;
-  color: #fff8f1;
+.article-card-title {
+  text-wrap: balance;
+}
+
+.article-card-fallback {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.16), transparent 32%),
+    linear-gradient(135deg, rgba(222, 90, 36, 0.92), rgba(53, 141, 123, 0.84));
+}
+
+.article-card-fallback-mark {
   font-family: var(--font-display), sans-serif;
-  font-size: 1.45rem;
+  font-size: clamp(3rem, 6vw, 4.6rem);
+  line-height: 1;
   font-weight: 700;
-  line-height: 1.05;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.article-card-fallback-copy {
+  margin-left: auto;
+}
+
+.home-featured-card {
+  position: relative;
+  isolation: isolate;
+  min-height: 22rem;
+  background: color-mix(in srgb, var(--surface-strong) 88%, white 12%);
+}
+
+.home-featured-media-layer {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+}
+
+.home-featured-media-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 8, 7, 0.18);
+}
+
+.home-featured-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    linear-gradient(145deg, rgba(18, 14, 10, 0.88), rgba(18, 14, 10, 0.48) 50%, rgba(18, 14, 10, 0.82)),
+    radial-gradient(circle at top right, rgba(222, 90, 36, 0.18), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 24%);
+}
+
+.home-featured-content {
+  position: relative;
+  z-index: 1;
+}
+
+.home-featured-card .text-muted {
+  color: rgba(255, 244, 237, 0.84);
+}
+
+.home-featured-card .button-primary {
+  box-shadow: 0 10px 22px rgba(14, 12, 10, 0.22), inset 0 -1px 0 rgba(0, 0, 0, 0.08);
 }
 
 .content-card {
@@ -164,31 +232,167 @@ img {
   background: color-mix(in srgb, var(--surface-strong) 82%, black 18%);
 }
 
+.airing-card-media-shell {
+  position: relative;
+}
+
+.airing-hero {
+  position: relative;
+  isolation: isolate;
+  min-height: 22rem;
+}
+
+.airing-hero-media-layer {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+}
+
+.airing-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    linear-gradient(135deg, rgba(18, 14, 10, 0.9), rgba(18, 14, 10, 0.56) 48%, rgba(18, 14, 10, 0.82)),
+    radial-gradient(circle at top left, rgba(222, 90, 36, 0.22), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 24%);
+}
+
+.airing-hero-media-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(9, 7, 5, 0.24);
+}
+
+.news-hero {
+  position: relative;
+  isolation: isolate;
+  min-height: 18rem;
+}
+
+.news-hero-media-layer {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+}
+
+.news-hero-media-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 8, 7, 0.18);
+}
+
+.news-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    linear-gradient(135deg, rgba(18, 14, 10, 0.9), rgba(18, 14, 10, 0.54) 52%, rgba(18, 14, 10, 0.78)),
+    radial-gradient(circle at top right, rgba(222, 90, 36, 0.2), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 26%);
+}
+
+.news-hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.news-hero .eyebrow {
+  background: rgba(255, 248, 241, 0.16);
+  color: #fff3ea;
+}
+
+.news-hero .text-muted {
+  color: rgba(255, 244, 237, 0.84);
+}
+
+.airing-hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.airing-hero .eyebrow {
+  background: rgba(255, 248, 241, 0.16);
+  color: #fff3ea;
+}
+
+.airing-hero .text-muted {
+  color: rgba(255, 244, 237, 0.84);
+}
+
+.airing-hero-stat {
+  border: 1px solid rgba(255, 248, 241, 0.16);
+  border-radius: 1.15rem;
+  padding: 1rem 1.05rem;
+  background: rgba(19, 16, 13, 0.34);
+  backdrop-filter: blur(12px);
+}
+
+.airing-hero-stat-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 243, 234, 0.68);
+}
+
+.airing-hero-stat-value {
+  margin-top: 0.35rem;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(1.55rem, 4vw, 2.4rem);
+  line-height: 1.05;
+  font-weight: 700;
+  color: #fff8f1;
+}
+
+.airing-hero-stat-meta {
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  color: rgba(255, 243, 234, 0.78);
+}
+
 .airing-card-media-compact {
   aspect-ratio: 16 / 10;
+}
+
+.airing-card-placeholder,
+.anime-hero-placeholder {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.85rem;
+  padding: 1.1rem;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.16), transparent 30%),
+    linear-gradient(135deg, rgba(222, 90, 36, 0.92), rgba(53, 141, 123, 0.84));
+}
+
+.airing-card-placeholder-mark,
+.anime-hero-placeholder-mark {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(3rem, 8vw, 5rem);
+  line-height: 1;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.airing-card-placeholder-title,
+.anime-hero-placeholder-title {
+  max-width: 22rem;
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: white;
 }
 
 .anime-hero-media {
   aspect-ratio: 3 / 4;
   background: color-mix(in srgb, var(--surface-strong) 82%, black 18%);
-}
-
-.anime-hero-fallback {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 1rem;
-  background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.12), transparent 32%),
-    linear-gradient(180deg, rgba(222, 90, 36, 0.84), rgba(53, 141, 123, 0.72));
-}
-
-.anime-hero-fallback-title {
-  color: #fff8f1;
-  font-family: var(--font-display), sans-serif;
-  font-size: clamp(1.8rem, 3vw, 2.8rem);
-  font-weight: 700;
-  line-height: 0.98;
 }
 
 .airing-mini-card {
@@ -216,52 +420,14 @@ img {
 }
 
 .airing-mini-card-fallback {
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-start;
-  padding: 0.55rem;
-  background: linear-gradient(135deg, rgba(222, 90, 36, 0.88), rgba(53, 141, 123, 0.7));
-}
-
-.airing-mini-card-fallback-label {
-  color: #fff8f1;
-  font-size: 0.52rem;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.airing-card-fallback {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 0.8rem;
-  background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.12), transparent 32%),
-    linear-gradient(145deg, rgba(222, 90, 36, 0.82), rgba(53, 141, 123, 0.66));
-}
-
-.airing-card-fallback-chip {
   display: inline-flex;
-  align-self: flex-start;
-  padding: 0.32rem 0.68rem;
-  border-radius: 999px;
-  background: rgba(255, 248, 241, 0.14);
-  color: #fff8f1;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.airing-card-fallback-title {
-  max-width: 18rem;
-  color: #fff8f1;
+  align-items: center;
+  justify-content: center;
   font-family: var(--font-display), sans-serif;
-  font-size: clamp(1.25rem, 2vw, 2rem);
+  font-size: 1.7rem;
   font-weight: 700;
-  line-height: 1.04;
+  color: rgba(255, 255, 255, 0.88);
+  background: linear-gradient(135deg, rgba(222, 90, 36, 0.92), rgba(53, 141, 123, 0.84));
 }
 
 .eyebrow {
@@ -558,6 +724,57 @@ img {
   color: #d94b4b;
 }
 
+.notification-panel {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 88%, white 12%), color-mix(in srgb, var(--surface-strong) 90%, transparent 10%)),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 12%, transparent), transparent 30%);
+}
+
+.notification-option {
+  display: block;
+}
+
+.notification-option-active {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--line) 58%);
+  background: color-mix(in srgb, var(--accent-soft) 68%, var(--surface-strong) 32%);
+}
+
+.notification-option-thumb {
+  flex: none;
+  width: 4.25rem;
+  height: 4.25rem;
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--surface-strong) 82%, black 18%);
+}
+
+.notification-option-thumb-fallback {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.88);
+  background: linear-gradient(135deg, rgba(222, 90, 36, 0.92), rgba(53, 141, 123, 0.84));
+}
+
+.push-diagnostic-card {
+  border: 1px solid color-mix(in srgb, var(--accent) 10%, var(--line) 90%);
+  border-radius: 1.1rem;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--surface-strong) 82%, white 18%);
+}
+
+.push-diagnostic-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -630,5 +847,27 @@ img {
   .grid-auto-fit {
     gap: 1rem;
     grid-template-columns: 1fr;
+  }
+
+  .airing-hero {
+    min-height: 20rem;
+  }
+
+  .news-hero {
+    min-height: 16rem;
+  }
+
+  .home-featured-card {
+    min-height: 18rem;
+  }
+
+  .airing-hero-stat {
+    padding: 0.95rem 1rem;
+  }
+
+  .notification-option-thumb {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 0.85rem;
   }
 }

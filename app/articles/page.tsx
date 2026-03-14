@@ -1,7 +1,9 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import AdUnit from "@/app/components/AdUnit";
 import ArticleCard from "@/app/components/ArticleCard";
+import newsHeroCover from "@/assets/images/satoru-gojo-jujutsu-3840x2160-9295.jpg";
 import { resolveArticleLocalization } from "@/lib/articleLocalization";
 import { ensureArticlesLocalization } from "@/lib/articleTranslation";
 import { getMessages } from "@/lib/i18n/messages";
@@ -40,18 +42,31 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
 
   return (
     <div className="shell-container py-6 md:py-9">
-      <div className="panel px-5 py-6 md:px-8 md:py-8">
-        <span className="eyebrow">{messages.news.eyebrow}</span>
-        <div className="mt-3.5 flex flex-col gap-3.5 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="font-display text-3xl font-semibold md:text-4xl">{messages.news.title}</h1>
-            <p className="mt-2.5 max-w-2xl text-sm leading-6 text-muted md:text-[15px]">
-              {messages.news.pagePrefix} {page} {messages.news.pageMiddle} {totalPages}. {messages.news.pageSuffix}
-            </p>
-          </div>
-          <AdUnit slot="header" compact />
+      <section className="panel news-hero overflow-hidden px-5 py-6 md:px-8 md:py-8">
+        <div className="news-hero-media-layer" aria-hidden="true">
+          <Image
+            alt=""
+            className="h-full w-full object-cover"
+            fill
+            priority
+            sizes="(max-width: 768px) 100vw, 1080px"
+            src={newsHeroCover}
+          />
         </div>
-      </div>
+        <div className="news-hero-overlay" aria-hidden="true" />
+        <div className="news-hero-content">
+          <span className="eyebrow">{messages.news.eyebrow}</span>
+          <div className="mt-3.5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h1 className="max-w-3xl font-display text-3xl font-semibold tracking-[-0.03em] md:text-5xl">{messages.news.title}</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted md:text-[15px] md:leading-7">
+                {messages.news.pagePrefix} {page} {messages.news.pageMiddle} {totalPages}. {messages.news.pageSuffix}
+              </p>
+            </div>
+            <AdUnit slot="header" compact />
+          </div>
+        </div>
+      </section>
 
       <div className="mt-6 grid gap-5 md:mt-8 lg:grid-cols-[1fr_280px]">
         <div className="grid-auto-fit">

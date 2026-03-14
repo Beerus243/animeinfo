@@ -91,7 +91,7 @@ export default async function RecommendationsPage() {
                     slug: localized.slug || article.slug,
                     excerpt: localized.excerpt ?? undefined,
                     category: article.category ?? undefined,
-                    coverImage: article.coverImage ?? localized.seo.ogImage ?? article.seo?.ogImage ?? undefined,
+                    coverImage: article.coverImage ?? undefined,
                     publishedAt: article.publishedAt ?? undefined,
                   }}
                 />
@@ -114,7 +114,7 @@ export default async function RecommendationsPage() {
                     slug: localized.slug || article.slug,
                     excerpt: localized.excerpt ?? undefined,
                     category: article.category ?? undefined,
-                    coverImage: article.coverImage ?? localized.seo.ogImage ?? article.seo?.ogImage ?? undefined,
+                    coverImage: article.coverImage ?? undefined,
                     publishedAt: article.publishedAt ?? undefined,
                   }}
                 />

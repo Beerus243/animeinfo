@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import NotificationSignupForm from "@/app/components/NotificationSignupForm";
+import airingHeroCover from "@/assets/images/steel-ball-run-3840x2160-25586.jpg";
 import { getPreferredAiringFilter } from "@/lib/airingAnime";
 import { formatDateTime, getMessages } from "@/lib/i18n/messages";
 import { getCurrentSeasonLabel } from "@/lib/animeSeason";
@@ -54,25 +55,51 @@ export default async function AiringPage() {
     slug: anime.slug,
     title: anime.title,
     releaseDay: anime.releaseDay || undefined,
+    coverImage: anime.coverImage || undefined,
   }));
+  const getFallbackLetter = (title: string) => title.trim().charAt(0).toUpperCase() || "A";
 
   return (
     <div className="shell-container py-6 md:py-9">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <section className="panel px-5 py-6 md:px-8 md:py-8">
-        <span className="eyebrow">{messages.airing.eyebrow}</span>
-        <h1 className="mt-4 font-display text-3xl font-semibold md:text-5xl">{messages.airing.title}</h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-muted md:text-base md:leading-7">{messages.airing.description}</p>
-        <div className="mt-5 flex flex-wrap gap-2.5 text-[13px] text-muted md:text-sm">
-          <span className="rounded-full border border-line px-3 py-1.5">{currentSeasonLabel}</span>
-          <span className="rounded-full border border-line px-3 py-1.5">{airingAnimes.length} {messages.airing.airingCountSuffix}</span>
-          <span className="rounded-full border border-line px-3 py-1.5">{popularAiringAnimes.length} {messages.airing.popularCountSuffix}</span>
+      <section className="panel airing-hero overflow-hidden px-5 py-6 md:px-8 md:py-8">
+        <div className="airing-hero-media-layer" aria-hidden="true">
+          <Image
+            alt=""
+            className="h-full w-full object-cover"
+            fill
+            priority
+            sizes="(max-width: 768px) 100vw, 1080px"
+            src={airingHeroCover}
+          />
+        </div>
+        <div className="airing-hero-overlay" aria-hidden="true" />
+        <div className="airing-hero-content relative">
+          <span className="eyebrow">{messages.airing.eyebrow}</span>
+          <h1 className="mt-4 max-w-3xl font-display text-3xl font-semibold md:text-5xl">{messages.airing.title}</h1>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-muted md:text-base md:leading-7">{messages.airing.description}</p>
+          <div className="mt-6 grid gap-3 md:grid-cols-3">
+            <div className="airing-hero-stat">
+              <p className="airing-hero-stat-label">{messages.airing.seasonStatLabel}</p>
+              <p className="airing-hero-stat-value">{currentSeasonLabel}</p>
+            </div>
+            <div className="airing-hero-stat">
+              <p className="airing-hero-stat-label">{messages.airing.airingStatLabel}</p>
+              <p className="airing-hero-stat-value">{airingAnimes.length}</p>
+              <p className="airing-hero-stat-meta">{messages.airing.airingCountSuffix}</p>
+            </div>
+            <div className="airing-hero-stat">
+              <p className="airing-hero-stat-label">{messages.airing.popularStatLabel}</p>
+              <p className="airing-hero-stat-value">{popularAiringAnimes.length}</p>
+              <p className="airing-hero-stat-meta">{messages.airing.popularCountSuffix}</p>
+            </div>
+          </div>
         </div>
       </section>
 
       <div className="mt-6 md:mt-8">
-        <NotificationSignupForm animeOptions={notificationOptions} locale={locale} messages={messages.notifications} sourcePage="/airing" />
+        <NotificationSignupForm animeOptions={notificationOptions} locale={locale} maxVisible={24} messages={messages.notifications} sourcePage="/airing" />
       </div>
 
       <section className="mt-6 md:mt-8">
@@ -86,8 +113,8 @@ export default async function AiringPage() {
           {airingAnimes.length ? (
             airingAnimes.map((anime) => (
               <Link key={anime._id.toString()} href={`/anime/${anime.slug}`} className="content-card overflow-hidden p-4 transition-transform hover:-translate-y-0.5">
-                {anime.coverImage ? (
-                  <div className="airing-card-media -mx-4 -mt-4 mb-4 overflow-hidden border-b border-line/70">
+                <div className="airing-card-media airing-card-media-shell -mx-4 -mt-4 mb-4 overflow-hidden border-b border-line/70">
+                  {anime.coverImage ? (
                     <Image
                       alt={anime.title}
                       className="h-full w-full object-cover"
@@ -95,13 +122,13 @@ export default async function AiringPage() {
                       src={anime.coverImage}
                       width={760}
                     />
-                  </div>
-                ) : (
-                  <div className="airing-card-media airing-card-fallback -mx-4 -mt-4 mb-4 border-b border-line/70 p-4">
-                    <span className="airing-card-fallback-chip">{messages.airing.airingEyebrow}</span>
-                    <p className="airing-card-fallback-title">{anime.title}</p>
-                  </div>
-                )}
+                  ) : (
+                    <div className="airing-card-placeholder">
+                      <span className="airing-card-placeholder-mark">{getFallbackLetter(anime.title)}</span>
+                      <span className="airing-card-placeholder-title">{anime.title}</span>
+                    </div>
+                  )}
+                </div>
                 <p className="text-[11px] uppercase tracking-[0.16em] text-muted">{anime.currentSeasonLabel || currentSeasonLabel}</p>
                 <h3 className="mt-3 font-display text-2xl font-semibold md:text-[1.65rem]">{anime.title}</h3>
                 <p className="mt-2.5 text-[13px] leading-6 text-muted md:text-sm">{anime.synopsis || messages.anime.synopsisFallback}</p>
@@ -128,8 +155,8 @@ export default async function AiringPage() {
           {popularAiringAnimes.length ? (
             popularAiringAnimes.map((anime, index) => (
               <Link key={anime._id.toString()} href={`/anime/${anime.slug}`} className="content-card overflow-hidden p-4 transition-transform hover:-translate-y-0.5">
-                {anime.coverImage ? (
-                  <div className="airing-card-media airing-card-media-compact -mx-4 -mt-4 mb-4 overflow-hidden border-b border-line/70">
+                <div className="airing-card-media airing-card-media-compact airing-card-media-shell -mx-4 -mt-4 mb-4 overflow-hidden border-b border-line/70">
+                  {anime.coverImage ? (
                     <Image
                       alt={anime.title}
                       className="h-full w-full object-cover"
@@ -137,13 +164,13 @@ export default async function AiringPage() {
                       src={anime.coverImage}
                       width={520}
                     />
-                  </div>
-                ) : (
-                  <div className="airing-card-media airing-card-media-compact airing-card-fallback -mx-4 -mt-4 mb-4 border-b border-line/70 p-4">
-                    <span className="airing-card-fallback-chip">Top {index + 1}</span>
-                    <p className="airing-card-fallback-title">{anime.title}</p>
-                  </div>
-                )}
+                  ) : (
+                    <div className="airing-card-placeholder">
+                      <span className="airing-card-placeholder-mark">{getFallbackLetter(anime.title)}</span>
+                      <span className="airing-card-placeholder-title">{anime.title}</span>
+                    </div>
+                  )}
+                </div>
                 <p className="text-[11px] uppercase tracking-[0.16em] text-muted">Top {index + 1}</p>
                 <h3 className="mt-2 font-display text-xl font-semibold">{anime.title}</h3>
                 <p className="mt-1.5 text-[13px] text-muted">{messages.airing.popularityPrefix} {anime.popularityScore || 0}</p>
