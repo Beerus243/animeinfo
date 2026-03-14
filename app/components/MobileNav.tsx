@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 
+import BrandLogo from "@/app/components/BrandLogo";
 import ThemeToggle from "@/app/components/ThemeToggle";
 
 type MobileNavProps = {
@@ -91,7 +92,10 @@ export default function MobileNav({ links, ariaLabel, openLabel, closeLabel, tit
         <div className="mobile-nav-surface">
           <div className="flex items-start justify-between gap-3 border-b border-line/80 pb-4">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-muted">AnimeInfo</p>
+              <div className="flex items-center gap-2">
+                <BrandLogo size="mobile" />
+                <p className="text-[10px] uppercase tracking-[0.18em] text-muted">Manga Empire</p>
+              </div>
               <p className="mt-1 text-base font-semibold text-foreground">{title}</p>
               <p className="mt-1 text-[13px] text-muted">{description}</p>
             </div>

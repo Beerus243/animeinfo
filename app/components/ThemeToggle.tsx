@@ -6,7 +6,8 @@ import { useLanguage } from "@/app/components/LanguageProvider";
 
 type ThemeMode = "light" | "dark";
 
-const storageKey = "animeinfo-theme";
+const storageKey = "mangaempire-theme";
+const legacyStorageKey = "animeinfo-theme";
 
 function subscribe(callback: () => void) {
   window.addEventListener("storage", callback);
@@ -14,7 +15,7 @@ function subscribe(callback: () => void) {
 }
 
 function getSnapshot(): ThemeMode {
-  const saved = window.localStorage.getItem(storageKey);
+  const saved = window.localStorage.getItem(storageKey) || window.localStorage.getItem(legacyStorageKey);
   if (saved === "light" || saved === "dark") {
     return saved;
   }
@@ -33,6 +34,7 @@ export default function ThemeToggle({ compact = false }: ThemeToggleProps) {
   function toggleTheme() {
     const nextTheme: ThemeMode = theme === "dark" ? "light" : "dark";
     window.localStorage.setItem(storageKey, nextTheme);
+    window.localStorage.removeItem(legacyStorageKey);
     document.documentElement.classList.toggle("dark", nextTheme === "dark");
     document.documentElement.dataset.theme = nextTheme;
     window.dispatchEvent(new Event("storage"));

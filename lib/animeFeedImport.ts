@@ -192,7 +192,7 @@ export async function importAnimeFeed(options: ImportAnimeFeedOptions): Promise<
 
   const response = await fetch(options.feedUrl, {
     headers: {
-      "user-agent": "AnimeInfoBot/1.0 (+https://animeinfo.local)",
+      "user-agent": "MangaEmpireBot/1.0 (+https://mangaempire.local)",
     },
     next: { revalidate: 0 },
   });

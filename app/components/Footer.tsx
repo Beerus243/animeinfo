@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Facebook, Instagram, MessageCircle, Music2, Send } from "lucide-react";
 
+import BrandLogo from "@/app/components/BrandLogo";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { getSocialLinks } from "@/lib/socialLinks";
@@ -31,7 +32,10 @@ export default async function Footer() {
         <div className="space-y-3">
           <p className="eyebrow">{messages.footer.tagline}</p>
           <div>
-            <p className="font-display text-2xl font-semibold text-foreground">{messages.footer.brand}</p>
+            <div className="flex items-center gap-3">
+              <BrandLogo size="footer" />
+              <p className="font-display text-2xl font-semibold text-foreground">{messages.footer.brand}</p>
+            </div>
             <p className="mt-2 leading-6">{messages.footer.line1}</p>
           </div>
           <p className="max-w-xl leading-6">{messages.footer.line2}</p>

@@ -12,7 +12,7 @@ export type WebPushPayload = {
 function getWebPushConfig() {
   const publicKey = process.env.WEB_PUSH_VAPID_PUBLIC_KEY || process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY || "";
   const privateKey = process.env.WEB_PUSH_VAPID_PRIVATE_KEY || "";
-  const subject = process.env.WEB_PUSH_SUBJECT || "mailto:admin@animeinfo.local";
+  const subject = process.env.WEB_PUSH_SUBJECT || "mailto:admin@mangaempire.local";
 
   return {
     publicKey,

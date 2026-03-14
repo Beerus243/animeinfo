@@ -71,9 +71,9 @@ export default async function AnimePage({ params }: AnimePageProps) {
   return (
     <div className="shell-container py-8 md:py-12">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <section className="panel overflow-hidden px-6 py-8 md:px-10 md:py-12">
-        <div className="grid gap-6 md:grid-cols-[280px_minmax(0,1fr)] md:items-start">
-          <div className="anime-hero-media overflow-hidden rounded-[1.4rem] border border-line/70">
+      <section className="panel anime-detail-shell overflow-hidden px-6 py-8 md:px-10 md:py-12">
+        <div className="grid gap-6 md:grid-cols-[236px_minmax(0,1fr)] md:items-start">
+          <div className="anime-hero-media anime-detail-cover overflow-hidden rounded-[1.4rem] border border-line/70">
             {anime.coverImage ? (
               <Image
                 alt={anime.title}
@@ -89,7 +89,7 @@ export default async function AnimePage({ params }: AnimePageProps) {
               </div>
             )}
           </div>
-          <div>
+          <div className="anime-detail-copy">
             <span className="eyebrow">{messages.anime.eyebrow}</span>
             <h1 className="mt-5 font-display text-4xl font-semibold md:text-6xl">
               {anime.title}

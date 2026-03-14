@@ -45,8 +45,8 @@ async function buildAiringFeed() {
     .lean();
 
   return buildRssFeed({
-    title: "AnimeInfo RSS - Animes en cours",
-    description: "Flux RSS interne des animes en cours importes et enrichis dans AnimeInfo.",
+    title: "Manga Empire RSS - Animes en cours",
+    description: "Flux RSS interne des animes en cours importes et enrichis dans Manga Empire.",
     path: "/rss/airing",
     items: animes.map((anime) => ({
       title: anime.title,
@@ -63,13 +63,13 @@ async function buildTrendingFeed() {
   const snapshot = (await getLatestPersistedTrendSnapshot()) || (await getRssTrendSnapshot());
 
   return buildRssFeed({
-    title: "AnimeInfo RSS - Tendances anime",
-    description: "Flux RSS interne des tendances issues des snapshots RSS et sources anime suivies par AnimeInfo.",
+    title: "Manga Empire RSS - Tendances anime",
+    description: "Flux RSS interne des tendances issues des snapshots RSS et sources anime suivies par Manga Empire.",
     path: "/rss/trending",
     items: snapshot.liveItems.map((item) => ({
       title: item.title,
       link: item.url,
-      description: `Source ${item.sourceLabel}. Republie depuis le snapshot de tendances AnimeInfo.`,
+      description: `Source ${item.sourceLabel}. Republie depuis le snapshot de tendances Manga Empire.`,
       guid: `trend:${item.sourceLabel}:${item.url}`,
       pubDate: item.publishedAt,
       categories: [item.sourceLabel],
@@ -87,7 +87,7 @@ async function buildSeasonFeed() {
     .lean();
 
   return buildRssFeed({
-    title: `AnimeInfo RSS - ${currentSeasonLabel}`,
+    title: `Manga Empire RSS - ${currentSeasonLabel}`,
     description: `Flux RSS interne des animes relies a la saison ${currentSeasonLabel}.`,
     path: "/rss/season",
     items: animes.map((anime) => ({
@@ -138,13 +138,13 @@ async function buildCategoriesFeed() {
     .slice(0, 24);
 
   return buildRssFeed({
-    title: "AnimeInfo RSS - Categories anime",
-    description: "Flux RSS interne des categories et genres dominants agreges dans AnimeInfo.",
+    title: "Manga Empire RSS - Categories anime",
+    description: "Flux RSS interne des categories et genres dominants agreges dans Manga Empire.",
     path: "/rss/categories",
     items: categories.map((category) => ({
       title: `${category._id} (${category.count})`,
       link: absoluteUrl(`/search?q=${encodeURIComponent(category._id)}`),
-      description: `Categorie ou genre visible dans AnimeInfo avec ${category.count} element(s).`,
+      description: `Categorie ou genre visible dans Manga Empire avec ${category.count} element(s).`,
       guid: `category:${slugify(category._id)}`,
       pubDate: category.latestPublishedAt,
       categories: [category._id],

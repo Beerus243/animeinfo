@@ -23,7 +23,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
 
   return (
     <article className="article-card panel overflow-hidden">
-      <div className="article-card-media relative h-44 overflow-hidden bg-[linear-gradient(135deg,rgba(235,94,40,0.92),rgba(53,141,123,0.82))] md:h-48">
+      <div className="article-card-media relative h-40 overflow-hidden bg-[linear-gradient(135deg,rgba(235,94,40,0.92),rgba(53,141,123,0.82))] md:h-44">
         <div className="absolute left-3 top-3 z-10">
           <span className="article-card-category-badge">{article.category || messages.card.defaultCategory}</span>
         </div>
@@ -49,7 +49,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
         )}
         <div className="absolute inset-x-0 top-0 h-16 bg-linear-to-b from-black/18 to-transparent" />
       </div>
-      <div className="space-y-3 p-4 md:p-5">
+      <div className="space-y-3 p-4 md:p-4.5">
         <div className="flex items-center justify-end gap-3 text-[10px] uppercase tracking-[0.13em] text-muted md:text-[11px]">
           <span>
             {article.publishedAt

@@ -32,7 +32,7 @@ export async function sendReleaseAlertEmail(input: ReleaseAlertEmailInput) {
         ${input.animeTitles.map((title) => `<li>${title}</li>`).join("")}
       </ul>
       <p>
-        Suivez les mises a jour sur <a href="${absoluteUrl("/airing")}">AnimeInfo</a>.
+        Suivez les mises a jour sur <a href="${absoluteUrl("/airing")}">Manga Empire</a>.
       </p>
       <p style="font-size:12px;color:#6f6457">Email envoye depuis ${siteUrl}</p>
     </div>

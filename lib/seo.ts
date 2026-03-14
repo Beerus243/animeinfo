@@ -79,7 +79,7 @@ export function buildMetadata(input: SeoInput): Metadata {
       title: input.title,
       description: input.description,
       url: canonical,
-      siteName: "AnimeInfo",
+      siteName: "Manga Empire",
       type: input.type || "website",
       images: input.image ? [{ url: absoluteUrl(input.image) }] : undefined,
     },
@@ -102,8 +102,8 @@ export function buildBrandJsonLd(description: string) {
       {
         "@type": "Organization",
         "@id": `${websiteUrl}#organization`,
-        name: "AnimeInfo",
-        alternateName: "Anime info",
+        name: "Manga Empire",
+        alternateName: "Manga Empire Media",
         url: websiteUrl,
         description,
         logo: {
@@ -115,8 +115,8 @@ export function buildBrandJsonLd(description: string) {
       {
         "@type": "WebSite",
         "@id": `${websiteUrl}#website`,
-        name: "AnimeInfo",
-        alternateName: "Anime info",
+        name: "Manga Empire",
+        alternateName: "Manga Empire Media",
         url: websiteUrl,
         description,
         publisher: {
@@ -142,14 +142,14 @@ export function buildArticleJsonLd(input: ArticleSeoInput) {
     image: input.image ? [absoluteUrl(input.image)] : undefined,
     datePublished: input.publishedTime ? new Date(input.publishedTime).toISOString() : undefined,
     dateModified: input.modifiedTime ? new Date(input.modifiedTime).toISOString() : undefined,
-    author: (input.authors || ["AnimeInfo Editorial"]).map((name) => ({
+    author: (input.authors || ["Manga Empire Editorial"]).map((name) => ({
       "@type": "Person",
       name,
     })),
     keywords: input.tags?.join(", "),
     publisher: {
       "@type": "Organization",
-      name: "AnimeInfo",
+      name: "Manga Empire",
       logo: {
         "@type": "ImageObject",
         url: absoluteUrl("/og/placeholder-1200x630.svg"),

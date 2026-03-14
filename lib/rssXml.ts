@@ -68,7 +68,7 @@ export function buildRssFeed(input: BuildRssFeedInput) {
     <link>${escapeXml(feedUrl)}</link>
     <description>${escapeXml(input.description)}</description>
     <language>fr-FR</language>
-    <generator>AnimeInfo</generator>
+    <generator>Manga Empire</generator>
     <atom:link href="${escapeXml(feedUrl)}" rel="self" type="application/rss+xml" />
     ${itemsXml}
   </channel>

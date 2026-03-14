@@ -52,7 +52,7 @@ async function fetchHtml(url: string) {
 
   const response = await fetch(url, {
     headers: {
-      "user-agent": "AnimeInfoBot/1.0 (+https://animeinfo.local)",
+      "user-agent": "MangaEmpireBot/1.0 (+https://mangaempire.local)",
     },
     next: { revalidate: 0 },
     signal: controller.signal,

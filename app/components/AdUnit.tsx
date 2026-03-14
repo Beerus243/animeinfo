@@ -16,12 +16,15 @@ declare global {
   }
 }
 
+const consentStorageKey = "mangaempire-consent";
+const legacyConsentStorageKey = "animeinfo-consent";
+
 export default function AdUnit({ slot, compact = false }: AdUnitProps) {
   const config = adSlots[slot];
   const { messages } = useLanguage();
   const consent = useSyncExternalStore(
     () => () => undefined,
-    () => window.localStorage.getItem("animeinfo-consent") === "granted",
+    () => (window.localStorage.getItem(consentStorageKey) || window.localStorage.getItem(legacyConsentStorageKey)) === "granted",
     () => false,
   );
 

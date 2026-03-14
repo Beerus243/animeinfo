@@ -11,9 +11,14 @@ import { buildBrandJsonLd, getSiteUrl } from "@/lib/seo";
 import "./globals.css";
 
 const themeBootstrap = `(() => {
-  const storageKey = "animeinfo-theme";
+  const storageKey = "mangaempire-theme";
+  const legacyStorageKey = "animeinfo-theme";
   const root = document.documentElement;
-  const savedTheme = window.localStorage.getItem(storageKey);
+  const savedTheme = window.localStorage.getItem(storageKey) || window.localStorage.getItem(legacyStorageKey);
+  if (!window.localStorage.getItem(storageKey) && savedTheme) {
+    window.localStorage.setItem(storageKey, savedTheme);
+    window.localStorage.removeItem(legacyStorageKey);
+  }
   const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   const theme = savedTheme || (systemDark ? "dark" : "light");
   root.classList.toggle("dark", theme === "dark");
@@ -32,27 +37,31 @@ const bodyFont = Space_Grotesk({
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
-  applicationName: "AnimeInfo",
+  applicationName: "Manga Empire",
   title: {
-    default: "AnimeInfo",
-    template: "%s | AnimeInfo",
+    default: "Manga Empire",
+    template: "%s | Manga Empire",
   },
-  description: "AnimeInfo suit les sorties, les tendances et les recommandations anime dans une experience editoriale claire et rapide.",
-  keywords: ["AnimeInfo", "Anime info", "actualites anime", "anime en cours", "recommandations anime", "trending anime"],
+  description: "Manga Empire suit les sorties, les tendances et les recommandations manga et anime dans une experience editoriale claire et rapide.",
+  keywords: ["Manga Empire", "manga empire", "actualites manga", "actualites anime", "anime en cours", "recommandations manga", "recommandations anime"],
   category: "entertainment",
   openGraph: {
-    siteName: "AnimeInfo",
-    title: "AnimeInfo",
-    description: "AnimeInfo suit les sorties, les tendances et les recommandations anime dans une experience editoriale claire et rapide.",
+    siteName: "Manga Empire",
+    title: "Manga Empire",
+    description: "Manga Empire suit les sorties, les tendances et les recommandations manga et anime dans une experience editoriale claire et rapide.",
     url: getSiteUrl(),
     type: "website",
     images: [{ url: "/og/placeholder-1200x630.svg" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AnimeInfo",
-    description: "AnimeInfo suit les sorties, les tendances et les recommandations anime dans une experience editoriale claire et rapide.",
+    title: "Manga Empire",
+    description: "Manga Empire suit les sorties, les tendances et les recommandations manga et anime dans une experience editoriale claire et rapide.",
     images: ["/og/placeholder-1200x630.svg"],
+  },
+  icons: {
+    icon: "/icon",
+    apple: "/apple-icon",
   },
 };
 
@@ -63,7 +72,7 @@ export default async function RootLayout({
 }>) {
   const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
   const locale = await getServerLocale();
-  const brandJsonLd = buildBrandJsonLd("AnimeInfo suit les sorties, les tendances et les recommandations anime dans une experience editoriale claire et rapide.");
+  const brandJsonLd = buildBrandJsonLd("Manga Empire suit les sorties, les tendances et les recommandations manga et anime dans une experience editoriale claire et rapide.");
 
   return (
     <html lang={locale} suppressHydrationWarning>

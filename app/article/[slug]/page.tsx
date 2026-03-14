@@ -131,7 +131,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     <div className="shell-container py-8 md:py-12">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <article className="grid gap-8 lg:grid-cols-[1fr_300px]">
-        <div className="panel reading-surface px-6 py-8 md:px-10 md:py-12">
+        <div className="panel article-detail-shell reading-surface px-6 py-8 md:px-10 md:py-12">
           <span className="eyebrow">{hydratedArticle.category || messages.article.fallbackCategory}</span>
           <div className="article-measure">
             <h1 className="mt-5 font-display text-4xl font-semibold md:text-6xl md:leading-[1.05]" lang={localized.sourceLocale} translate="yes">
@@ -158,7 +158,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           ) : null}
           <ArticleExperienceControls title={localized.title || hydratedArticle.title} />
           {hydratedArticle.coverImage ? (
-            <div className="article-measure relative mt-8 overflow-hidden rounded-3xl">
+            <div className="article-detail-cover article-measure relative mt-8 overflow-hidden rounded-3xl">
               <Image
                 alt={localized.title || hydratedArticle.title}
                 className="h-auto w-full object-cover"
@@ -168,7 +168,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 src={hydratedArticle.coverImage}
                 width={1280}
               />
-              <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent dark:from-black/30" />
+              <div className="article-detail-cover-overlay pointer-events-none absolute inset-0" />
             </div>
           ) : null}
           <div className="article-measure prose-content mt-8 text-base text-foreground" lang={localized.sourceLocale} translate="yes">

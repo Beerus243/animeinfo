@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
-export const adminSessionCookieName = "animeinfo-admin-session";
+export const adminSessionCookieName = "mangaempire-admin-session";
+export const legacyAdminSessionCookieName = "animeinfo-admin-session";
 
 function base64UrlEncode(value: string) {
   return Buffer.from(value, "utf8").toString("base64url");
@@ -15,7 +16,7 @@ function bytesToBase64Url(bytes: Uint8Array) {
 }
 
 function getAdminSessionSecret() {
-  return process.env.ADMIN_SESSION_SECRET || "animeinfo-dev-session-secret";
+  return process.env.ADMIN_SESSION_SECRET || "mangaempire-dev-session-secret";
 }
 
 async function signValue(value: string) {
@@ -32,7 +33,7 @@ async function signValue(value: string) {
 
 export function getAdminCredentials() {
   return {
-    email: process.env.ADMIN_EMAIL || "admin@animeinfo.local",
+    email: process.env.ADMIN_EMAIL || "admin@mangaempire.local",
     password: process.env.ADMIN_PASSWORD || "change_me_secure_token",
   };
 }
@@ -80,7 +81,7 @@ export async function verifyAdminSession(sessionValue?: string | null) {
 }
 
 export async function isAdminRequestAuthorized(request: NextRequest) {
-  const sessionValue = request.cookies.get(adminSessionCookieName)?.value;
+  const sessionValue = request.cookies.get(adminSessionCookieName)?.value || request.cookies.get(legacyAdminSessionCookieName)?.value;
   return verifyAdminSession(sessionValue);
 }
 

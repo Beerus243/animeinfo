@@ -151,18 +151,18 @@ export default async function AiringPage() {
       <section className="mt-6 panel px-5 py-6 md:mt-8 md:px-6 md:py-7">
         <p className="eyebrow">{messages.airing.popularEyebrow}</p>
         <h2 className="mt-2.5 font-display text-2xl font-semibold md:text-[1.7rem]">{messages.airing.popularTitle}</h2>
-        <div className="mt-5 grid gap-3.5 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {popularAiringAnimes.length ? (
             popularAiringAnimes.map((anime, index) => (
-              <Link key={anime._id.toString()} href={`/anime/${anime.slug}`} className="content-card overflow-hidden p-4 transition-transform hover:-translate-y-0.5">
-                <div className="airing-card-media airing-card-media-compact airing-card-media-shell -mx-4 -mt-4 mb-4 overflow-hidden border-b border-line/70">
+              <Link key={anime._id.toString()} href={`/anime/${anime.slug}`} className="content-card airing-popular-card overflow-hidden p-3.5 transition-transform hover:-translate-y-0.5">
+                <div className="airing-card-media airing-card-media-compact airing-card-media-shell airing-popular-card-media -mx-3.5 -mt-3.5 mb-3 overflow-hidden border-b border-line/70">
                   {anime.coverImage ? (
                     <Image
                       alt={anime.title}
                       className="h-full w-full object-cover"
-                      height={300}
+                      height={220}
                       src={anime.coverImage}
-                      width={520}
+                      width={420}
                     />
                   ) : (
                     <div className="airing-card-placeholder">
@@ -171,9 +171,9 @@ export default async function AiringPage() {
                     </div>
                   )}
                 </div>
-                <p className="text-[11px] uppercase tracking-[0.16em] text-muted">Top {index + 1}</p>
-                <h3 className="mt-2 font-display text-xl font-semibold">{anime.title}</h3>
-                <p className="mt-1.5 text-[13px] text-muted">{messages.airing.popularityPrefix} {anime.popularityScore || 0}</p>
+                <p className="text-[10px] uppercase tracking-[0.16em] text-muted">Top {index + 1}</p>
+                <h3 className="mt-1.5 font-display text-lg font-semibold leading-tight">{anime.title}</h3>
+                <p className="mt-1 text-[12px] text-muted">{messages.airing.popularityPrefix} {anime.popularityScore || 0}</p>
               </Link>
             ))
           ) : (

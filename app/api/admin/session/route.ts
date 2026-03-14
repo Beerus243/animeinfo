@@ -1,9 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { adminSessionCookieName, verifyAdminSession } from "@/lib/adminAuth";
+import { adminSessionCookieName, legacyAdminSessionCookieName, verifyAdminSession } from "@/lib/adminAuth";
 
 export async function GET(request: NextRequest) {
-  const sessionValue = request.cookies.get(adminSessionCookieName)?.value;
+  const sessionValue = request.cookies.get(adminSessionCookieName)?.value || request.cookies.get(legacyAdminSessionCookieName)?.value;
   const authenticated = await verifyAdminSession(sessionValue);
 
   return NextResponse.json({ authenticated });

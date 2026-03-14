@@ -4,6 +4,7 @@ import path from "node:path";
 import Link from "next/link";
 
 import CreateDraftButtons from "@/app/admin/components/CreateDraftButtons";
+import ClearDraftsButton from "@/app/admin/components/ClearDraftsButton";
 import ImportRecommendationsButton from "@/app/admin/components/ImportRecommendationsButton";
 import ProcessDraftsButton from "@/app/admin/components/ProcessDraftsButton";
 import AdminLogoutButton from "@/app/admin/components/AdminLogoutButton";
@@ -118,6 +119,14 @@ export default async function AdminPage() {
             successLabel={messages.admin.importRecommendationsSuccess}
             emptyLabel={messages.admin.importRecommendationsEmpty}
             failedLabel={messages.admin.importRecommendationsFailed}
+          />
+          <ClearDraftsButton
+            idleLabel={messages.admin.clearDrafts}
+            pendingLabel={messages.admin.clearingDrafts}
+            successLabel={messages.admin.clearDraftsSuccess}
+            emptyLabel={messages.admin.clearDraftsEmpty}
+            failedLabel={messages.admin.clearDraftsFailed}
+            confirmLabel={messages.admin.clearDraftsConfirm}
           />
           {aiEnabled ? (
             <ProcessDraftsButton

@@ -1,15 +1,20 @@
 {
-  "name": "AnimeInfo",
-  "short_name": "AnimeInfo",
+  "name": "Manga Empire",
+  "short_name": "MangaEmpire",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f6f1e8",
   "theme_color": "#eb5e28",
   "icons": [
     {
-      "src": "/favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "/icon",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-icon",
+      "sizes": "180x180",
+      "type": "image/png"
     }
   ]
 }

@@ -6,11 +6,18 @@ export async function POST(request: NextRequest) {
   const status = payload?.status === "granted" ? "granted" : "denied";
   const cookieStore = await cookies();
 
-  cookieStore.set("animeinfo-consent", status, {
+  cookieStore.set("mangaempire-consent", status, {
     httpOnly: false,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 180,
+    path: "/",
+  });
+  cookieStore.set("animeinfo-consent", "", {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 0,
     path: "/",
   });
 

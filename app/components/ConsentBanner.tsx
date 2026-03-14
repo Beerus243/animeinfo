@@ -4,18 +4,22 @@ import { useState, useSyncExternalStore } from "react";
 
 import { useLanguage } from "@/app/components/LanguageProvider";
 
+const consentStorageKey = "mangaempire-consent";
+const legacyConsentStorageKey = "animeinfo-consent";
+
 export default function ConsentBanner() {
   const { messages } = useLanguage();
   const [override, setOverride] = useState<"granted" | "denied" | null | undefined>(undefined);
   const storedConsent = useSyncExternalStore(
     () => () => undefined,
-    () => (window.localStorage.getItem("animeinfo-consent") as "granted" | "denied" | null),
+    () => (window.localStorage.getItem(consentStorageKey) || window.localStorage.getItem(legacyConsentStorageKey)) as "granted" | "denied" | null,
     () => null,
   );
   const consent = override ?? storedConsent;
 
   async function handleConsent(status: "granted" | "denied") {
-    window.localStorage.setItem("animeinfo-consent", status);
+    window.localStorage.setItem(consentStorageKey, status);
+    window.localStorage.removeItem(legacyConsentStorageKey);
     setOverride(status);
 
     await fetch("/api/ads/consent", {

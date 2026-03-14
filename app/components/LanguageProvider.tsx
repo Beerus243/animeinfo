@@ -17,6 +17,10 @@ type LanguageProviderProps = {
   children: React.ReactNode;
 };
 
+const localeStorageKey = "mangaempire-locale";
+const legacyLocaleStorageKey = "animeinfo-locale";
+const localeCookieName = "mangaempire-locale";
+
 export default function LanguageProvider({ initialLocale, children }: LanguageProviderProps) {
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
 
@@ -24,8 +28,10 @@ export default function LanguageProvider({ initialLocale, children }: LanguagePr
     locale,
     messages: getMessages(locale),
     setLocale(nextLocale) {
-      window.localStorage.setItem("animeinfo-locale", nextLocale);
-      document.cookie = `animeinfo-locale=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
+      window.localStorage.setItem(localeStorageKey, nextLocale);
+      window.localStorage.removeItem(legacyLocaleStorageKey);
+      document.cookie = `${localeCookieName}=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
+      document.cookie = `animeinfo-locale=; path=/; max-age=0; samesite=lax`;
       document.documentElement.lang = nextLocale;
       setLocaleState(nextLocale);
       window.location.reload();

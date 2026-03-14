@@ -64,7 +64,7 @@ async function fetchVoiranimeHtml(pathOrUrl: string) {
   const url = pathOrUrl.startsWith("http") ? pathOrUrl : `${getVoiranimeBaseUrl()}${pathOrUrl}`;
   const response = await fetch(url, {
     headers: {
-      "user-agent": "AnimeInfoBot/1.0 (+https://animeinfo.local)",
+      "user-agent": "MangaEmpireBot/1.0 (+https://mangaempire.local)",
     },
     next: { revalidate: 0 },
   });

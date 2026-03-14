@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 
+import BrandLogo from "@/app/components/BrandLogo";
 import MobileNav from "@/app/components/MobileNav";
 import NavLinks from "@/app/components/NavLinks";
 import ThemeToggle from "@/app/components/ThemeToggle";
-import { adminSessionCookieName, verifyAdminSession } from "@/lib/adminAuth";
+import { adminSessionCookieName, legacyAdminSessionCookieName, verifyAdminSession } from "@/lib/adminAuth";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 
@@ -12,7 +13,7 @@ export default async function Header() {
   const locale = await getServerLocale();
   const messages = getMessages(locale);
   const cookieStore = await cookies();
-  const sessionValue = cookieStore.get(adminSessionCookieName)?.value;
+  const sessionValue = cookieStore.get(adminSessionCookieName)?.value || cookieStore.get(legacyAdminSessionCookieName)?.value;
   const isAdmin = await verifyAdminSession(sessionValue);
   const links = [
     { href: "/articles", label: messages.header.news },
@@ -27,11 +28,9 @@ export default async function Header() {
         <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center justify-between gap-3">
             <Link href="/" className="flex items-center gap-2" aria-label={messages.header.homeAria}>
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground text-[11px] font-bold text-background shadow-[inset_0_-1px_0_rgba(255,255,255,0.15)]">
-                AI
-              </span>
+              <BrandLogo size="header" />
               <div>
-                <p className="font-display text-base font-semibold md:text-lg">AnimeInfo</p>
+                <p className="font-display text-base font-semibold md:text-lg">Manga Empire</p>
                 <p className="text-[9px] uppercase tracking-[0.14em] text-muted md:text-[10px]">{messages.header.tagline}</p>
               </div>
             </Link>

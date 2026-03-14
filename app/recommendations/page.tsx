@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 
 import ArticleCard from "@/app/components/ArticleCard";
+import recommendationsHeroCover from "@/assets/images/itachi-uchiha-naruto-minimal-art-red-background-5k-5334x3000-7749.jpg";
 import { resolveArticleLocalization } from "@/lib/articleLocalization";
 import { ensureArticlesLocalization } from "@/lib/articleTranslation";
 import { getMessages } from "@/lib/i18n/messages";
@@ -72,10 +74,23 @@ export default async function RecommendationsPage() {
   return (
     <div className="shell-container py-6 md:py-9">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <section className="panel px-5 py-6 md:px-8 md:py-8">
-        <span className="eyebrow">{messages.recommendations.eyebrow}</span>
-        <h1 className="mt-4 font-display text-3xl font-semibold md:text-5xl">{messages.recommendations.title}</h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-muted md:text-base md:leading-7">{messages.recommendations.description}</p>
+      <section className="panel recommendations-hero overflow-hidden px-5 py-6 md:px-8 md:py-8">
+        <div className="recommendations-hero-media-layer" aria-hidden="true">
+          <Image
+            alt=""
+            className="h-full w-full object-cover"
+            fill
+            priority
+            sizes="(max-width: 768px) 100vw, 1080px"
+            src={recommendationsHeroCover}
+          />
+        </div>
+        <div className="recommendations-hero-overlay" aria-hidden="true" />
+        <div className="recommendations-hero-content">
+          <span className="eyebrow">{messages.recommendations.eyebrow}</span>
+          <h1 className="mt-4 max-w-3xl font-display text-3xl font-semibold md:text-5xl">{messages.recommendations.title}</h1>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-muted md:text-base md:leading-7">{messages.recommendations.description}</p>
+        </div>
       </section>
 
       <section className="mt-6 space-y-6 md:mt-8 md:space-y-8">

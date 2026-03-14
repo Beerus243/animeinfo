@@ -4,12 +4,12 @@ self.addEventListener("push", (event) => {
   }
 
   const payload = event.data.json();
-  const title = payload.title || "AnimeInfo";
+  const title = payload.title || "Manga Empire";
   const options = {
-    body: payload.body || "Nouvelle notification AnimeInfo",
+    body: payload.body || "Nouvelle notification Manga Empire",
     icon: payload.icon || "/favicon.ico",
     badge: payload.badge || "/favicon.ico",
-    tag: payload.tag || "animeinfo-release",
+    tag: payload.tag || "manga-empire-release",
     data: {
       url: payload.url || "/airing",
     },

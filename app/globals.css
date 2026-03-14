@@ -114,10 +114,53 @@ img {
   box-shadow: 0 20px 50px var(--shadow);
 }
 
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  overflow: hidden;
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+}
+
+.brand-logo-image {
+  display: block;
+  background: transparent;
+  mix-blend-mode: multiply;
+}
+
+.dark .brand-logo-image {
+  mix-blend-mode: screen;
+}
+
+.brand-logo-header {
+  width: 1.875rem;
+  height: 1.875rem;
+}
+
+.brand-logo-mobile {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.brand-logo-footer {
+  width: 1.875rem;
+  height: 1.875rem;
+}
+
 .article-card {
   background: color-mix(in srgb, var(--surface-strong) 88%, white 12%);
   border-color: color-mix(in srgb, var(--accent) 14%, var(--line) 86%);
   box-shadow: 0 22px 54px color-mix(in srgb, var(--shadow) 80%, rgba(235, 94, 40, 0.12) 20%);
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+}
+
+.article-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--line) 76%);
+  box-shadow: 0 26px 62px color-mix(in srgb, var(--shadow) 70%, rgba(29, 122, 98, 0.12) 30%);
 }
 
 .article-card-media::after {
@@ -130,8 +173,18 @@ img {
 
 .article-card-image-overlay {
   background:
+    radial-gradient(circle at top right, rgba(222, 90, 36, 0.16), transparent 32%),
     linear-gradient(180deg, rgba(14, 12, 10, 0.12), transparent 26%),
-    linear-gradient(0deg, rgba(14, 12, 10, 0.74), rgba(14, 12, 10, 0.16) 45%, transparent 74%);
+    linear-gradient(0deg, rgba(14, 12, 10, 0.76), rgba(14, 12, 10, 0.2) 45%, transparent 74%);
+}
+
+.article-card-media img {
+  transition: transform 360ms ease, filter 280ms ease;
+}
+
+.article-card:hover .article-card-media img {
+  transform: scale(1.065);
+  filter: saturate(1.06) contrast(1.02);
 }
 
 .article-card-category-badge,
@@ -180,8 +233,10 @@ img {
 .home-featured-card {
   position: relative;
   isolation: isolate;
-  min-height: 22rem;
+  min-height: 20rem;
   background: color-mix(in srgb, var(--surface-strong) 88%, white 12%);
+  border-color: color-mix(in srgb, var(--accent) 16%, var(--line) 84%);
+  box-shadow: 0 28px 68px color-mix(in srgb, var(--shadow) 70%, rgba(222, 90, 36, 0.14) 30%);
 }
 
 .home-featured-media-layer {
@@ -202,8 +257,9 @@ img {
   inset: 0;
   z-index: -2;
   background:
-    linear-gradient(145deg, rgba(18, 14, 10, 0.88), rgba(18, 14, 10, 0.48) 50%, rgba(18, 14, 10, 0.82)),
+    linear-gradient(145deg, rgba(18, 14, 10, 0.9), rgba(18, 14, 10, 0.52) 48%, rgba(18, 14, 10, 0.84)),
     radial-gradient(circle at top right, rgba(222, 90, 36, 0.18), transparent 32%),
+    radial-gradient(circle at bottom left, rgba(29, 122, 98, 0.14), transparent 28%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 24%);
 }
 
@@ -218,6 +274,52 @@ img {
 
 .home-featured-card .button-primary {
   box-shadow: 0 10px 22px rgba(14, 12, 10, 0.22), inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+}
+
+.recommendations-hero {
+  position: relative;
+  isolation: isolate;
+  min-height: 15.5rem;
+  border-color: color-mix(in srgb, var(--accent) 16%, var(--line) 84%);
+  box-shadow: 0 28px 66px color-mix(in srgb, var(--shadow) 72%, rgba(222, 90, 36, 0.18) 28%);
+}
+
+.recommendations-hero-media-layer {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+}
+
+.recommendations-hero-media-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 7, 7, 0.2);
+}
+
+.recommendations-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    linear-gradient(135deg, rgba(18, 10, 10, 0.92), rgba(18, 10, 10, 0.54) 48%, rgba(18, 10, 10, 0.82)),
+    radial-gradient(circle at top right, rgba(222, 90, 36, 0.22), transparent 28%),
+    radial-gradient(circle at bottom left, rgba(29, 122, 98, 0.12), transparent 26%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 24%);
+}
+
+.recommendations-hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.recommendations-hero .eyebrow {
+  background: rgba(255, 248, 241, 0.16);
+  color: #fff3ea;
+}
+
+.recommendations-hero .text-muted {
+  color: rgba(255, 244, 237, 0.84);
 }
 
 .content-card {
@@ -240,6 +342,8 @@ img {
   position: relative;
   isolation: isolate;
   min-height: 22rem;
+  border-color: color-mix(in srgb, var(--accent) 16%, var(--line) 84%);
+  box-shadow: 0 28px 70px color-mix(in srgb, var(--shadow) 72%, rgba(29, 122, 98, 0.16) 28%);
 }
 
 .airing-hero-media-layer {
@@ -255,6 +359,7 @@ img {
   background:
     linear-gradient(135deg, rgba(18, 14, 10, 0.9), rgba(18, 14, 10, 0.56) 48%, rgba(18, 14, 10, 0.82)),
     radial-gradient(circle at top left, rgba(222, 90, 36, 0.22), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(29, 122, 98, 0.18), transparent 30%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 24%);
 }
 
@@ -269,6 +374,8 @@ img {
   position: relative;
   isolation: isolate;
   min-height: 18rem;
+  border-color: color-mix(in srgb, var(--accent) 16%, var(--line) 84%);
+  box-shadow: 0 26px 64px color-mix(in srgb, var(--shadow) 74%, rgba(222, 90, 36, 0.16) 26%);
 }
 
 .news-hero-media-layer {
@@ -291,6 +398,7 @@ img {
   background:
     linear-gradient(135deg, rgba(18, 14, 10, 0.9), rgba(18, 14, 10, 0.54) 52%, rgba(18, 14, 10, 0.78)),
     radial-gradient(circle at top right, rgba(222, 90, 36, 0.2), transparent 30%),
+    radial-gradient(circle at bottom left, rgba(29, 122, 98, 0.14), transparent 28%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 26%);
 }
 
@@ -357,6 +465,14 @@ img {
   aspect-ratio: 16 / 10;
 }
 
+.airing-popular-card {
+  border-radius: 1rem;
+}
+
+.airing-popular-card-media {
+  aspect-ratio: 16 / 8.5;
+}
+
 .airing-card-placeholder,
 .anime-hero-placeholder {
   display: flex;
@@ -393,6 +509,49 @@ img {
 .anime-hero-media {
   aspect-ratio: 3 / 4;
   background: color-mix(in srgb, var(--surface-strong) 82%, black 18%);
+}
+
+.anime-detail-shell {
+  border-color: color-mix(in srgb, var(--accent) 14%, var(--line) 86%);
+  box-shadow: 0 26px 64px color-mix(in srgb, var(--shadow) 74%, rgba(29, 122, 98, 0.16) 26%);
+}
+
+.anime-detail-cover {
+  position: relative;
+  max-width: 236px;
+  box-shadow: 0 20px 44px color-mix(in srgb, var(--shadow) 76%, rgba(222, 90, 36, 0.12) 24%);
+}
+
+.anime-detail-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 22%),
+    linear-gradient(0deg, rgba(14, 12, 10, 0.18), transparent 32%);
+  pointer-events: none;
+}
+
+.anime-detail-copy {
+  position: relative;
+}
+
+.article-detail-shell {
+  border-color: color-mix(in srgb, var(--accent) 14%, var(--line) 86%);
+  box-shadow: 0 28px 68px color-mix(in srgb, var(--shadow) 72%, rgba(222, 90, 36, 0.14) 28%);
+}
+
+.article-detail-cover {
+  border: 1px solid color-mix(in srgb, var(--accent) 12%, var(--line) 88%);
+  max-width: 700px;
+  box-shadow: 0 22px 52px color-mix(in srgb, var(--shadow) 72%, rgba(29, 122, 98, 0.12) 28%);
+}
+
+.article-detail-cover-overlay {
+  background:
+    radial-gradient(circle at top right, rgba(222, 90, 36, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 20%),
+    linear-gradient(0deg, rgba(14, 12, 10, 0.28), transparent 28%);
 }
 
 .airing-mini-card {
@@ -859,6 +1018,15 @@ img {
 
   .home-featured-card {
     min-height: 18rem;
+  }
+
+  .recommendations-hero {
+    min-height: 14rem;
+  }
+
+  .anime-detail-cover,
+  .article-detail-cover {
+    max-width: 100%;
   }
 
   .airing-hero-stat {

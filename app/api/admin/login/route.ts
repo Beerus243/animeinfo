@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { adminSessionCookieName, createAdminSession, verifyAdminCredentials } from "@/lib/adminAuth";
+import { adminSessionCookieName, createAdminSession, legacyAdminSessionCookieName, verifyAdminCredentials } from "@/lib/adminAuth";
 
 export async function POST(request: NextRequest) {
   const payload = await request.json();
@@ -12,12 +12,20 @@ export async function POST(request: NextRequest) {
   }
 
   const response = NextResponse.json({ ok: true });
-  response.cookies.set(adminSessionCookieName, await createAdminSession(email), {
+  const session = await createAdminSession(email);
+  response.cookies.set(adminSessionCookieName, session, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
+  });
+  response.cookies.set(legacyAdminSessionCookieName, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
   });
   return response;
 }

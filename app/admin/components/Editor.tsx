@@ -668,7 +668,7 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
             <p className="text-xs uppercase tracking-[0.16em] text-muted">{messages.editor.serpPreview}</p>
             <div className="mt-4 space-y-2">
               <p className="line-clamp-2 text-lg font-semibold text-[#1a0dab] dark:text-[#8ab4f8]">{deferredPreview.title}</p>
-              <p className="text-sm text-success">animeinfo.com/article/{deferredPreview.slug || messages.editor.slugFallback}</p>
+              <p className="text-sm text-success">mangaempire.com/article/{deferredPreview.slug || messages.editor.slugFallback}</p>
               <p className="text-sm leading-6 text-muted">{deferredPreview.description}</p>
             </div>
           </div>

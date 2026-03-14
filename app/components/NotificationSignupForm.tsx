@@ -35,7 +35,8 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
-const PUSH_SELECTION_STORAGE_KEY = "animeinfo-push-selection";
+const PUSH_SELECTION_STORAGE_KEY = "mangaempire-push-selection";
+const LEGACY_PUSH_SELECTION_STORAGE_KEY = "animeinfo-push-selection";
 
 export default function NotificationSignupForm({
   animeOptions,
@@ -110,7 +111,7 @@ export default function NotificationSignupForm({
     }
 
     try {
-      const rawValue = window.localStorage.getItem(PUSH_SELECTION_STORAGE_KEY);
+      const rawValue = window.localStorage.getItem(PUSH_SELECTION_STORAGE_KEY) || window.localStorage.getItem(LEGACY_PUSH_SELECTION_STORAGE_KEY);
       if (!rawValue) {
         return;
       }
@@ -126,8 +127,14 @@ export default function NotificationSignupForm({
       if (nextSelection.length) {
         setSelectedSlugs(nextSelection);
       }
+
+      if (!window.localStorage.getItem(PUSH_SELECTION_STORAGE_KEY)) {
+        window.localStorage.setItem(PUSH_SELECTION_STORAGE_KEY, JSON.stringify(nextSelection));
+        window.localStorage.removeItem(LEGACY_PUSH_SELECTION_STORAGE_KEY);
+      }
     } catch {
       window.localStorage.removeItem(PUSH_SELECTION_STORAGE_KEY);
+      window.localStorage.removeItem(LEGACY_PUSH_SELECTION_STORAGE_KEY);
     }
   }, [animeOptions, isHydrated]);
 
@@ -138,6 +145,7 @@ export default function NotificationSignupForm({
 
     try {
       window.localStorage.setItem(PUSH_SELECTION_STORAGE_KEY, JSON.stringify(selectedSlugs));
+      window.localStorage.removeItem(LEGACY_PUSH_SELECTION_STORAGE_KEY);
     } catch {
       // Ignore storage errors silently and keep the selection in memory only.
     }
