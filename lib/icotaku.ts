@@ -5,6 +5,7 @@ const ICOTAKU_BASE_URL = "https://anime.icotaku.com";
 export type IcotakuAiringItem = {
   title: string;
   url: string;
+  coverImage?: string;
   releaseDay: string;
   nextEpisodeAt: Date;
   currentSeasonLabel: string;
@@ -48,6 +49,32 @@ async function fetchIcotakuHtml(pathOrUrl: string) {
   }
 
   return response.text();
+}
+
+function parseIcotakuCoverImage(html: string, pageUrl: string) {
+  const match = html.match(/<img[^>]+alt="[^"]+"[^>]+src="([^"]*uploads\/animes\/[^">]+)"[^>]*>/i);
+  const src = match?.[1]?.trim();
+  if (!src) {
+    return undefined;
+  }
+
+  try {
+    return new URL(src, pageUrl).toString();
+  } catch {
+    return undefined;
+  }
+}
+
+async function enrichIcotakuItem(item: IcotakuAiringItem) {
+  try {
+    const html = await fetchIcotakuHtml(item.url);
+    return {
+      ...item,
+      coverImage: parseIcotakuCoverImage(html, item.url),
+    } satisfies IcotakuAiringItem;
+  } catch {
+    return item;
+  }
 }
 
 function getReferenceDate(html: string) {
@@ -119,5 +146,14 @@ function parseCalendarTables(html: string, referenceDate: Date) {
 export async function importIcotakuAiringCalendar() {
   const html = await fetchIcotakuHtml("/calendrier_diffusion.html");
   const referenceDate = getReferenceDate(html);
-  return parseCalendarTables(html, referenceDate);
+  const items = parseCalendarTables(html, referenceDate);
+  const enrichedItems: IcotakuAiringItem[] = [];
+
+  for (let index = 0; index < items.length; index += 4) {
+    const batch = items.slice(index, index + 4);
+    const results = await Promise.all(batch.map((item) => enrichIcotakuItem(item)));
+    enrichedItems.push(...results);
+  }
+
+  return enrichedItems;
 }

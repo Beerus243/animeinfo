@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 
 import ArticleCard from "@/app/components/ArticleCard";
@@ -69,28 +70,48 @@ export default async function AnimePage({ params }: AnimePageProps) {
   return (
     <div className="shell-container py-8 md:py-12">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <section className="panel px-6 py-8 md:px-10 md:py-12">
-        <span className="eyebrow">{messages.anime.eyebrow}</span>
-        <h1 className="mt-5 font-display text-4xl font-semibold md:text-6xl">
-          {anime.title}
-        </h1>
-        <p className="mt-4 max-w-3xl text-lg leading-8 text-muted">{anime.synopsis || messages.anime.synopsisFallback}</p>
-        <div className="mt-6 flex flex-wrap gap-2 text-sm text-muted">
-          {anime.status ? <span className="rounded-full border border-line px-3 py-2">{messages.anime[`status_${anime.status}` as keyof typeof messages.anime] || anime.status}</span> : null}
-          {anime.currentSeasonLabel ? <span className="rounded-full border border-line px-3 py-2">{anime.currentSeasonLabel}</span> : null}
-          {anime.releaseDay ? <span className="rounded-full border border-line px-3 py-2">{anime.releaseDay}</span> : null}
-          {anime.nextEpisodeAt ? (
-            <span className="rounded-full border border-line px-3 py-2">
-              {messages.anime.nextEpisodePrefix} {formatDateTime(locale, anime.nextEpisodeAt)}
-            </span>
-          ) : null}
-        </div>
-        <div className="mt-6 flex flex-wrap gap-2">
-          {(anime.genres || []).map((genre) => (
-            <span key={genre} className="rounded-full bg-accent-soft px-3 py-2 text-sm font-medium text-accent">
-              {genre}
-            </span>
-          ))}
+      <section className="panel overflow-hidden px-6 py-8 md:px-10 md:py-12">
+        <div className="grid gap-6 md:grid-cols-[280px_minmax(0,1fr)] md:items-start">
+          {anime.coverImage ? (
+            <div className="anime-hero-media overflow-hidden rounded-[1.4rem] border border-line/70">
+              <Image
+                alt={anime.title}
+                className="h-full w-full object-cover"
+                height={720}
+                src={anime.coverImage}
+                width={520}
+              />
+            </div>
+          ) : (
+            <div className="anime-hero-media anime-hero-fallback overflow-hidden rounded-[1.4rem] border border-line/70 p-6">
+              <span className="airing-card-fallback-chip">{messages.anime.eyebrow}</span>
+              <p className="anime-hero-fallback-title">{anime.title}</p>
+            </div>
+          )}
+          <div>
+            <span className="eyebrow">{messages.anime.eyebrow}</span>
+            <h1 className="mt-5 font-display text-4xl font-semibold md:text-6xl">
+              {anime.title}
+            </h1>
+            <p className="mt-4 max-w-3xl text-lg leading-8 text-muted">{anime.synopsis || messages.anime.synopsisFallback}</p>
+            <div className="mt-6 flex flex-wrap gap-2 text-sm text-muted">
+              {anime.status ? <span className="rounded-full border border-line px-3 py-2">{messages.anime[`status_${anime.status}` as keyof typeof messages.anime] || anime.status}</span> : null}
+              {anime.currentSeasonLabel ? <span className="rounded-full border border-line px-3 py-2">{anime.currentSeasonLabel}</span> : null}
+              {anime.releaseDay ? <span className="rounded-full border border-line px-3 py-2">{anime.releaseDay}</span> : null}
+              {anime.nextEpisodeAt ? (
+                <span className="rounded-full border border-line px-3 py-2">
+                  {messages.anime.nextEpisodePrefix} {formatDateTime(locale, anime.nextEpisodeAt)}
+                </span>
+              ) : null}
+            </div>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {(anime.genres || []).map((genre) => (
+                <span key={genre} className="rounded-full bg-accent-soft px-3 py-2 text-sm font-medium text-accent">
+                  {genre}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
       {anime.notificationsEnabled !== false && (anime.status === "airing" || anime.currentSeasonLabel) ? (

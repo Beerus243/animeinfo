@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import AdUnit from "@/app/components/AdUnit";
@@ -158,6 +159,30 @@ export default async function Home() {
         </div>
         <aside className="space-y-5">
           <AdUnit slot="header" />
+          {airingAnimes.length ? (
+            <div className="panel p-5 md:p-6">
+              <p className="eyebrow">{messages.airing.airingEyebrow}</p>
+              <div className="mt-4 space-y-3.5">
+                {airingAnimes.map((anime) => (
+                  <Link key={anime._id.toString()} href={`/anime/${anime.slug}`} className="airing-mini-card">
+                    {anime.coverImage ? (
+                      <div className="airing-mini-card-media overflow-hidden">
+                        <Image alt={anime.title} className="h-full w-full object-cover" height={132} src={anime.coverImage} width={132} />
+                      </div>
+                    ) : (
+                      <div className="airing-mini-card-media airing-mini-card-fallback overflow-hidden">
+                        <span className="airing-mini-card-fallback-label">{messages.airing.airingEyebrow}</span>
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground">{anime.title}</p>
+                      <p className="mt-1 text-[12px] leading-5 text-muted">{anime.releaseDay ?? messages.airing.unknownReleaseDay}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
           <div className="panel p-5 md:p-6">
             <p className="eyebrow">{messages.home.seoEyebrow}</p>
             <h3 className="mt-3 font-display text-xl font-semibold md:text-2xl">

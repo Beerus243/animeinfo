@@ -120,11 +120,148 @@ img {
   box-shadow: 0 22px 54px color-mix(in srgb, var(--shadow) 80%, rgba(235, 94, 40, 0.12) 20%);
 }
 
+.article-card-fallback {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.16), transparent 36%),
+    linear-gradient(155deg, rgba(24, 19, 14, 0.14), rgba(24, 19, 14, 0.36));
+}
+
+.article-card-fallback-chip {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(255, 248, 241, 0.16);
+  color: #fff8f1;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.article-card-fallback-title {
+  max-width: 20rem;
+  color: #fff8f1;
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.05;
+}
+
 .content-card {
   background: color-mix(in srgb, var(--surface-strong) 90%, white 10%);
   border: 1px solid color-mix(in srgb, var(--accent) 10%, var(--line) 90%);
   border-radius: 1.2rem;
   box-shadow: 0 18px 40px color-mix(in srgb, var(--shadow) 84%, rgba(53, 141, 123, 0.08) 16%);
+}
+
+.airing-card-media {
+  aspect-ratio: 16 / 9;
+  background: color-mix(in srgb, var(--surface-strong) 82%, black 18%);
+}
+
+.airing-card-media-compact {
+  aspect-ratio: 16 / 10;
+}
+
+.anime-hero-media {
+  aspect-ratio: 3 / 4;
+  background: color-mix(in srgb, var(--surface-strong) 82%, black 18%);
+}
+
+.anime-hero-fallback {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 1rem;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.12), transparent 32%),
+    linear-gradient(180deg, rgba(222, 90, 36, 0.84), rgba(53, 141, 123, 0.72));
+}
+
+.anime-hero-fallback-title {
+  color: #fff8f1;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  font-weight: 700;
+  line-height: 0.98;
+}
+
+.airing-mini-card {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 10%, var(--line) 90%);
+  border-radius: 1rem;
+  padding: 0.65rem;
+  background: color-mix(in srgb, var(--surface-strong) 78%, white 22%);
+  transition: transform 180ms ease, background-color 180ms ease;
+}
+
+.airing-mini-card:hover {
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--surface-strong) 88%, white 12%);
+}
+
+.airing-mini-card-media {
+  width: 72px;
+  height: 72px;
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--surface-strong) 82%, black 18%);
+}
+
+.airing-mini-card-fallback {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 0.55rem;
+  background: linear-gradient(135deg, rgba(222, 90, 36, 0.88), rgba(53, 141, 123, 0.7));
+}
+
+.airing-mini-card-fallback-label {
+  color: #fff8f1;
+  font-size: 0.52rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.airing-card-fallback {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.8rem;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.12), transparent 32%),
+    linear-gradient(145deg, rgba(222, 90, 36, 0.82), rgba(53, 141, 123, 0.66));
+}
+
+.airing-card-fallback-chip {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 0.32rem 0.68rem;
+  border-radius: 999px;
+  background: rgba(255, 248, 241, 0.14);
+  color: #fff8f1;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.airing-card-fallback-title {
+  max-width: 18rem;
+  color: #fff8f1;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(1.25rem, 2vw, 2rem);
+  font-weight: 700;
+  line-height: 1.04;
 }
 
 .eyebrow {

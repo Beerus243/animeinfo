@@ -19,11 +19,12 @@ type ArticleCardProps = {
 
 export default function ArticleCard({ article }: ArticleCardProps) {
   const { locale, messages } = useLanguage();
+  const hasCoverImage = Boolean(article.coverImage);
 
   return (
     <article className="article-card panel overflow-hidden">
       <div className="relative h-44 overflow-hidden bg-[linear-gradient(135deg,rgba(235,94,40,0.92),rgba(53,141,123,0.82))] md:h-48">
-        {article.coverImage ? (
+        {hasCoverImage ? (
           <>
             <Image
               alt={article.title}
@@ -34,7 +35,12 @@ export default function ArticleCard({ article }: ArticleCardProps) {
             />
             <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/18 to-transparent" />
           </>
-        ) : null}
+        ) : (
+          <div className="article-card-fallback absolute inset-0 p-4 md:p-5">
+            <span className="article-card-fallback-chip">{article.category || messages.card.defaultCategory}</span>
+            <p className="article-card-fallback-title">{article.title}</p>
+          </div>
+        )}
         <div className="absolute inset-x-0 top-0 h-16 bg-linear-to-b from-black/18 to-transparent" />
       </div>
       <div className="space-y-2.5 p-4 md:p-5">

@@ -100,6 +100,7 @@ export async function importAnimeFeed(options: ImportAnimeFeedOptions): Promise<
               currentSeasonLabel: item.currentSeasonLabel,
               nextEpisodeAt: item.nextEpisodeAt,
               releaseDay: item.releaseDay,
+              ...(item.coverImage ? { coverImage: item.coverImage } : {}),
               notificationsEnabled: true,
             },
             $addToSet: {
@@ -117,7 +118,7 @@ export async function importAnimeFeed(options: ImportAnimeFeedOptions): Promise<
         title: item.title,
         slug,
         synopsis: undefined,
-        coverImage: undefined,
+        coverImage: item.coverImage,
         genres: [],
         tags: ["icotaku", item.status],
         seasons: item.currentSeasonLabel ? [item.currentSeasonLabel] : [],

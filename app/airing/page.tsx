@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import NotificationSignupForm from "@/app/components/NotificationSignupForm";
@@ -84,7 +85,23 @@ export default async function AiringPage() {
         <div className="grid-auto-fit mt-5 md:mt-6">
           {airingAnimes.length ? (
             airingAnimes.map((anime) => (
-              <Link key={anime._id.toString()} href={`/anime/${anime.slug}`} className="content-card p-4 transition-transform hover:-translate-y-0.5">
+              <Link key={anime._id.toString()} href={`/anime/${anime.slug}`} className="content-card overflow-hidden p-4 transition-transform hover:-translate-y-0.5">
+                {anime.coverImage ? (
+                  <div className="airing-card-media -mx-4 -mt-4 mb-4 overflow-hidden border-b border-line/70">
+                    <Image
+                      alt={anime.title}
+                      className="h-full w-full object-cover"
+                      height={420}
+                      src={anime.coverImage}
+                      width={760}
+                    />
+                  </div>
+                ) : (
+                  <div className="airing-card-media airing-card-fallback -mx-4 -mt-4 mb-4 border-b border-line/70 p-4">
+                    <span className="airing-card-fallback-chip">{messages.airing.airingEyebrow}</span>
+                    <p className="airing-card-fallback-title">{anime.title}</p>
+                  </div>
+                )}
                 <p className="text-[11px] uppercase tracking-[0.16em] text-muted">{anime.currentSeasonLabel || currentSeasonLabel}</p>
                 <h3 className="mt-3 font-display text-2xl font-semibold md:text-[1.65rem]">{anime.title}</h3>
                 <p className="mt-2.5 text-[13px] leading-6 text-muted md:text-sm">{anime.synopsis || messages.anime.synopsisFallback}</p>
@@ -110,7 +127,23 @@ export default async function AiringPage() {
         <div className="mt-5 grid gap-3.5 md:grid-cols-2 xl:grid-cols-4">
           {popularAiringAnimes.length ? (
             popularAiringAnimes.map((anime, index) => (
-              <Link key={anime._id.toString()} href={`/anime/${anime.slug}`} className="content-card p-4 transition-transform hover:-translate-y-0.5">
+              <Link key={anime._id.toString()} href={`/anime/${anime.slug}`} className="content-card overflow-hidden p-4 transition-transform hover:-translate-y-0.5">
+                {anime.coverImage ? (
+                  <div className="airing-card-media airing-card-media-compact -mx-4 -mt-4 mb-4 overflow-hidden border-b border-line/70">
+                    <Image
+                      alt={anime.title}
+                      className="h-full w-full object-cover"
+                      height={300}
+                      src={anime.coverImage}
+                      width={520}
+                    />
+                  </div>
+                ) : (
+                  <div className="airing-card-media airing-card-media-compact airing-card-fallback -mx-4 -mt-4 mb-4 border-b border-line/70 p-4">
+                    <span className="airing-card-fallback-chip">Top {index + 1}</span>
+                    <p className="airing-card-fallback-title">{anime.title}</p>
+                  </div>
+                )}
                 <p className="text-[11px] uppercase tracking-[0.16em] text-muted">Top {index + 1}</p>
                 <h3 className="mt-2 font-display text-xl font-semibold">{anime.title}</h3>
                 <p className="mt-1.5 text-[13px] text-muted">{messages.airing.popularityPrefix} {anime.popularityScore || 0}</p>
