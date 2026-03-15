@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 
 import ArticleCard from "@/app/components/ArticleCard";
+import CrossLinks from "@/app/components/CrossLinks";
 import recommendationsHeroCover from "@/assets/images/itachi-uchiha-naruto-minimal-art-red-background-5k-5334x3000-7749.jpg";
 import { resolveArticleLocalization } from "@/lib/articleLocalization";
 import { ensureArticlesLocalization } from "@/lib/articleTranslation";
@@ -140,6 +141,7 @@ export default async function RecommendationsPage() {
           </div>
         </div>
       </section>
+      <CrossLinks messages={messages.crossLinks} exclude={["/recommendations"]} />
     </div>
   );
 }

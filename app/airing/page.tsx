@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import NotificationSignupForm from "@/app/components/NotificationSignupForm";
+import CrossLinks from "@/app/components/CrossLinks";
 import airingHeroCover from "@/assets/images/steel-ball-run-3840x2160-25586.jpg";
 import { getPreferredAiringFilter } from "@/lib/airingAnime";
 import { formatDateTime, getMessages } from "@/lib/i18n/messages";
@@ -181,6 +182,7 @@ export default async function AiringPage() {
           )}
         </div>
       </section>
+      <CrossLinks messages={messages.crossLinks} exclude={["/airing"]} />
     </div>
   );
 }

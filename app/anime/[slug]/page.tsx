@@ -3,6 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 
 import ArticleCard from "@/app/components/ArticleCard";
+import CrossLinks from "@/app/components/CrossLinks";
 import NotificationSignupForm from "@/app/components/NotificationSignupForm";
 import { resolveArticleLocalization } from "@/lib/articleLocalization";
 import { ensureArticlesLocalization } from "@/lib/articleTranslation";
@@ -151,6 +152,7 @@ export default async function AnimePage({ params }: AnimePageProps) {
           ))}
         </div>
       </section>
+      <CrossLinks messages={messages.crossLinks} exclude={["/airing"]} />
     </div>
   );
 }

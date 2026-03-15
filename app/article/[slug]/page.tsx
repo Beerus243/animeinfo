@@ -5,6 +5,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import AdUnit from "@/app/components/AdUnit";
 import ArticleCard from "@/app/components/ArticleCard";
 import ArticleExperienceControls from "@/app/components/ArticleExperienceControls";
+import CrossLinks from "@/app/components/CrossLinks";
 import { resolveArticleLocalization } from "@/lib/articleLocalization";
 import { ensureArticleLocalization, ensureArticlesLocalization } from "@/lib/articleTranslation";
 import { formatDate, getMessages } from "@/lib/i18n/messages";
@@ -217,6 +218,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           <AdUnit slot="inArticle" />
         </aside>
       </article>
+      <CrossLinks messages={messages.crossLinks} exclude={["/articles"]} />
     </div>
   );
 }
