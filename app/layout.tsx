@@ -93,6 +93,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
+  const gaId = process.env.GOOGLE_ANALYTICS_ID?.trim();
   const locale = await getServerLocale();
   const brandJsonLd = buildBrandJsonLd("Manga Empire suit les sorties, les tendances et les recommandations manga et anime dans une experience editoriale claire et rapide.");
 
@@ -110,6 +111,18 @@ export default async function RootLayout({
         className={`${displayFont.variable} ${bodyFont.variable} app-shell antialiased`}
       >
         <LanguageProvider initialLocale={locale}>
+          {gaId ? (
+            <>
+              <Script
+                id="gtag-script"
+                src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+                strategy="afterInteractive"
+              />
+              <Script id="gtag-init" strategy="afterInteractive">
+                {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaId}');`}
+              </Script>
+            </>
+          ) : null}
           {adsenseClient ? (
             <Script
               id="adsense-script"
