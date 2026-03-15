@@ -73,13 +73,13 @@ export const metadata: Metadata = {
     description: "Manga Empire suit les sorties, les tendances et les recommandations manga et anime dans une experience editoriale claire et rapide.",
     url: getSiteUrl(),
     type: "website",
-    images: [{ url: "/og/placeholder-1200x630.svg" }],
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Manga Empire" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Manga Empire",
     description: "Manga Empire suit les sorties, les tendances et les recommandations manga et anime dans une experience editoriale claire et rapide.",
-    images: ["/og/placeholder-1200x630.svg"],
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Manga Empire" }],
   },
   icons: {
     icon: "/icon",

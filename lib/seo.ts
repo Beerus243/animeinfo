@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { getSocialSameAs } from "@/lib/socialLinks";
 
 export const SITE_NAME = "Manga Empire";
-export const DEFAULT_OG_IMAGE = "/og/placeholder-1200x630.svg";
+export const DEFAULT_OG_IMAGE = "/opengraph-image";
 
 type SeoInput = {
   title: string;
@@ -105,13 +105,13 @@ export function buildMetadata(input: SeoInput): Metadata {
       url: canonical,
       siteName: SITE_NAME,
       type: input.type || "website",
-      images: [{ url: absoluteUrl(input.image || DEFAULT_OG_IMAGE) }],
+      images: [{ url: absoluteUrl(input.image || DEFAULT_OG_IMAGE), width: 1200, height: 630, alt: input.title }],
     },
     twitter: {
       card: "summary_large_image",
       title: input.title,
       description: input.description,
-      images: [absoluteUrl(input.image || DEFAULT_OG_IMAGE)],
+      images: [{ url: absoluteUrl(input.image || DEFAULT_OG_IMAGE), width: 1200, height: 630, alt: input.title }],
     },
   };
 }
