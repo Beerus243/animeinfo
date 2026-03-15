@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -10,10 +11,22 @@ import { ensureArticlesLocalization } from "@/lib/articleTranslation";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
+import { buildCollectionJsonLd, buildMetadata } from "@/lib/seo";
 import Anime from "@/models/Anime";
 import Article from "@/models/Article";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const messages = getMessages(locale);
+
+  return buildMetadata({
+    title: "Manga Empire",
+    description: messages.home.description,
+    path: "/",
+  });
+}
 
 async function getHomepageArticles() {
   await connectToDatabase();
@@ -51,10 +64,20 @@ export default async function Home() {
     title: anime.title,
     releaseDay: anime.releaseDay ?? undefined,
   }));
+  const homepageJsonLd = buildCollectionJsonLd({
+    title: messages.home.title,
+    description: messages.home.description,
+    path: "/",
+    itemPaths: [
+      ...localizedLatest.slice(0, 6).map((article) => `/article/${resolveArticleLocalization(article, locale).slug || article.slug}`),
+      ...airingAnimes.slice(0, 4).map((anime) => `/anime/${anime.slug}`),
+    ],
+  });
   const getFallbackLetter = (title: string) => title.trim().charAt(0).toUpperCase() || "A";
 
   return (
     <div className="shell-container py-6 md:py-10">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(homepageJsonLd) }} />
       <section className="panel grid gap-6 overflow-hidden px-5 py-6 md:grid-cols-[1.2fr_0.8fr] md:px-8 md:py-9">
         <div className="space-y-5">
           <span className="eyebrow">{messages.home.eyebrow}</span>

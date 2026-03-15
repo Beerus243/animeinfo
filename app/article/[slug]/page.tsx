@@ -10,7 +10,7 @@ import { ensureArticleLocalization, ensureArticlesLocalization } from "@/lib/art
 import { formatDate, getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
-import { buildArticleJsonLd, buildMetadata } from "@/lib/seo";
+import { buildArticleJsonLd, buildBreadcrumbJsonLd, buildMetadata } from "@/lib/seo";
 import Article from "@/models/Article";
 
 export const dynamic = "force-dynamic";
@@ -103,7 +103,14 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     publishedTime: hydratedArticle.publishedAt ?? undefined,
     modifiedTime: hydratedArticle.updatedAt ?? undefined,
     tags: hydratedArticle.tags ?? undefined,
+    section: hydratedArticle.category ?? undefined,
+    locale,
   });
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Accueil", path: "/" },
+    { name: "Actualites", path: "/articles" },
+    { name: localized.title || hydratedArticle.title, path: `/article/${localizedSlug}` },
+  ]);
   const readTime = getReadingTime(localized.content, localized.excerpt);
   const relatedFilters: Array<Record<string, unknown>> = [];
 
@@ -130,6 +137,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   return (
     <div className="shell-container py-8 md:py-12">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <article className="grid gap-8 lg:grid-cols-[1fr_300px]">
         <div className="panel article-detail-shell reading-surface px-6 py-8 md:px-10 md:py-12">
           <span className="eyebrow">{hydratedArticle.category || messages.article.fallbackCategory}</span>

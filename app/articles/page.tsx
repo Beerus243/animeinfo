@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -9,6 +10,7 @@ import { ensureArticlesLocalization } from "@/lib/articleTranslation";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
+import { buildCollectionJsonLd, buildMetadata } from "@/lib/seo";
 import Article from "@/models/Article";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +20,20 @@ type ArticlesPageProps = {
 };
 
 const PAGE_SIZE = 9;
+
+export async function generateMetadata({ searchParams }: ArticlesPageProps): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const messages = getMessages(locale);
+  const resolved = searchParams ? await searchParams : undefined;
+  const page = Math.max(1, Number(resolved?.page || "1") || 1);
+  const isFirstPage = page <= 1;
+
+  return buildMetadata({
+    title: isFirstPage ? messages.news.title : `${messages.news.title} - Page ${page}`,
+    description: messages.news.archiveNote,
+    path: isFirstPage ? "/articles" : `/articles?page=${page}`,
+  });
+}
 
 export default async function ArticlesPage({ searchParams }: ArticlesPageProps) {
   const locale = await getServerLocale();
@@ -39,9 +55,16 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
   const localizedArticles = await ensureArticlesLocalization(articles, locale);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const jsonLd = buildCollectionJsonLd({
+    title: messages.news.title,
+    description: messages.news.archiveNote,
+    path: page <= 1 ? "/articles" : `/articles?page=${page}`,
+    itemPaths: localizedArticles.map((article) => `/article/${resolveArticleLocalization(article, locale).slug || article.slug}`),
+  });
 
   return (
     <div className="shell-container py-6 md:py-9">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <section className="panel news-hero overflow-hidden px-5 py-6 md:px-8 md:py-8">
         <div className="news-hero-media-layer" aria-hidden="true">
           <Image

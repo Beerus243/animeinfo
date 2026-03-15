@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 
 import { getSocialSameAs } from "@/lib/socialLinks";
 
+export const SITE_NAME = "Manga Empire";
+export const DEFAULT_OG_IMAGE = "/og/placeholder-1200x630.svg";
+
 type SeoInput = {
   title: string;
   description: string;
@@ -16,10 +19,17 @@ type ArticleSeoInput = SeoInput & {
   modifiedTime?: Date | string;
   authors?: string[];
   tags?: string[];
+  section?: string;
+  locale?: string;
 };
 
 type CollectionSeoInput = SeoInput & {
   itemPaths?: string[];
+};
+
+type BreadcrumbItemInput = {
+  name: string;
+  path: string;
 };
 
 function getSiteUrlSource() {
@@ -71,23 +81,37 @@ export function buildMetadata(input: SeoInput): Metadata {
   return {
     title: input.title,
     description: input.description,
+    authors: [{ name: SITE_NAME }],
+    creator: SITE_NAME,
+    publisher: SITE_NAME,
     alternates: {
       canonical,
       languages,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
+      },
     },
     openGraph: {
       title: input.title,
       description: input.description,
       url: canonical,
-      siteName: "Manga Empire",
+      siteName: SITE_NAME,
       type: input.type || "website",
-      images: input.image ? [{ url: absoluteUrl(input.image) }] : undefined,
+      images: [{ url: absoluteUrl(input.image || DEFAULT_OG_IMAGE) }],
     },
     twitter: {
       card: "summary_large_image",
       title: input.title,
       description: input.description,
-      images: input.image ? [absoluteUrl(input.image)] : undefined,
+      images: [absoluteUrl(input.image || DEFAULT_OG_IMAGE)],
     },
   };
 }
@@ -102,23 +126,25 @@ export function buildBrandJsonLd(description: string) {
       {
         "@type": "Organization",
         "@id": `${websiteUrl}#organization`,
-        name: "Manga Empire",
+        name: SITE_NAME,
         alternateName: "Manga Empire Media",
         url: websiteUrl,
         description,
         logo: {
           "@type": "ImageObject",
-          url: absoluteUrl("/og/placeholder-1200x630.svg"),
+          url: absoluteUrl("/icon"),
         },
+        image: absoluteUrl(DEFAULT_OG_IMAGE),
         sameAs: sameAs.length ? sameAs : undefined,
       },
       {
         "@type": "WebSite",
         "@id": `${websiteUrl}#website`,
-        name: "Manga Empire",
+        name: SITE_NAME,
         alternateName: "Manga Empire Media",
         url: websiteUrl,
         description,
+        inLanguage: ["fr", "en"],
         publisher: {
           "@id": `${websiteUrl}#organization`,
         },
@@ -142,6 +168,9 @@ export function buildArticleJsonLd(input: ArticleSeoInput) {
     image: input.image ? [absoluteUrl(input.image)] : undefined,
     datePublished: input.publishedTime ? new Date(input.publishedTime).toISOString() : undefined,
     dateModified: input.modifiedTime ? new Date(input.modifiedTime).toISOString() : undefined,
+    inLanguage: input.locale,
+    isAccessibleForFree: true,
+    articleSection: input.section,
     author: (input.authors || ["Manga Empire Editorial"]).map((name) => ({
       "@type": "Person",
       name,
@@ -149,10 +178,10 @@ export function buildArticleJsonLd(input: ArticleSeoInput) {
     keywords: input.tags?.join(", "),
     publisher: {
       "@type": "Organization",
-      name: "Manga Empire",
+      name: SITE_NAME,
       logo: {
         "@type": "ImageObject",
-        url: absoluteUrl("/og/placeholder-1200x630.svg"),
+        url: absoluteUrl("/icon"),
       },
     },
   };
@@ -165,10 +194,36 @@ export function buildCollectionJsonLd(input: CollectionSeoInput) {
     name: input.title,
     description: input.description,
     url: absoluteUrl(input.path),
+    isPartOf: {
+      "@id": `${absoluteUrl("/")}#website`,
+    },
+    mainEntity: input.itemPaths?.length
+      ? {
+          "@type": "ItemList",
+          itemListElement: input.itemPaths.slice(0, 20).map((path, index) => ({
+            "@type": "ListItem",
+            position: index + 1,
+            url: absoluteUrl(path),
+          })),
+        }
+      : undefined,
     hasPart: input.itemPaths?.slice(0, 20).map((path, index) => ({
       "@type": "ListItem",
       position: index + 1,
       url: absoluteUrl(path),
+    })),
+  };
+}
+
+export function buildBreadcrumbJsonLd(items: BreadcrumbItemInput[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: absoluteUrl(item.path),
     })),
   };
 }

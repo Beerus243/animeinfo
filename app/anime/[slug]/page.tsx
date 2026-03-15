@@ -9,7 +9,7 @@ import { ensureArticlesLocalization } from "@/lib/articleTranslation";
 import { formatDateTime, getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
-import { buildCollectionJsonLd, buildMetadata } from "@/lib/seo";
+import { buildBreadcrumbJsonLd, buildCollectionJsonLd, buildMetadata } from "@/lib/seo";
 import Anime from "@/models/Anime";
 import Article from "@/models/Article";
 
@@ -66,11 +66,17 @@ export default async function AnimePage({ params }: AnimePageProps) {
     path: `/anime/${slug}`,
     itemPaths: localizedArticles.map((article) => `/article/${resolveArticleLocalization(article, locale).slug || article.slug}`),
   });
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Accueil", path: "/" },
+    { name: "Anime", path: "/airing" },
+    { name: anime.title, path: `/anime/${slug}` },
+  ]);
   const fallbackLetter = anime.title.trim().charAt(0).toUpperCase() || "A";
 
   return (
     <div className="shell-container py-8 md:py-12">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <section className="panel anime-detail-shell overflow-hidden px-6 py-8 md:px-10 md:py-12">
         <div className="grid gap-6 md:grid-cols-[236px_minmax(0,1fr)] md:items-start">
           <div className="anime-hero-media anime-detail-cover overflow-hidden rounded-[1.4rem] border border-line/70">

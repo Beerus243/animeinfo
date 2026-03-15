@@ -35,6 +35,8 @@ const bodyFont = Space_Grotesk({
   subsets: ["latin"],
 });
 
+const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION?.trim();
+
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   applicationName: "Manga Empire",
@@ -45,6 +47,26 @@ export const metadata: Metadata = {
   description: "Manga Empire suit les sorties, les tendances et les recommandations manga et anime dans une experience editoriale claire et rapide.",
   keywords: ["Manga Empire", "manga empire", "actualites manga", "actualites anime", "anime en cours", "recommandations manga", "recommandations anime"],
   category: "entertainment",
+  authors: [{ name: "Manga Empire" }],
+  creator: "Manga Empire",
+  publisher: "Manga Empire",
+  alternates: {
+    canonical: getSiteUrl(),
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  verification: {
+    google: googleSiteVerification || undefined,
+  },
   openGraph: {
     siteName: "Manga Empire",
     title: "Manga Empire",
