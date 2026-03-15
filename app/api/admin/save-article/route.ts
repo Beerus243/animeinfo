@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
   const section = payload.section === "recommendation" ? "recommendation" : "news";
   const recommendationType =
-    section === "recommendation" && (payload.recommendationType === "anime" || payload.recommendationType === "manga")
+    section === "recommendation" && (payload.recommendationType === "anime" || payload.recommendationType === "manga" || payload.recommendationType === "webtoon")
       ? payload.recommendationType
       : undefined;
 

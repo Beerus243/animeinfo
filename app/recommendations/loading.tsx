@@ -69,6 +69,16 @@ export default function RecommendationsLoading() {
             <CardSkeleton />
           </div>
         </div>
+
+        {/* Webtoon recommendations section skeleton */}
+        <div>
+          <Shimmer className="h-8 w-60 rounded-xl" />
+          <div className="grid-auto-fit mt-5 md:mt-6">
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+        </div>
       </section>
     </div>
   );

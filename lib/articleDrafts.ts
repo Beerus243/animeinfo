@@ -2,7 +2,7 @@ import { slugify } from "@/lib/slugify";
 import Article from "@/models/Article";
 
 export type EditorialSection = "news" | "recommendation";
-export type RecommendationKind = "anime" | "manga" | null;
+export type RecommendationKind = "anime" | "manga" | "webtoon" | null;
 
 export function buildImportedArticleKey(
   originalUrl: string,
@@ -51,7 +51,9 @@ export async function ensureUniqueArticleSlug(title: string, options: UniqueSlug
 
 export function buildManualDraftTitle(section: EditorialSection, recommendationType: RecommendationKind) {
   if (section === "recommendation") {
-    return recommendationType === "manga" ? "Nouvelle recommandation manga" : "Nouvelle recommandation anime";
+    if (recommendationType === "manga") return "Nouvelle recommandation manga";
+    if (recommendationType === "webtoon") return "Nouvelle recommandation webtoon";
+    return "Nouvelle recommandation anime";
   }
 
   return "Nouvel article";

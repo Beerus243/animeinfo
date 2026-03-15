@@ -6,9 +6,13 @@ import { useLanguage } from "@/app/components/LanguageProvider";
 
 type UploadImageProps = {
   onUploaded: (url: string) => void;
+  title?: string;
+  description?: string;
+  ctaLabel?: string;
+  compact?: boolean;
 };
 
-export default function UploadImage({ onUploaded }: UploadImageProps) {
+export default function UploadImage({ onUploaded, title, description, ctaLabel, compact = false }: UploadImageProps) {
   const { messages } = useLanguage();
   const [status, setStatus] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
@@ -19,6 +23,7 @@ export default function UploadImage({ onUploaded }: UploadImageProps) {
       return;
     }
 
+    setProgress(0);
     setStatus(messages.upload.signing);
 
     const signatureResponse = await fetch("/api/upload/image", {
@@ -65,16 +70,32 @@ export default function UploadImage({ onUploaded }: UploadImageProps) {
       onUploaded(String(data.secure_url));
       setProgress(100);
       setStatus(messages.upload.uploaded);
+      event.target.value = "";
       return;
     }
 
     setStatus(messages.upload.failed);
+    event.target.value = "";
   }
 
   return (
-    <label className="block rounded-2xl border border-dashed border-line bg-white/50 px-4 py-5 text-sm text-muted">
-      {messages.upload.label}
-      <input className="mt-3 block w-full" onChange={handleChange} type="file" accept="image/*" />
+    <label
+      className={compact
+        ? "inline-flex cursor-pointer items-center rounded-full border border-line bg-white/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-foreground transition hover:border-accent hover:bg-accent-soft dark:bg-white/10"
+        : "block cursor-pointer rounded-3xl border border-dashed border-line bg-white/50 px-4 py-5 text-sm text-muted transition hover:border-accent hover:bg-accent-soft/50 dark:bg-white/5 dark:hover:bg-white/10"}
+    >
+      {compact ? (
+        <span>{ctaLabel || messages.upload.label}</span>
+      ) : (
+        <>
+          {title ? <span className="block text-sm font-semibold text-foreground">{title}</span> : null}
+          {description ? <span className="mt-1 block text-[13px] leading-6 text-muted">{description}</span> : null}
+          <span className="mt-4 inline-flex items-center rounded-full border border-line bg-background px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-foreground">
+            {ctaLabel || messages.upload.label}
+          </span>
+        </>
+      )}
+      <input className="sr-only" onChange={handleChange} type="file" accept="image/*" />
       {progress > 0 && progress < 100 ? (
         <div className="mt-3">
           <div className="h-2 overflow-hidden rounded-full bg-line">

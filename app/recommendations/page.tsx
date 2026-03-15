@@ -32,7 +32,7 @@ export default async function RecommendationsPage() {
 
   await connectToDatabase();
 
-  const [animeRecommendations, mangaRecommendations] = await Promise.all([
+  const [animeRecommendations, mangaRecommendations, webtoonRecommendations] = await Promise.all([
     Article.find({ status: "published", section: "recommendation", recommendationType: "anime" })
       .sort({ publishedAt: -1, updatedAt: -1 })
       .limit(12)
@@ -41,10 +41,15 @@ export default async function RecommendationsPage() {
       .sort({ publishedAt: -1, updatedAt: -1 })
       .limit(12)
       .lean(),
+    Article.find({ status: "published", section: "recommendation", recommendationType: "webtoon" })
+      .sort({ publishedAt: -1, updatedAt: -1 })
+      .limit(12)
+      .lean(),
   ]);
-  const [localizedAnimeSource, localizedMangaSource] = await Promise.all([
+  const [localizedAnimeSource, localizedMangaSource, localizedWebtoonSource] = await Promise.all([
     ensureArticlesLocalization(animeRecommendations, locale),
     ensureArticlesLocalization(mangaRecommendations, locale),
+    ensureArticlesLocalization(webtoonRecommendations, locale),
   ]);
 
   const localizedAnimeRecommendations = localizedAnimeSource.map((article) => ({
@@ -52,6 +57,10 @@ export default async function RecommendationsPage() {
     localized: resolveArticleLocalization(article, locale),
   }));
   const localizedMangaRecommendations = localizedMangaSource.map((article) => ({
+    article,
+    localized: resolveArticleLocalization(article, locale),
+  }));
+  const localizedWebtoonRecommendations = localizedWebtoonSource.map((article) => ({
     article,
     localized: resolveArticleLocalization(article, locale),
   }));
@@ -65,11 +74,21 @@ export default async function RecommendationsPage() {
     return !seenRecommendationKeys.has(key);
   });
 
+  const seenMangaKeys = new Set([
+    ...seenRecommendationKeys,
+    ...dedupedMangaRecommendations.map(({ article, localized }) => (article.originalUrl || slugify(localized.title || article.title || "")).toLowerCase()),
+  ]);
+
+  const dedupedWebtoonRecommendations = localizedWebtoonRecommendations.filter(({ article, localized }) => {
+    const key = (article.originalUrl || slugify(localized.title || article.title || "")).toLowerCase();
+    return !seenMangaKeys.has(key);
+  });
+
   const jsonLd = buildCollectionJsonLd({
     title: messages.recommendations.title,
     description: messages.recommendations.description,
     path: "/recommendations",
-    itemPaths: [...localizedAnimeRecommendations.map(({ article, localized }) => localized.slug || article.slug), ...dedupedMangaRecommendations.map(({ article, localized }) => localized.slug || article.slug)].map((slug) => `/article/${slug}`),
+    itemPaths: [...localizedAnimeRecommendations.map(({ article, localized }) => localized.slug || article.slug), ...dedupedMangaRecommendations.map(({ article, localized }) => localized.slug || article.slug), ...dedupedWebtoonRecommendations.map(({ article, localized }) => localized.slug || article.slug)].map((slug) => `/article/${slug}`),
   });
 
   return (
@@ -137,6 +156,29 @@ export default async function RecommendationsPage() {
               ))
             ) : (
               <div className="panel p-5 text-sm text-muted">{messages.recommendations.emptyManga}</div>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <h2 className="font-display text-2xl font-semibold md:text-[1.7rem]">{messages.recommendations.webtoonTitle}</h2>
+          <div className="grid-auto-fit mt-5 md:mt-6">
+            {dedupedWebtoonRecommendations.length ? (
+              dedupedWebtoonRecommendations.map(({ article, localized }) => (
+                <ArticleCard
+                  key={article._id.toString()}
+                  article={{
+                    title: localized.title || article.title,
+                    slug: localized.slug || article.slug,
+                    excerpt: localized.excerpt ?? undefined,
+                    category: article.category ?? undefined,
+                    coverImage: article.coverImage ?? undefined,
+                    publishedAt: article.publishedAt ?? undefined,
+                  }}
+                />
+              ))
+            ) : (
+              <div className="panel p-5 text-sm text-muted">{messages.recommendations.emptyWebtoon}</div>
             )}
           </div>
         </div>

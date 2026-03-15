@@ -41,7 +41,7 @@ const ArticleSchema = new Schema(
     },
     recommendationType: {
       type: String,
-      enum: ["anime", "manga"],
+      enum: ["anime", "manga", "webtoon"],
       index: true,
     },
     status: {

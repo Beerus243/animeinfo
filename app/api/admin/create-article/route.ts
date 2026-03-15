@@ -21,7 +21,9 @@ function normalizeRecommendationType(value: unknown, section: EditorialSection):
     return null;
   }
 
-  return value === "manga" ? "manga" : "anime";
+  if (value === "manga") return "manga";
+  if (value === "webtoon") return "webtoon";
+  return "anime";
 }
 
 export async function POST(request: NextRequest) {
