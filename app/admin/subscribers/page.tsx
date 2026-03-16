@@ -1,6 +1,9 @@
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { formatDateTime, getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
+import { verifyAdminSession } from "@/lib/adminAuth";
 import Anime from "@/models/Anime";
 import NotificationSubscription from "@/models/NotificationSubscription";
 import WebPushSubscription from "@/models/WebPushSubscription";
@@ -10,6 +13,15 @@ export const dynamic = "force-dynamic";
 export default async function AdminSubscribersPage() {
   const locale = await getServerLocale();
   const messages = getMessages(locale);
+
+  // Check admin authentication
+  const cookieStore = await cookies();
+  const sessionValue = cookieStore.get("mangaempire-admin-session")?.value;
+  const isAuthenticated = await verifyAdminSession(sessionValue);
+
+  if (!isAuthenticated) {
+    redirect("/admin/login?redirect=" + encodeURIComponent("/admin/subscribers"));
+  }
 
   await connectToDatabase();
 

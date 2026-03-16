@@ -1,11 +1,12 @@
 "use client";
 
-
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
-import { useLanguage } from "@/app/components/LanguageProvider";
+import WysiwygEditor from "@/components/WysiwygEditor";
 import UploadImage from "@/app/admin/components/UploadImage";
+import { useLanguage } from "@/app/components/LanguageProvider";
 import { slugify } from "@/lib/slugify";
+import ImageGallery from "@/components/ImageGallery";
+import SeoPanel from "@/components/SeoPanel";
 
 type EditorLocale = "fr" | "en";
 
@@ -79,6 +80,50 @@ type EditorProps = {
   };
 };
 
+// ── Anime Block Inserter (inline component) ──────────────────────────────
+function AnimeBlockInserter({ onInsert }: { onInsert: (html: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [studio, setStudio] = useState("");
+  const [year, setYear] = useState("");
+  const [episodes, setEpisodes] = useState("");
+
+  function insert() {
+    const html = `<div class="anime-card">\n  <h3>${title}</h3>\n  <p>Studio : ${studio}</p>\n  <p>Sortie : ${year}</p>\n  <p>Épisodes : ${episodes}</p>\n</div>`;
+    onInsert(html);
+    setTitle(""); setStudio(""); setYear(""); setEpisodes(""); setOpen(false);
+  }
+
+  return (
+    <div className="rounded-2xl border border-line bg-white/50 p-3 dark:bg-white/5">
+      <button
+        type="button"
+        className="flex w-full items-center justify-between text-sm font-medium"
+        onClick={() => setOpen(v => !v)}
+      >
+        <span>🎌 Insérer un bloc anime</span>
+        <span className="text-muted">{open ? "▲" : "▼"}</span>
+      </button>
+      {open && (
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <input className="rounded-xl border border-line bg-white/70 px-3 py-2 text-sm dark:bg-white/10 dark:text-foreground" placeholder="Titre (ex: Jujutsu Kaisen)" value={title} onChange={e => setTitle(e.target.value)} />
+          <input className="rounded-xl border border-line bg-white/70 px-3 py-2 text-sm dark:bg-white/10 dark:text-foreground" placeholder="Studio (ex: MAPPA)" value={studio} onChange={e => setStudio(e.target.value)} />
+          <input className="rounded-xl border border-line bg-white/70 px-3 py-2 text-sm dark:bg-white/10 dark:text-foreground" placeholder="Année (ex: 2023)" value={year} onChange={e => setYear(e.target.value)} />
+          <input className="rounded-xl border border-line bg-white/70 px-3 py-2 text-sm dark:bg-white/10 dark:text-foreground" placeholder="Épisodes (ex: 24)" value={episodes} onChange={e => setEpisodes(e.target.value)} />
+          <button
+            type="button"
+            className="button-secondary sm:col-span-2"
+            disabled={!title}
+            onClick={insert}
+          >
+            Insérer le bloc
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Editor({ initialArticle, rewritingEnabled, translationEnabled }: EditorProps) {
   const { messages } = useLanguage();
   const frenchOnlyMode = !translationEnabled;
@@ -126,6 +171,14 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
   const [remoteImageUrl, setRemoteImageUrl] = useState("");
   const [imageAlt, setImageAlt] = useState("");
   const [galleryAlt, setGalleryAlt] = useState("");
+  const [imageCaption, setImageCaption] = useState("");
+  const [imageAlign, setImageAlign] = useState("center"); // gauche, centre, droite
+  const [imageSize, setImageSize] = useState("normal"); // normale, large, plein
+  const [publishDate, setPublishDate] = useState<string>("");
+  const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiType, setAiType] = useState("news");
+  const [aiGenerating, setAiGenerating] = useState(false);
   const formRef = useRef(form);
   const contentTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const lastSavedRef = useRef(JSON.stringify(initialFormState));
@@ -147,9 +200,17 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, ""),
   }), [form.localizations.fr.title, localizedForm.excerpt, localizedForm.seo.metaDesc, localizedForm.seo.metaTitle, localizedForm.title, messages.editor.articleTitleFallback, messages.editor.metaFallback]);
-  const contentImageUrls = useMemo(() => {
-    const matches = localizedForm.content.matchAll(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi);
-    return Array.from(new Set(Array.from(matches, (match) => match[1]?.trim()).filter(Boolean)));
+  // Extraction avancée des images <figure>
+  const contentImages = useMemo(() => {
+    const figureRegex = /<figure[^>]*class=["']([^"']*)["'][^>]*>([\s\S]*?)<img[^>]+src=["']([^"']+)["'][^>]*alt=["']([^"']*)["'][^>]*\s*\/?>[\s\S]*?<figcaption>(.*?)<\/figcaption>[\s\S]*?<\/figure>/gi;
+    const matches = Array.from(localizedForm.content.matchAll(figureRegex));
+    return matches.map(match => ({
+      src: match[3],
+      alt: match[4],
+      caption: match[5],
+      align: (match[1].match(/align-(left|center|right)/)?.[1]) || "center",
+      size: (match[1].match(/size-(normal|large|full)/)?.[1]) || "normal",
+    }));
   }, [localizedForm.content]);
 
   useEffect(() => {
@@ -242,20 +303,24 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
     setToast(messages.editor.imageToast);
   }
 
-  function insertImageIntoActiveContent(rawUrl: string, altText?: string) {
+  function insertImageIntoActiveContent(rawUrl: string, altText?: string, captionText?: string, align?: string, size?: string) {
     const url = rawUrl.trim();
     if (!url) {
       setToast(messages.editor.remoteImageInvalid);
       return;
     }
     const alt = (altText ?? imageAlt).trim();
+    const caption = (captionText ?? imageCaption).trim();
+    const alignClass = align ?? imageAlign;
+    const sizeClass = size ?? imageSize;
     const textarea = contentTextareaRef.current;
     const activeContent = formRef.current.localizations[activeLocale].content;
     const selectionStart = textarea?.selectionStart ?? activeContent.length;
     const selectionEnd = textarea?.selectionEnd ?? activeContent.length;
     const needsLeadingBreak = selectionStart > 0 && !activeContent.slice(0, selectionStart).endsWith("\n");
     const needsTrailingBreak = selectionEnd < activeContent.length && !activeContent.slice(selectionEnd).startsWith("\n");
-    const imageMarkup = `${needsLeadingBreak ? "\n" : ""}<figure>\n  <img src="${url}" alt="${alt.replace(/"/g, '&quot;')}" />\n</figure>${needsTrailingBreak ? "\n" : ""}`;
+    const figureClass = `article-image align-${alignClass} size-${sizeClass}`;
+    const imageMarkup = `${needsLeadingBreak ? "\n" : ""}<figure class=\"${figureClass}\">\n  <img src=\"${url}\" alt=\"${alt.replace(/"/g, '&quot;')}\" />\n  <figcaption>${caption}</figcaption>\n</figure>${needsTrailingBreak ? "\n" : ""}`;
     const nextContent = `${activeContent.slice(0, selectionStart)}${imageMarkup}${activeContent.slice(selectionEnd)}`;
 
     updateForm({
@@ -280,6 +345,9 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
     setToast(messages.editor.inlineImageToast.replace("{locale}", activeLocale.toUpperCase()));
     setImageAlt("");
     setGalleryAlt("");
+    setImageCaption("");
+    setImageAlign("center");
+    setImageSize("normal");
   }
 
   function handleRemoteImageInsert() {
@@ -550,6 +618,7 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
 
   return (
     <div className="panel p-6 md:p-8">
+      {/* ── Top bar: status + save + publish ── */}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
           <span className={`status-chip ${isDirty ? "status-chip-warning" : "status-chip-success"}`}>
@@ -558,9 +627,42 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
           {aiRewritten ? <span className="status-chip status-chip-success">{messages.editor.aiRewritten}</span> : null}
           {status ? <span className="text-sm text-muted">{status}</span> : null}
         </div>
-        <button className="button-primary" onClick={() => void handleSave("manual")} type="button">
-          {messages.editor.saveNow}
-        </button>
+        <div className="flex gap-2 items-center flex-wrap">
+          <button className="button-primary" onClick={() => void handleSave("manual")} type="button">
+            {messages.editor.saveNow}
+          </button>
+          <button
+            className="button-success"
+            type="button"
+            onClick={() => {
+              if (window.confirm("Publier l'article maintenant ?")) {
+                void handleSave("manual");
+                setToast("Article publié !");
+              }
+            }}
+          >
+            Publier maintenant
+          </button>
+          <input
+            type="datetime-local"
+            className="rounded-xl border border-line bg-white/70 px-3 py-2 text-sm dark:bg-white/10 dark:text-foreground"
+            value={publishDate}
+            onChange={e => setPublishDate(e.target.value)}
+            title="Date de publication programmée"
+          />
+          {publishDate && (
+            <button
+              className="button-secondary"
+              type="button"
+              onClick={() => {
+                void handleSave("manual");
+                setToast(`Publication programmée pour le ${new Date(publishDate).toLocaleString("fr-FR")}`);
+              }}
+            >
+              Programmer
+            </button>
+          )}
+        </div>
       </div>
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <div className="space-y-5">
@@ -639,6 +741,22 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
             onChange={(event) => updateLocalizedField(activeLocale, "title", event.target.value)}
             placeholder={`${messages.editor.titlePlaceholder} (${activeLocale.toUpperCase()})`}
           />
+          {/* Panneau SEO auto-généré */}
+          <SeoPanel
+            title={localizedForm.title}
+            content={localizedForm.content}
+            metaTitle={localizedForm.seo.metaTitle}
+            metaDesc={localizedForm.seo.metaDesc}
+            ogImage={localizedForm.seo.ogImage}
+            coverImage={form.coverImage}
+            slug={localizedForm.slug}
+            onChange={fields => {
+              if (fields.metaTitle !== undefined) updateLocalizedSeoField(activeLocale, "metaTitle", fields.metaTitle);
+              if (fields.metaDesc !== undefined) updateLocalizedSeoField(activeLocale, "metaDesc", fields.metaDesc);
+              if (fields.ogImage !== undefined) updateLocalizedSeoField(activeLocale, "ogImage", fields.ogImage);
+              if (fields.slug !== undefined) updateLocalizedField(activeLocale, "slug", fields.slug);
+            }}
+          />
           <textarea
             aria-label={messages.editor.excerptAria}
             className="min-h-28 w-full rounded-2xl border border-line bg-white/70 px-4 py-3 dark:bg-white/10 dark:text-foreground"
@@ -646,57 +764,154 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
             onChange={(event) => updateLocalizedField(activeLocale, "excerpt", event.target.value)}
             placeholder={`${messages.editor.excerptPlaceholder} (${activeLocale.toUpperCase()})`}
           />
-          <div className="rounded-2xl border border-line bg-white/50 p-4 dark:bg-white/5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-xs uppercase tracking-[0.16em] text-muted">{messages.editor.contentToolsEyebrow}</p>
-                <p className="mt-1 text-sm font-semibold text-foreground">{messages.editor.contentToolsTitle}</p>
-                <p className="mt-2 text-[13px] leading-6 text-muted">{messages.editor.contentToolsDescription}</p>
-              </div>
-              <div className="flex flex-col gap-2 w-full sm:w-auto">
-                <UploadImage compact ctaLabel={messages.upload.insertInContent} onUploaded={(url) => insertImageIntoActiveContent(url, imageAlt)} />
-                <input
-                  className="rounded-2xl border border-line bg-white/70 px-3 py-2 text-xs dark:bg-white/10 dark:text-foreground"
-                  style={{ minWidth: 0 }}
-                  type="text"
-                  value={imageAlt}
-                  onChange={e => setImageAlt(e.target.value)}
-                  placeholder={messages.editor.altPlaceholder}
-                  aria-label={messages.editor.altAria}
-                  maxLength={120}
-                />
-              </div>
+          {/* ── Outils insertion image ── */}
+          <div className="rounded-2xl border border-line bg-white/50 p-4 dark:bg-white/5 space-y-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.16em] text-muted">{messages.editor.contentToolsEyebrow}</p>
+              <p className="mt-1 text-sm font-semibold text-foreground">{messages.editor.contentToolsTitle}</p>
             </div>
-            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+
+            {/* Champs communs alt + légende */}
+            <div className="grid gap-2 sm:grid-cols-2">
               <input
-                className="w-full rounded-2xl border border-line bg-white/70 px-4 py-3 dark:bg-white/10 dark:text-foreground"
+                className="rounded-xl border border-line bg-white/70 px-3 py-2 text-sm dark:bg-white/10 dark:text-foreground"
+                type="text"
+                value={imageAlt}
+                onChange={e => setImageAlt(e.target.value)}
+                placeholder={messages.editor.altPlaceholder}
+                aria-label={messages.editor.altAria}
+                maxLength={120}
+              />
+              <input
+                className="rounded-xl border border-line bg-white/70 px-3 py-2 text-sm dark:bg-white/10 dark:text-foreground"
+                type="text"
+                value={imageCaption}
+                onChange={e => setImageCaption(e.target.value)}
+                placeholder="Légende (figcaption)"
+                aria-label="Légende de l'image"
+                maxLength={200}
+              />
+            </div>
+
+            {/* Alignement + Taille */}
+            <div className="flex flex-wrap gap-4 text-sm text-muted">
+              <fieldset className="flex items-center gap-2">
+                <legend className="mr-1 text-xs font-medium">Alignement</legend>
+                {(["left", "center", "right"] as const).map(a => (
+                  <label key={a} className="flex cursor-pointer items-center gap-1">
+                    <input type="radio" name="imgAlign" value={a} checked={imageAlign === a} onChange={() => setImageAlign(a)} />
+                    <span className="text-xs capitalize">{a === "left" ? "Gauche" : a === "center" ? "Centre" : "Droite"}</span>
+                  </label>
+                ))}
+              </fieldset>
+              <fieldset className="flex items-center gap-2">
+                <legend className="mr-1 text-xs font-medium">Taille</legend>
+                {(["normal", "large", "full"] as const).map(s => (
+                  <label key={s} className="flex cursor-pointer items-center gap-1">
+                    <input type="radio" name="imgSize" value={s} checked={imageSize === s} onChange={() => setImageSize(s)} />
+                    <span className="text-xs capitalize">{s === "normal" ? "Normale" : s === "large" ? "Large" : "Plein écran"}</span>
+                  </label>
+                ))}
+              </fieldset>
+            </div>
+
+            {/* Upload fichier */}
+            <UploadImage
+              compact
+              ctaLabel={messages.upload.insertInContent}
+              onUploaded={(url) => insertImageIntoActiveContent(url, imageAlt, imageCaption, imageAlign, imageSize)}
+            />
+
+            {/* URL distante */}
+            <div className="flex gap-2">
+              <input
+                className="w-full rounded-xl border border-line bg-white/70 px-3 py-2 text-sm dark:bg-white/10 dark:text-foreground"
                 onChange={(event) => setRemoteImageUrl(event.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); insertImageIntoActiveContent(remoteImageUrl, imageAlt, imageCaption, imageAlign, imageSize); setRemoteImageUrl(""); }}}
                 placeholder={messages.editor.remoteImagePlaceholder}
                 type="url"
                 value={remoteImageUrl}
               />
-              <input
-                className="w-full rounded-2xl border border-line bg-white/70 px-4 py-3 dark:bg-white/10 dark:text-foreground"
-                onChange={e => setImageAlt(e.target.value)}
-                placeholder={messages.editor.altPlaceholder}
-                type="text"
-                value={imageAlt}
-                maxLength={120}
-                aria-label={messages.editor.altAria}
-              />
-              <button className="button-secondary shrink-0" onClick={handleRemoteImageInsert} type="button">
+              <button
+                className="button-secondary shrink-0"
+                onClick={() => { insertImageIntoActiveContent(remoteImageUrl, imageAlt, imageCaption, imageAlign, imageSize); setRemoteImageUrl(""); }}
+                type="button"
+              >
                 {messages.editor.remoteImageInsertAction}
               </button>
             </div>
           </div>
-          <textarea
-            aria-label={messages.editor.contentAria}
-            className="min-h-90 w-full rounded-2xl border border-line bg-white/70 px-4 py-3 dark:bg-white/10 dark:text-foreground"
+
+          {/* ── Bloc Anime rapide ── */}
+          <AnimeBlockInserter onInsert={(html) => {
+            const curr = formRef.current.localizations[activeLocale].content;
+            updateLocalizedField(activeLocale, "content", curr + "\n" + html);
+            setToast("Bloc anime inséré");
+          }} />
+
+          {/* ── Éditeur WYSIWYG ── */}
+          <WysiwygEditor
             ref={contentTextareaRef}
             value={localizedForm.content}
-            onChange={(event) => updateLocalizedField(activeLocale, "content", event.target.value)}
+            onChange={html => updateLocalizedField(activeLocale, "content", html)}
             placeholder={`${messages.editor.contentPlaceholder} (${activeLocale.toUpperCase()})`}
           />
+
+          {/* ── Génération IA ── */}
+          <div className="rounded-2xl border border-line bg-white/50 p-4 dark:bg-white/5 space-y-3">
+            <p className="text-xs uppercase tracking-[0.16em] text-muted">Génération IA</p>
+            <p className="text-sm font-semibold">⚡ Générer l'article avec l'IA</p>
+            <input
+              className="w-full rounded-xl border border-line bg-white/70 px-3 py-2 text-sm dark:bg-white/10 dark:text-foreground"
+              placeholder="Sujet (ex: Nouveau trailer Solo Leveling saison 3)"
+              value={aiPrompt}
+              onChange={e => setAiPrompt(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") e.preventDefault(); }}
+            />
+            <div className="flex gap-2 items-center flex-wrap">
+              <select
+                className="rounded-xl border border-line bg-white/70 px-3 py-2 text-sm dark:bg-white/10 dark:text-foreground"
+                value={aiType}
+                onChange={e => setAiType(e.target.value)}
+              >
+                <option value="news">News</option>
+                <option value="review">Analyse / Review</option>
+                <option value="summary">Résumé</option>
+                <option value="opinion">Opinion</option>
+              </select>
+              <button
+                className="button-accent flex-1"
+                type="button"
+                disabled={aiGenerating || !aiPrompt.trim()}
+                onClick={async () => {
+                  setAiGenerating(true);
+                  try {
+                    const response = await fetch("/api/admin/generate-article", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ prompt: aiPrompt, type: aiType }),
+                    });
+                    const data = await response.json();
+                    if (data?.content) {
+                      updateLocalizedField(activeLocale, "content", data.content);
+                      if (data.title) updateLocalizedField(activeLocale, "title", data.title);
+                      if (data.excerpt) updateLocalizedField(activeLocale, "excerpt", data.excerpt);
+                      setToast("✅ Article généré par IA");
+                    } else {
+                      setToast(data?.error || "Erreur lors de la génération");
+                    }
+                  } catch {
+                    setToast("Erreur réseau lors de la génération IA");
+                  } finally {
+                    setAiGenerating(false);
+                  }
+                }}
+              >
+                {aiGenerating ? "⏳ Génération en cours..." : "⚡ Générer"}
+              </button>
+            </div>
+            <p className="text-[12px] text-muted">L'IA génère intro, résumé, analyse et conclusion. Tu relis et publies.</p>
+          </div>
         </div>
         <div className="space-y-5">
           <div className="content-card p-4">
@@ -800,15 +1015,53 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
             </div>
           </div>
           <div className="rounded-3xl border border-line bg-white/55 p-5 dark:bg-white/5">
-            <p className="text-xs uppercase tracking-[0.16em] text-muted">{messages.editor.livePreview}</p>
-            <div className="mt-4 space-y-3">
-              <p className="eyebrow">
-                {form.section === "recommendation"
-                  ? `${messages.editor.sectionRecommendation} · ${form.recommendationType === "manga" ? messages.editor.recommendationTypeManga : form.recommendationType === "webtoon" ? messages.editor.recommendationTypeWebtoon : messages.editor.recommendationTypeAnime}`
-                  : form.category || messages.editor.categoryFallback}
-              </p>
-              <h2 className="font-display text-2xl font-semibold">{localizedForm.title || messages.editor.articleTitleFallback}</h2>
-              <p className="text-sm leading-7 text-muted">{localizedForm.excerpt || messages.editor.excerptPreviewFallback}</p>
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-xs uppercase tracking-[0.16em] text-muted">{messages.editor.livePreview}</p>
+              <div className="flex gap-1 rounded-xl border border-line p-0.5">
+                <button
+                  className={`rounded-lg px-3 py-1 text-xs font-medium transition-colors ${previewMode === "desktop" ? "bg-accent text-white" : "text-muted hover:bg-accent-soft"}`}
+                  onClick={() => setPreviewMode("desktop")}
+                  type="button"
+                >
+                  🖥 Desktop
+                </button>
+                <button
+                  className={`rounded-lg px-3 py-1 text-xs font-medium transition-colors ${previewMode === "mobile" ? "bg-accent text-white" : "text-muted hover:bg-accent-soft"}`}
+                  onClick={() => setPreviewMode("mobile")}
+                  type="button"
+                >
+                  📱 Mobile
+                </button>
+              </div>
+            </div>
+            <div className={previewMode === "mobile" ? "mx-auto max-w-[320px] overflow-hidden rounded-2xl border-2 border-line shadow-lg" : ""}>
+              <div className={previewMode === "mobile" ? "overflow-y-auto p-4" : ""}>
+                {/* Tags + section */}
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  <span className="rounded-full bg-accent px-2 py-0.5 text-[11px] font-medium text-white">
+                    {form.section === "recommendation" ? messages.editor.sectionRecommendation : messages.editor.sectionNews}
+                  </span>
+                  {form.anime && <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] text-muted">{form.anime}</span>}
+                  {form.tags.split(",").filter(t => t.trim()).map(tag => (
+                    <span key={tag.trim()} className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] text-muted">{tag.trim()}</span>
+                  ))}
+                </div>
+                {/* Titre */}
+                <h2 className="mb-3 font-display text-xl font-bold leading-snug">{localizedForm.title || messages.editor.articleTitleFallback}</h2>
+                {/* Image couverture */}
+                {form.coverImage && (
+                  <img src={form.coverImage} alt="cover" className="mb-3 w-full rounded-xl object-cover" style={{ maxHeight: 200 }} />
+                )}
+                {/* Extrait */}
+                {localizedForm.excerpt && (
+                  <p className="mb-3 rounded-xl border-l-4 border-accent bg-accent-soft/50 px-3 py-2 text-sm italic text-muted">{localizedForm.excerpt}</p>
+                )}
+                {/* Contenu HTML */}
+                <div
+                  className="prose prose-sm max-w-none dark:prose-invert [&_.anime-card]:rounded-xl [&_.anime-card]:border [&_.anime-card]:border-line [&_.anime-card]:bg-accent-soft [&_.anime-card]:p-3 [&_.anime-card]:my-3 [&_.article-image]:my-4 [&_.article-image.align-left]:float-left [&_.article-image.align-left]:mr-4 [&_.article-image.align-right]:float-right [&_.article-image.align-right]:ml-4 [&_.article-image.align-center]:mx-auto [&_.article-image.size-large]:w-4/5 [&_.article-image.size-full]:w-full [&_.article-image.size-normal]:w-1/2"
+                  dangerouslySetInnerHTML={{ __html: localizedForm.content || `<p class="text-muted">${messages.editor.contentPlaceholder}...</p>` }}
+                />
+              </div>
             </div>
           </div>
           <div className="rounded-3xl border border-line bg-white/55 p-5 dark:bg-white/5">
@@ -817,34 +1070,10 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
               <p className="text-sm font-semibold text-foreground">{messages.editor.imagePreviewTitle}</p>
               <p className="text-[13px] leading-6 text-muted">{messages.editor.imagePreviewDescription}</p>
             </div>
-            {contentImageUrls.length ? (
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                {contentImageUrls.map((url) => (
-                  <div key={url} className="overflow-hidden rounded-2xl border border-line bg-background/60">
-                    <img alt="" className="h-32 w-full object-cover" src={url} />
-                    <div className="space-y-2 p-3">
-                      <p className="truncate text-xs text-muted">{url}</p>
-                      <input
-                        className="w-full rounded-2xl border border-line bg-white/70 px-2 py-1 text-xs dark:bg-white/10 dark:text-foreground"
-                        type="text"
-                        value={galleryAlt}
-                        onChange={e => setGalleryAlt(e.target.value)}
-                        placeholder={messages.editor.altPlaceholder}
-                        aria-label={messages.editor.altAria}
-                        maxLength={120}
-                      />
-                      <button className="button-secondary w-full" onClick={() => insertImageIntoActiveContent(url, galleryAlt)} type="button">
-                        {messages.editor.reinsertImageAction}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="mt-4 rounded-2xl border border-dashed border-line px-4 py-5 text-sm text-muted">
-                {messages.editor.imagePreviewEmpty}
-              </div>
-            )}
+            <ImageGallery
+              images={contentImages}
+              onReinsert={img => insertImageIntoActiveContent(img.src, img.alt, img.caption, img.align, img.size)}
+            />
           </div>
         </div>
       </div>

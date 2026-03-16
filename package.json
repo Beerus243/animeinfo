@@ -25,6 +25,7 @@
     "next-cloudinary": "^6.17.5",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "react-quill-new": "^3.8.3",
     "rss-parser": "^3.13.0",
     "web-push": "^3.6.7"
   },

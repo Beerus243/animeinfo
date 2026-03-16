@@ -1,4 +1,5 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 import Editor from "@/app/admin/components/Editor";
 import PublishButton from "@/app/admin/components/PublishButton";
@@ -6,6 +7,7 @@ import { isAutomaticRewritingConfigured, isAutomaticTranslationConfigured } from
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
+import { verifyAdminSession } from "@/lib/adminAuth";
 import Article from "@/models/Article";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +20,16 @@ export default async function EditArticlePage({ params }: EditPageProps) {
   const locale = await getServerLocale();
   const messages = getMessages(locale);
   const { id } = await params;
+
+  // Check admin authentication
+  const cookieStore = await cookies();
+  const sessionValue = cookieStore.get("mangaempire-admin-session")?.value;
+  const isAuthenticated = await verifyAdminSession(sessionValue);
+
+  if (!isAuthenticated) {
+    redirect("/admin/login?redirect=" + encodeURIComponent(`/admin/edit/${id}`));
+  }
+
   await connectToDatabase();
 
   const article = await Article.findById(id).lean();

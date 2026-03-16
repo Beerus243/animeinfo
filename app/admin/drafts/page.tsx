@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import Link from "next/link";
 
 import DraftCard from "@/app/admin/components/DraftCard";
@@ -6,6 +8,7 @@ import { isFrenchAiPipelineConfigured } from "@/lib/articleTranslation";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
+import { verifyAdminSession } from "@/lib/adminAuth";
 import Article from "@/models/Article";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +20,16 @@ type DraftsPageProps = {
 export default async function DraftsPage({ searchParams }: DraftsPageProps) {
   const locale = await getServerLocale();
   const messages = getMessages(locale);
+
+  // Check admin authentication
+  const cookieStore = await cookies();
+  const sessionValue = cookieStore.get("mangaempire-admin-session")?.value;
+  const isAuthenticated = await verifyAdminSession(sessionValue);
+
+  if (!isAuthenticated) {
+    redirect("/admin/login?redirect=" + encodeURIComponent("/admin/drafts"));
+  }
+
   const aiEnabled = isFrenchAiPipelineConfigured();
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const filter = ["all", "no-image", "ai-pending", "ai-done", "ai-failed"].includes(resolvedSearchParams?.filter || "")

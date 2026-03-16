@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { access } from "node:fs/promises";
 import path from "node:path";
 
@@ -12,6 +14,7 @@ import { isFrenchAiPipelineConfigured } from "@/lib/articleTranslation";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
+import { verifyAdminSession } from "@/lib/adminAuth";
 import { isWebPushConfigured } from "@/lib/webPush";
 import Anime from "@/models/Anime";
 import Article from "@/models/Article";
@@ -32,6 +35,16 @@ async function hasPushServiceWorker() {
 export default async function AdminPage() {
   const locale = await getServerLocale();
   const messages = getMessages(locale);
+
+  // Check admin authentication
+  const cookieStore = await cookies();
+  const sessionValue = cookieStore.get("mangaempire-admin-session")?.value;
+  const isAuthenticated = await verifyAdminSession(sessionValue);
+
+  if (!isAuthenticated) {
+    redirect("/admin/login?redirect=/admin");
+  }
+
   const aiEnabled = isFrenchAiPipelineConfigured();
   const pushConfigured = isWebPushConfigured();
   await connectToDatabase();

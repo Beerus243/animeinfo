@@ -32,6 +32,12 @@ export default function UploadImage({ onUploaded, title, description, ctaLabel, 
     const signature = await signatureResponse.json();
 
     if (!signatureResponse.ok) {
+      if (signatureResponse.status === 401) {
+        setStatus("Session expirée. Veuillez vous reconnecter.");
+        // Optionally redirect to login
+        window.location.href = "/admin/login?redirect=" + encodeURIComponent(window.location.pathname);
+        return;
+      }
       setStatus(signature.error || messages.upload.signatureFailed);
       return;
     }
@@ -45,26 +51,40 @@ export default function UploadImage({ onUploaded, title, description, ctaLabel, 
 
     setStatus(messages.upload.uploading);
 
-    const data = await new Promise<Record<string, unknown>>((resolve, reject) => {
-      const request = new XMLHttpRequest();
-      request.open("POST", `https://api.cloudinary.com/v1_1/${signature.cloudName}/image/upload`);
-      request.upload.addEventListener("progress", (uploadEvent) => {
-        if (!uploadEvent.lengthComputable) {
-          return;
-        }
+    let data: Record<string, unknown>;
+    try {
+      data = await new Promise<Record<string, unknown>>((resolve, reject) => {
+        const request = new XMLHttpRequest();
+        request.open("POST", `https://api.cloudinary.com/v1_1/${signature.cloudName}/image/upload`);
+        request.upload.addEventListener("progress", (uploadEvent) => {
+          if (!uploadEvent.lengthComputable) {
+            return;
+          }
 
-        setProgress(Math.round((uploadEvent.loaded / uploadEvent.total) * 100));
+          setProgress(Math.round((uploadEvent.loaded / uploadEvent.total) * 100));
+        });
+        request.addEventListener("load", () => {
+          try {
+            const parsed = JSON.parse(request.responseText);
+            if (request.status >= 400) {
+              reject(new Error(parsed?.error?.message || `Cloudinary error ${request.status}`));
+            } else {
+              resolve(parsed);
+            }
+          } catch (error) {
+            reject(error);
+          }
+        });
+        request.addEventListener("error", () => reject(new Error("Connexion impossible. Vérifie ta connexion et réessaie.")));
+        request.addEventListener("abort", () => reject(new Error("Upload annulé.")));
+        request.send(payload);
       });
-      request.addEventListener("load", () => {
-        try {
-          resolve(JSON.parse(request.responseText));
-        } catch (error) {
-          reject(error);
-        }
-      });
-      request.addEventListener("error", () => reject(new Error("Upload failed")));
-      request.send(payload);
-    });
+    } catch (error) {
+      setProgress(0);
+      setStatus(error instanceof Error ? error.message : messages.upload.failed);
+      event.target.value = "";
+      return;
+    }
 
     if (data.secure_url) {
       onUploaded(String(data.secure_url));

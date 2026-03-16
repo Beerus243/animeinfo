@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import Link from "next/link";
 
 import AdminAnimeActions from "@/app/admin/components/AdminAnimeActions";
@@ -5,6 +7,7 @@ import AnimeCard from "@/app/admin/components/AnimeCard";
 import { getMessages } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/mongodb";
+import { verifyAdminSession } from "@/lib/adminAuth";
 import Anime from "@/models/Anime";
 import NotificationSubscription from "@/models/NotificationSubscription";
 import WebPushSubscription from "@/models/WebPushSubscription";
@@ -18,6 +21,15 @@ type AdminAnimePageProps = {
 export default async function AdminAnimePage({ searchParams }: AdminAnimePageProps) {
   const locale = await getServerLocale();
   const messages = getMessages(locale);
+
+  // Check admin authentication
+  const cookieStore = await cookies();
+  const sessionValue = cookieStore.get("mangaempire-admin-session")?.value;
+  const isAuthenticated = await verifyAdminSession(sessionValue);
+
+  if (!isAuthenticated) {
+    redirect("/admin/login?redirect=" + encodeURIComponent("/admin/anime"));
+  }
   const resolved = searchParams ? await searchParams : undefined;
   const filter = resolved?.filter === "popular" ? "popular" : resolved?.filter === "airing" ? "airing" : "all";
 
