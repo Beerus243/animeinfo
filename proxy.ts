@@ -34,6 +34,8 @@ function buildCsp() {
 
   const connectSrc = [
     "'self'",
+    "https://api.cloudinary.com",
+    "https://res.cloudinary.com",
     "https://www.google-analytics.com",
     "https://www.googletagmanager.com",
     "https://analytics.google.com",
