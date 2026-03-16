@@ -87,7 +87,7 @@ export default async function PublishedArticlesPage({ searchParams }: PublishedA
                 section: article.section ?? undefined,
                 recommendationType: article.recommendationType ?? undefined,
                 updatedAt: article.updatedAt,
-                publishedAt: article.publishedAt,
+                publishedAt: article.publishedAt ?? undefined,
               }}
             />
           ))}
