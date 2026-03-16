@@ -22,6 +22,15 @@ const legacyConsentStorageKey = "animeinfo-consent";
 export default function AdUnit({ slot, compact = false }: AdUnitProps) {
   const config = adSlots[slot];
   const { messages } = useLanguage();
+  const rootClassName = [
+    "ad-unit",
+    "panel",
+    "p-4",
+    compact ? "ad-unit-compact min-h-28" : "min-h-56",
+    slot === "header" ? "ad-unit-header" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
   const consent = useSyncExternalStore(
     () => () => undefined,
     () => (window.localStorage.getItem(consentStorageKey) || window.localStorage.getItem(legacyConsentStorageKey)) === "granted",
@@ -42,14 +51,14 @@ export default function AdUnit({ slot, compact = false }: AdUnitProps) {
   }, [consent]);
 
   return (
-    <div className={`panel p-4 ${compact ? "min-h-28" : "min-h-56"}`}>
-      <div className="mb-3 flex items-center justify-between text-xs uppercase tracking-[0.16em] text-muted">
+    <div className={rootClassName}>
+      <div className="ad-unit-meta mb-3 flex items-center justify-between text-xs uppercase tracking-[0.16em] text-muted">
         <span>{messages.adUnit.adLabel} · {config.label}</span>
         <span>{consent ? messages.adUnit.enabled : messages.adUnit.consentRequired}</span>
       </div>
       {consent && process.env.NEXT_PUBLIC_ADSENSE_CLIENT ? (
         <ins
-          className="adsbygoogle block h-full w-full rounded-2xl"
+          className="adsbygoogle ad-unit-frame block h-full w-full rounded-2xl"
           style={{ display: "block" }}
           data-ad-client={process.env.NEXT_PUBLIC_ADSENSE_CLIENT}
           data-ad-format="auto"
@@ -57,7 +66,7 @@ export default function AdUnit({ slot, compact = false }: AdUnitProps) {
           data-full-width-responsive="true"
         />
       ) : (
-        <div className="flex h-full min-h-32 items-center justify-center rounded-2xl border border-dashed border-line bg-surface-strong text-center text-sm text-muted">
+        <div className="ad-unit-placeholder flex h-full min-h-32 items-center justify-center rounded-2xl border border-dashed border-line bg-surface-strong text-center text-sm text-muted">
           {messages.adUnit.configure}
         </div>
       )}

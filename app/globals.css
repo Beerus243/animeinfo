@@ -266,10 +266,20 @@ img {
 .home-featured-content {
   position: relative;
   z-index: 1;
+  max-width: min(44rem, 100%);
+  color: #fff6ef;
+  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
 }
 
 .home-featured-card .text-muted {
-  color: rgba(255, 244, 237, 0.84);
+  color: rgba(255, 244, 237, 0.92);
+}
+
+.home-featured-content .font-display,
+.home-featured-content h1,
+.home-featured-content h2,
+.home-featured-content h3 {
+  color: #fff8f3;
 }
 
 .home-featured-card .button-primary {
@@ -302,7 +312,7 @@ img {
   inset: 0;
   z-index: -2;
   background:
-    linear-gradient(135deg, rgba(18, 10, 10, 0.92), rgba(18, 10, 10, 0.54) 48%, rgba(18, 10, 10, 0.82)),
+    linear-gradient(135deg, rgba(18, 10, 10, 0.95), rgba(18, 10, 10, 0.62) 48%, rgba(18, 10, 10, 0.86)),
     radial-gradient(circle at top right, rgba(222, 90, 36, 0.22), transparent 28%),
     radial-gradient(circle at bottom left, rgba(29, 122, 98, 0.12), transparent 26%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 24%);
@@ -311,6 +321,9 @@ img {
 .recommendations-hero-content {
   position: relative;
   z-index: 1;
+  max-width: min(52rem, 100%);
+  color: #fff6ef;
+  text-shadow: 0 10px 28px rgba(0, 0, 0, 0.26);
 }
 
 .recommendations-hero .eyebrow {
@@ -319,7 +332,14 @@ img {
 }
 
 .recommendations-hero .text-muted {
-  color: rgba(255, 244, 237, 0.84);
+  color: rgba(255, 244, 237, 0.92);
+}
+
+.recommendations-hero-content .font-display,
+.recommendations-hero-content h1,
+.recommendations-hero-content h2,
+.recommendations-hero-content h3 {
+  color: #fff8f3;
 }
 
 .content-card {
@@ -396,7 +416,7 @@ img {
   inset: 0;
   z-index: -2;
   background:
-    linear-gradient(135deg, rgba(18, 14, 10, 0.9), rgba(18, 14, 10, 0.54) 52%, rgba(18, 14, 10, 0.78)),
+    linear-gradient(135deg, rgba(18, 14, 10, 0.94), rgba(18, 14, 10, 0.62) 52%, rgba(18, 14, 10, 0.82)),
     radial-gradient(circle at top right, rgba(222, 90, 36, 0.2), transparent 30%),
     radial-gradient(circle at bottom left, rgba(29, 122, 98, 0.14), transparent 28%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 26%);
@@ -405,6 +425,9 @@ img {
 .news-hero-content {
   position: relative;
   z-index: 1;
+  max-width: min(54rem, 100%);
+  color: #fff6ef;
+  text-shadow: 0 10px 28px rgba(0, 0, 0, 0.26);
 }
 
 .news-hero .eyebrow {
@@ -413,12 +436,22 @@ img {
 }
 
 .news-hero .text-muted {
-  color: rgba(255, 244, 237, 0.84);
+  color: rgba(255, 244, 237, 0.92);
+}
+
+.news-hero-content .font-display,
+.news-hero-content h1,
+.news-hero-content h2,
+.news-hero-content h3 {
+  color: #fff8f3;
 }
 
 .airing-hero-content {
   position: relative;
   z-index: 1;
+  max-width: min(56rem, 100%);
+  color: #fff6ef;
+  text-shadow: 0 10px 28px rgba(0, 0, 0, 0.26);
 }
 
 .airing-hero .eyebrow {
@@ -427,7 +460,100 @@ img {
 }
 
 .airing-hero .text-muted {
-  color: rgba(255, 244, 237, 0.84);
+  color: rgba(255, 244, 237, 0.92);
+}
+
+.airing-hero-content .font-display,
+.airing-hero-content h1,
+.airing-hero-content h2,
+.airing-hero-content h3 {
+  color: #fff8f3;
+}
+
+html:not(.dark) .home-featured-content,
+html:not(.dark) .recommendations-hero-content,
+html:not(.dark) .news-hero-content,
+html:not(.dark) .airing-hero-content {
+  min-height: 100%;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+html:not(.dark) .home-featured-media-layer::after {
+  background: rgba(10, 8, 7, 0.12);
+}
+
+html:not(.dark) .recommendations-hero-media-layer::after,
+html:not(.dark) .news-hero-media-layer::after,
+html:not(.dark) .airing-hero-media-layer::after {
+  background: rgba(10, 8, 7, 0.14);
+}
+
+html:not(.dark) .home-featured-overlay {
+  background:
+    linear-gradient(145deg, rgba(18, 14, 10, 0.76), rgba(18, 14, 10, 0.24) 48%, rgba(18, 14, 10, 0.64)),
+    radial-gradient(circle at top right, rgba(222, 90, 36, 0.16), transparent 32%),
+    radial-gradient(circle at bottom left, rgba(29, 122, 98, 0.1), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 24%);
+}
+
+html:not(.dark) .recommendations-hero-overlay {
+  background:
+    linear-gradient(135deg, rgba(18, 10, 10, 0.78), rgba(18, 10, 10, 0.3) 48%, rgba(18, 10, 10, 0.68)),
+    radial-gradient(circle at top right, rgba(222, 90, 36, 0.18), transparent 28%),
+    radial-gradient(circle at bottom left, rgba(29, 122, 98, 0.1), transparent 26%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 24%);
+}
+
+html:not(.dark) .news-hero-overlay {
+  background:
+    linear-gradient(135deg, rgba(18, 14, 10, 0.78), rgba(18, 14, 10, 0.3) 52%, rgba(18, 14, 10, 0.68)),
+    radial-gradient(circle at top right, rgba(222, 90, 36, 0.17), transparent 30%),
+    radial-gradient(circle at bottom left, rgba(29, 122, 98, 0.1), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 26%);
+}
+
+html:not(.dark) .airing-hero-overlay {
+  background:
+    linear-gradient(135deg, rgba(18, 14, 10, 0.8), rgba(18, 14, 10, 0.32) 48%, rgba(18, 14, 10, 0.7)),
+    radial-gradient(circle at top left, rgba(222, 90, 36, 0.18), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(29, 122, 98, 0.14), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 24%);
+}
+
+html:not(.dark) .home-featured-card .text-muted,
+html:not(.dark) .recommendations-hero .text-muted,
+html:not(.dark) .news-hero .text-muted,
+html:not(.dark) .airing-hero .text-muted {
+  color: rgba(255, 246, 239, 0.96);
+}
+
+html:not(.dark) .home-featured-category-badge,
+html:not(.dark) .recommendations-hero .eyebrow,
+html:not(.dark) .news-hero .eyebrow,
+html:not(.dark) .airing-hero .eyebrow {
+  border-color: rgba(255, 248, 241, 0.18);
+  background: rgba(19, 16, 13, 0.54);
+  color: #fff7f1;
+}
+
+html:not(.dark) .news-hero .ad-unit-header {
+  border-color: rgba(255, 248, 241, 0.14);
+  background: linear-gradient(135deg, rgba(255, 248, 241, 0.18), rgba(255, 248, 241, 0.08));
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12);
+}
+
+html:not(.dark) .news-hero .ad-unit-meta,
+html:not(.dark) .news-hero .ad-unit-placeholder {
+  color: rgba(255, 248, 242, 0.96);
+}
+
+html:not(.dark) .news-hero .ad-unit-placeholder,
+html:not(.dark) .news-hero .ad-unit-frame {
+  background: rgba(255, 250, 246, 0.08);
+  border-color: rgba(255, 248, 241, 0.16);
 }
 
 .airing-hero-stat {
@@ -436,6 +562,31 @@ img {
   padding: 1rem 1.05rem;
   background: rgba(19, 16, 13, 0.34);
   backdrop-filter: blur(12px);
+}
+
+.ad-unit-header {
+  width: min(100%, 18rem);
+}
+
+.news-hero .ad-unit-header {
+  border-color: rgba(255, 248, 241, 0.16);
+  background: linear-gradient(135deg, rgba(19, 16, 13, 0.42), rgba(19, 16, 13, 0.26));
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(12px);
+}
+
+.news-hero .ad-unit-meta {
+  color: rgba(255, 244, 237, 0.9);
+}
+
+.news-hero .ad-unit-placeholder,
+.news-hero .ad-unit-frame {
+  background: rgba(255, 248, 241, 0.08);
+  border-color: rgba(255, 248, 241, 0.18);
+}
+
+.news-hero .ad-unit-placeholder {
+  color: rgba(255, 246, 239, 0.92);
 }
 
 .airing-hero-stat-label {
