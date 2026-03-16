@@ -29,7 +29,7 @@ type EditorFormState = {
   tags: string;
   coverImage: string;
   section: "news" | "recommendation";
-  recommendationType: "anime" | "manga" | "webtoon";
+  recommendationType: "anime" | "manga" | "webtoon" | "culture";
 };
 
 type EditorProps = {
@@ -47,7 +47,7 @@ type EditorProps = {
     tags?: string[];
     coverImage?: string;
     section?: "news" | "recommendation";
-    recommendationType?: "anime" | "manga" | "webtoon";
+    recommendationType?: "anime" | "manga" | "webtoon" | "culture";
     seo?: {
       metaTitle?: string;
       metaDesc?: string;
@@ -132,6 +132,38 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
   const [aiRewritten, setAiRewritten] = useState(Boolean(initialArticle.aiRewritten));
   const [isRewriting, setIsRewriting] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
+  const emptyFormState: EditorFormState = {
+    localizations: {
+      fr: {
+        slug: "",
+        title: "",
+        excerpt: "",
+        content: "",
+        seo: {
+          metaTitle: "",
+          metaDesc: "",
+          ogImage: "",
+        },
+      },
+      en: {
+        slug: "",
+        title: "",
+        excerpt: "",
+        content: "",
+        seo: {
+          metaTitle: "",
+          metaDesc: "",
+          ogImage: "",
+        },
+      },
+    },
+    category: "",
+    anime: "",
+    tags: "",
+    coverImage: "",
+    section: "news",
+    recommendationType: "anime",
+  };
   const initialFormState: EditorFormState = {
     localizations: {
       fr: {
@@ -358,6 +390,26 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
     insertImageIntoActiveContent(remoteImageUrl, imageAlt);
     setRemoteImageUrl("");
     setImageAlt("");
+  }
+
+  function handleClearCurrentArticle() {
+    if (!window.confirm(messages.editor.clearConfirm)) {
+      return;
+    }
+
+    updateForm(emptyFormState);
+    setAiRewritten(false);
+    setStatus(messages.editor.clearedStatus);
+    setToast(messages.editor.clearedToast);
+    setRemoteImageUrl("");
+    setImageAlt("");
+    setGalleryAlt("");
+    setImageCaption("");
+    setImageAlign("center");
+    setImageSize("normal");
+    setPublishDate("");
+    setAiPrompt("");
+    setAiType("news");
   }
 
   function prefillLocaleFrom(sourceLocale: EditorLocale, targetLocale: EditorLocale) {
@@ -628,6 +680,9 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
           {status ? <span className="text-sm text-muted">{status}</span> : null}
         </div>
         <div className="flex gap-2 items-center flex-wrap">
+          <button className="button-secondary" onClick={handleClearCurrentArticle} type="button">
+            {messages.editor.clearCurrent}
+          </button>
           <button className="button-primary" onClick={() => void handleSave("manual")} type="button">
             {messages.editor.saveNow}
           </button>
@@ -961,6 +1016,7 @@ export default function Editor({ initialArticle, rewritingEnabled, translationEn
                 <option value="anime">{messages.editor.recommendationTypeAnime}</option>
                 <option value="manga">{messages.editor.recommendationTypeManga}</option>
                 <option value="webtoon">{messages.editor.recommendationTypeWebtoon}</option>
+                <option value="culture">{messages.editor.recommendationTypeCulture}</option>
               </select>
             </label>
           </div>

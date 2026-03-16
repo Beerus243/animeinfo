@@ -23,6 +23,7 @@ function normalizeRecommendationType(value: unknown, section: EditorialSection):
 
   if (value === "manga") return "manga";
   if (value === "webtoon") return "webtoon";
+  if (value === "culture") return "culture";
   return "anime";
 }
 

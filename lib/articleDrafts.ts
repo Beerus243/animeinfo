@@ -2,7 +2,7 @@ import { slugify } from "@/lib/slugify";
 import Article from "@/models/Article";
 
 export type EditorialSection = "news" | "recommendation";
-export type RecommendationKind = "anime" | "manga" | "webtoon" | null;
+export type RecommendationKind = "anime" | "manga" | "webtoon" | "culture" | null;
 
 export function buildImportedArticleKey(
   originalUrl: string,
@@ -53,6 +53,7 @@ export function buildManualDraftTitle(section: EditorialSection, recommendationT
   if (section === "recommendation") {
     if (recommendationType === "manga") return "Nouvelle recommandation manga";
     if (recommendationType === "webtoon") return "Nouvelle recommandation webtoon";
+    if (recommendationType === "culture") return "Nouvelle recommandation culture";
     return "Nouvelle recommandation anime";
   }
 

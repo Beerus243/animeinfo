@@ -35,6 +35,12 @@ async function hasPushServiceWorker() {
 export default async function AdminPage() {
   const locale = await getServerLocale();
   const messages = getMessages(locale);
+  const getRecommendationTypeLabel = (value?: string | null) => {
+    if (value === "manga") return messages.editor.recommendationTypeManga;
+    if (value === "webtoon") return messages.editor.recommendationTypeWebtoon;
+    if (value === "culture") return messages.editor.recommendationTypeCulture;
+    return messages.editor.recommendationTypeAnime;
+  };
 
   // Check admin authentication
   const cookieStore = await cookies();
@@ -67,6 +73,11 @@ export default async function AdminPage() {
     NotificationSubscription.countDocuments({ active: true }),
     WebPushSubscription.countDocuments({ active: true }),
   ]);
+  const recentPublishedArticles = await Article.find({ status: "published" })
+    .select({ _id: 1, title: 1, excerpt: 1, section: 1, recommendationType: 1, updatedAt: 1 })
+    .sort({ updatedAt: -1, publishedAt: -1 })
+    .limit(8)
+    .lean();
   const pushServiceWorkerAvailable = await hasPushServiceWorker();
 
   const coreStats = [
@@ -122,6 +133,9 @@ export default async function AdminPage() {
           <CreateDraftButtons />
           <Link className="button-primary" href="/admin/drafts">
             {messages.admin.openDrafts}
+          </Link>
+          <Link className="button-secondary" href="/admin/published">
+            {messages.admin.openPublished}
           </Link>
           <Link className="button-secondary" href="/admin/anime">
             {messages.admin.manageAnime}
@@ -196,6 +210,45 @@ export default async function AdminPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="mt-5 content-card rounded-3xl p-5 md:p-6">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="eyebrow">{messages.admin.publishedEyebrow}</p>
+              <h2 className="mt-3 font-display text-2xl font-semibold md:text-[1.7rem]">{messages.admin.publishedTitle}</h2>
+              <p className="mt-2.5 max-w-3xl text-sm leading-6 text-muted">{messages.admin.publishedDescription}</p>
+            </div>
+            <Link className="button-secondary" href="/admin/published">
+              {messages.admin.managePublished}
+            </Link>
+          </div>
+          {recentPublishedArticles.length ? (
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
+              {recentPublishedArticles.map((article) => (
+                <div key={article._id.toString()} className="rounded-2xl border border-line bg-white/35 p-4 dark:bg-white/3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-muted">
+                      {article.section === "recommendation"
+                        ? `${messages.editor.sectionRecommendation} • ${getRecommendationTypeLabel(article.recommendationType)}`
+                        : messages.editor.sectionNews}
+                    </p>
+                    <span className="status-chip status-chip-success">{messages.admin.published}</span>
+                  </div>
+                  <h3 className="mt-3 text-lg font-semibold text-foreground">{article.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted">{article.excerpt || messages.card.excerptFallback}</p>
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <span className="text-[11px] text-muted">{messages.admin.publishedUpdated}</span>
+                    <Link className="button-secondary min-h-10 px-4 py-2 text-sm font-semibold" href={`/admin/edit/${article._id.toString()}`}>
+                      {messages.admin.editPublished}
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="panel mt-5 p-6 text-muted">{messages.admin.publishedEmpty}</div>
+          )}
         </div>
 
         <div className="mt-5 content-card rounded-3xl p-5 md:p-6">

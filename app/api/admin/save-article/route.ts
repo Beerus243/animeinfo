@@ -30,6 +30,14 @@ export async function POST(request: NextRequest) {
 
   await connectToDatabase();
 
+  const existingArticle = await Article.findById(payload.id)
+    .select({ status: 1, publishedAt: 1 })
+    .lean();
+
+  if (!existingArticle) {
+    return NextResponse.json({ error: "Article not found." }, { status: 404 });
+  }
+
   const frTitle = localizations.fr.title || preferredLocalization.title;
   const frSlug = await ensureUniqueArticleSlug(frTitle || preferredLocalization.title, { excludeId: payload.id });
   const localizationsWithSlugs = {
@@ -41,9 +49,10 @@ export async function POST(request: NextRequest) {
 
   const section = payload.section === "recommendation" ? "recommendation" : "news";
   const recommendationType =
-    section === "recommendation" && (payload.recommendationType === "anime" || payload.recommendationType === "manga" || payload.recommendationType === "webtoon")
+    section === "recommendation" && (payload.recommendationType === "anime" || payload.recommendationType === "manga" || payload.recommendationType === "webtoon" || payload.recommendationType === "culture")
       ? payload.recommendationType
       : undefined;
+  const nextStatus = existingArticle.status === "published" ? "published" : "review";
 
   const article = await Article.findByIdAndUpdate(
     payload.id,
@@ -69,7 +78,8 @@ export async function POST(request: NextRequest) {
           ogImage: preferredLocalization.seo.ogImage,
         },
         aiRewritten: Boolean(payload.aiRewritten),
-        status: "review",
+        status: nextStatus,
+        ...(existingArticle.status === "published" ? { publishedAt: existingArticle.publishedAt || new Date() } : {}),
       },
       ...(section === "news" ? { $unset: { recommendationType: 1 } } : {}),
     },

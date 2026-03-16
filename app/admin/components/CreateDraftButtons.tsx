@@ -9,7 +9,7 @@ type DraftKind = {
   key: string;
   label: string;
   section: "news" | "recommendation";
-  recommendationType?: "anime" | "manga" | "webtoon";
+  recommendationType?: "anime" | "manga" | "webtoon" | "culture";
   variant: "primary" | "secondary";
 };
 
@@ -44,6 +44,13 @@ export default function CreateDraftButtons() {
       label: messages.admin.createWebtoonRecommendation,
       section: "recommendation",
       recommendationType: "webtoon",
+      variant: "secondary",
+    },
+    {
+      key: "recommendation-culture",
+      label: messages.admin.createCultureRecommendation,
+      section: "recommendation",
+      recommendationType: "culture",
       variant: "secondary",
     },
   ];
